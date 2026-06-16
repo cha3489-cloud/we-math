@@ -4,580 +4,215 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>우리수학교습소 – 수학의 자신감을 키우는 곳</title>
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;700;900&family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet" />
-  <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-    :root {
-      --navy: #1A2B4A;
-      --navy-mid: #253D6A;
-      --orange: #FF6B35;
-      --orange-light: #FF8C5A;
-      --bg: #F8F9FF;
-      --white: #ffffff;
-      --text: #2C3E50;
-      --text-light: #6B7A8D;
-      --border: #DDE3EE;
-    }
-
-    html { scroll-behavior: smooth; }
-
-    body {
-      font-family: 'Noto Sans KR', sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      line-height: 1.7;
-    }
-
-    /* ── NAV ── */
-    nav {
-      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
-      background: rgba(26, 43, 74, 0.97);
-      backdrop-filter: blur(8px);
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 0 5%;
-      height: 64px;
-      border-bottom: 1px solid rgba(255,255,255,0.07);
-    }
-
-    .nav-logo {
-      font-family: 'Noto Serif KR', serif;
-      font-size: 1.15rem;
-      font-weight: 700;
-      color: var(--white);
-      letter-spacing: -0.02em;
-    }
-    .nav-logo span { color: var(--orange); }
-
-    .nav-links { display: flex; gap: 2rem; list-style: none; }
-    .nav-links a {
-      color: rgba(255,255,255,0.75);
-      text-decoration: none;
-      font-size: 0.88rem;
-      font-weight: 500;
-      letter-spacing: 0.02em;
-      transition: color 0.2s;
-    }
-    .nav-links a:hover { color: var(--white); }
-
-    .nav-cta {
-      background: var(--orange);
-      color: var(--white) !important;
-      padding: 0.45rem 1.2rem;
-      border-radius: 4px;
-      font-weight: 700 !important;
-      transition: background 0.2s !important;
-    }
-    .nav-cta:hover { background: var(--orange-light) !important; }
-
-    /* ── HERO ── */
-    .hero {
-      min-height: 100vh;
-      background: var(--navy);
-      display: flex; align-items: center;
-      position: relative; overflow: hidden;
-      padding: 100px 5% 80px;
-    }
-
-    /* 수식 기호 배경 — 시그니처 요소 */
-    .math-bg {
-      position: absolute; inset: 0;
-      pointer-events: none;
-      overflow: hidden;
-    }
-    .math-symbol {
-      position: absolute;
-      font-family: 'Noto Serif KR', serif;
-      color: rgba(255,255,255,0.04);
-      font-weight: 900;
-      user-select: none;
-      line-height: 1;
-    }
-
-    .hero-inner {
-      max-width: 1100px; margin: 0 auto;
-      display: grid; grid-template-columns: 1fr 1fr; gap: 4rem;
-      align-items: center; width: 100%; position: relative; z-index: 1;
-    }
-
-    .hero-eyebrow {
-      display: inline-flex; align-items: center; gap: 0.5rem;
-      background: rgba(255, 107, 53, 0.15);
-      border: 1px solid rgba(255, 107, 53, 0.3);
-      color: var(--orange);
-      font-size: 0.78rem; font-weight: 700;
-      letter-spacing: 0.12em; text-transform: uppercase;
-      padding: 0.35rem 0.9rem; border-radius: 2px;
-      margin-bottom: 1.5rem;
-    }
-
-    .hero-title {
-      font-family: 'Noto Serif KR', serif;
-      font-size: clamp(2rem, 4vw, 3.2rem);
-      font-weight: 900;
-      color: var(--white);
-      line-height: 1.25;
-      letter-spacing: -0.03em;
-      margin-bottom: 1.5rem;
-    }
-    .hero-title .accent { color: var(--orange); }
-
-    .hero-desc {
-      color: rgba(255,255,255,0.65);
-      font-size: 1rem;
-      font-weight: 300;
-      line-height: 1.9;
-      margin-bottom: 2.5rem;
-      max-width: 440px;
-    }
-
-    .hero-actions { display: flex; gap: 1rem; flex-wrap: wrap; }
-
-    .btn-primary {
-      background: var(--orange);
-      color: var(--white);
-      padding: 0.85rem 2rem;
-      border-radius: 4px;
-      font-size: 0.95rem;
-      font-weight: 700;
-      text-decoration: none;
-      letter-spacing: 0.02em;
-      transition: background 0.2s, transform 0.15s;
-      display: inline-block;
-    }
-    .btn-primary:hover { background: var(--orange-light); transform: translateY(-1px); }
-
-    .btn-outline {
-      border: 1.5px solid rgba(255,255,255,0.35);
-      color: rgba(255,255,255,0.85);
-      padding: 0.85rem 2rem;
-      border-radius: 4px;
-      font-size: 0.95rem;
-      font-weight: 500;
-      text-decoration: none;
-      transition: border-color 0.2s, color 0.2s;
-      display: inline-block;
-    }
-    .btn-outline:hover { border-color: rgba(255,255,255,0.7); color: var(--white); }
-
-    /* 히어로 오른쪽 — 숫자 카드 */
-    .hero-stats {
-      display: grid; grid-template-columns: 1fr 1fr; gap: 1.2rem;
-    }
-    .stat-card {
-      background: rgba(255,255,255,0.05);
-      border: 1px solid rgba(255,255,255,0.1);
-      border-radius: 8px;
-      padding: 1.5rem 1.2rem;
-    }
-    .stat-card.highlight {
-      background: var(--orange);
-      border-color: var(--orange);
-      grid-column: span 2;
-      display: flex; align-items: center; gap: 1.2rem;
-    }
-    .stat-num {
-      font-family: 'Noto Serif KR', serif;
-      font-size: 2.4rem;
-      font-weight: 900;
-      color: var(--white);
-      line-height: 1;
-    }
-    .stat-label {
-      color: rgba(255,255,255,0.65);
-      font-size: 0.8rem;
-      margin-top: 0.35rem;
-    }
-    .stat-card.highlight .stat-label { color: rgba(255,255,255,0.85); font-size: 0.9rem; }
-    .stat-icon { font-size: 2.2rem; }
-
-    /* ── SECTION COMMONS ── */
-    section { padding: 90px 5%; }
-    .section-inner { max-width: 1100px; margin: 0 auto; }
-
-    .section-label {
-      font-size: 0.75rem;
-      font-weight: 700;
-      letter-spacing: 0.14em;
-      text-transform: uppercase;
-      color: var(--orange);
-      margin-bottom: 0.6rem;
-    }
-    .section-title {
-      font-family: 'Noto Serif KR', serif;
-      font-size: clamp(1.5rem, 2.5vw, 2.2rem);
-      font-weight: 900;
-      color: var(--navy);
-      letter-spacing: -0.03em;
-      line-height: 1.3;
-      margin-bottom: 1rem;
-    }
-    .section-sub {
-      color: var(--text-light);
-      font-size: 0.97rem;
-      font-weight: 300;
-      max-width: 520px;
-      line-height: 1.85;
-      margin-bottom: 3rem;
-    }
-
-    /* ── FEATURES ── */
-    #features { background: var(--white); }
-
-    .features-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-      gap: 1.5rem;
-    }
-    .feature-card {
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 2rem 1.5rem;
-      transition: box-shadow 0.2s, transform 0.2s;
-    }
-    .feature-card:hover {
-      box-shadow: 0 8px 30px rgba(26,43,74,0.1);
-      transform: translateY(-3px);
-    }
-    .feature-icon {
-      width: 48px; height: 48px;
-      background: rgba(255,107,53,0.1);
-      border-radius: 8px;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 1.4rem;
-      margin-bottom: 1.2rem;
-    }
-    .feature-card h3 {
-      font-family: 'Noto Serif KR', serif;
-      font-size: 1.05rem;
-      font-weight: 700;
-      color: var(--navy);
-      margin-bottom: 0.6rem;
-    }
-    .feature-card p {
-      font-size: 0.88rem;
-      color: var(--text-light);
-      line-height: 1.85;
-    }
-
-    /* ── CURRICULUM ── */
-    #curriculum { background: var(--bg); }
-
-    .curriculum-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 1rem;
-    }
-    .curriculum-item {
-      background: var(--white);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 1.5rem 1.2rem;
-      display: flex; align-items: flex-start; gap: 1rem;
-    }
-    .curriculum-grade {
-      background: var(--navy);
-      color: var(--white);
-      font-size: 0.7rem; font-weight: 700;
-      letter-spacing: 0.08em;
-      padding: 0.3rem 0.6rem;
-      border-radius: 3px;
-      white-space: nowrap;
-      margin-top: 2px;
-      flex-shrink: 0;
-    }
-    .curriculum-item h4 {
-      font-size: 0.9rem;
-      font-weight: 700;
-      color: var(--navy);
-      margin-bottom: 0.3rem;
-    }
-    .curriculum-item p {
-      font-size: 0.8rem;
-      color: var(--text-light);
-      line-height: 1.7;
-    }
-
-    /* ── PROCESS ── */
-    #process { background: var(--navy); }
-    #process .section-title { color: var(--white); }
-    #process .section-sub { color: rgba(255,255,255,0.55); }
-    #process .section-label { color: var(--orange); }
-
-    .process-steps {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 0;
-      position: relative;
-    }
-    .process-steps::before {
-      content: '';
-      position: absolute;
-      top: 28px; left: 10%;  right: 10%;
-      height: 1px;
-      background: rgba(255,255,255,0.1);
-      z-index: 0;
-    }
-    .process-step {
-      text-align: center;
-      padding: 0 1rem;
-      position: relative; z-index: 1;
-    }
-    .step-circle {
-      width: 56px; height: 56px;
-      border-radius: 50%;
-      background: var(--navy-mid);
-      border: 2px solid rgba(255,255,255,0.15);
-      display: flex; align-items: center; justify-content: center;
-      margin: 0 auto 1.2rem;
-      font-size: 1.3rem;
-    }
-    .process-step h3 {
-      font-family: 'Noto Serif KR', serif;
-      font-size: 0.95rem;
-      font-weight: 700;
-      color: var(--white);
-      margin-bottom: 0.5rem;
-    }
-    .process-step p {
-      font-size: 0.82rem;
-      color: rgba(255,255,255,0.5);
-      line-height: 1.75;
-    }
-
-    /* ── TESTIMONIALS ── */
-    #testimonials { background: var(--white); }
-
-    .testimonials-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 1.5rem;
-    }
-    .testimonial-card {
-      background: var(--bg);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 1.8rem;
-    }
-    .testimonial-stars { color: var(--orange); font-size: 0.9rem; margin-bottom: 1rem; }
-    .testimonial-card blockquote {
-      font-size: 0.9rem;
-      color: var(--text);
-      line-height: 1.85;
-      font-style: italic;
-      margin-bottom: 1.2rem;
-      border: none;
-    }
-    .testimonial-author {
-      font-size: 0.82rem;
-      font-weight: 700;
-      color: var(--navy);
-    }
-    .testimonial-role {
-      font-size: 0.78rem;
-      color: var(--text-light);
-    }
-
-    /* ── CONTACT ── */
-    #contact { background: var(--bg); }
-
-    .contact-layout {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 4rem;
-      align-items: start;
-    }
-    .contact-info { }
-    .contact-detail {
-      display: flex; align-items: flex-start; gap: 1rem;
-      margin-bottom: 1.5rem;
-    }
-    .contact-detail-icon {
-      width: 40px; height: 40px;
-      background: rgba(255,107,53,0.1);
-      border-radius: 6px;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 1rem; flex-shrink: 0;
-    }
-    .contact-detail h4 {
-      font-size: 0.8rem; font-weight: 700;
-      color: var(--text-light); text-transform: uppercase;
-      letter-spacing: 0.08em; margin-bottom: 0.2rem;
-    }
-    .contact-detail p { font-size: 0.93rem; color: var(--navy); font-weight: 500; }
-
-    .contact-form-card {
-      background: var(--white);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 2rem;
-    }
-    .contact-form-card h3 {
-      font-family: 'Noto Serif KR', serif;
-      font-size: 1.1rem;
-      font-weight: 700;
-      color: var(--navy);
-      margin-bottom: 1.5rem;
-    }
-    .form-group { margin-bottom: 1rem; }
-    .form-group label {
-      display: block;
-      font-size: 0.8rem; font-weight: 700;
-      color: var(--text-light);
-      letter-spacing: 0.05em;
-      margin-bottom: 0.4rem;
-    }
-    .form-group input,
-    .form-group select,
-    .form-group textarea {
-      width: 100%;
-      border: 1px solid var(--border);
-      border-radius: 5px;
-      padding: 0.7rem 0.9rem;
-      font-family: 'Noto Sans KR', sans-serif;
-      font-size: 0.9rem;
-      color: var(--text);
-      background: var(--bg);
-      outline: none;
-      transition: border-color 0.2s;
-    }
-    .form-group input:focus,
-    .form-group select:focus,
-    .form-group textarea:focus { border-color: var(--navy); }
-    .form-group textarea { height: 90px; resize: vertical; }
-    .form-submit {
-      width: 100%;
-      background: var(--navy);
-      color: var(--white);
-      border: none; cursor: pointer;
-      padding: 0.85rem;
-      border-radius: 5px;
-      font-family: 'Noto Sans KR', sans-serif;
-      font-size: 0.95rem; font-weight: 700;
-      letter-spacing: 0.03em;
-      transition: background 0.2s;
-      margin-top: 0.5rem;
-    }
-    .form-submit:hover { background: var(--navy-mid); }
-
-    /* ── FOOTER ── */
-    footer {
-      background: #111C30;
-      color: rgba(255,255,255,0.45);
-      padding: 2.5rem 5%;
-      text-align: center;
-      font-size: 0.82rem;
-    }
-    footer strong { color: rgba(255,255,255,0.7); }
-
-    /* ── RESPONSIVE ── */
-    @media (max-width: 768px) {
-      nav { padding: 0 4%; }
-      .nav-links { display: none; }
-
-      .hero { padding: 90px 5% 60px; }
-      .hero-inner { grid-template-columns: 1fr; gap: 2.5rem; }
-      .hero-stats { grid-template-columns: 1fr 1fr; }
-      .stat-card.highlight { grid-column: span 2; }
-
-      section { padding: 60px 5%; }
-
-      .contact-layout { grid-template-columns: 1fr; gap: 2rem; }
-
-      .process-steps::before { display: none; }
-    }
-
-    @media (prefers-reduced-motion: reduce) {
-      *, *::before, *::after { transition: none !important; animation: none !important; }
-    }
-  </style>
+  <meta name="description" content="개념부터 심화까지, 1:1 맞춤 수학 지도. 수원 우리수학교습소에서 수학 자신감을 키우세요." />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 </head>
 <body>
 
 <!-- NAV -->
-<nav>
-  <div class="nav-logo">우리<span>수학</span>교습소</div>
+<nav id="mainNav">
+  <a href="#home" class="nav-logo">
+    <div class="nav-logo-mark">✦</div>
+    우리<span>수학</span>교습소
+  </a>
   <ul class="nav-links">
     <li><a href="#features">특징</a></li>
+    <li><a href="#about">강사소개</a></li>
     <li><a href="#curriculum">커리큘럼</a></li>
     <li><a href="#process">학습과정</a></li>
     <li><a href="#testimonials">수강후기</a></li>
-    <li><a href="#contact" class="nav-cta">상담 신청</a></li>
+    <li><a href="#contact" class="nav-cta">무료 상담 →</a></li>
   </ul>
+  <button class="hamburger" id="hamburger" aria-label="메뉴 열기">
+    <span></span><span></span><span></span>
+  </button>
+</nav>
+
+<!-- MOBILE MENU -->
+<nav class="mobile-menu" id="mobileMenu">
+  <a href="#features" class="m-link">특징</a>
+  <a href="#about" class="m-link">강사소개</a>
+  <a href="#curriculum" class="m-link">커리큘럼</a>
+  <a href="#process" class="m-link">학습과정</a>
+  <a href="#testimonials" class="m-link">수강후기</a>
+  <a href="#contact" class="m-cta m-link">무료 상담 신청 →</a>
 </nav>
 
 <!-- HERO -->
 <section class="hero" id="home">
-  <!-- 수학 기호 배경 (시그니처 요소) -->
+  <div class="hero-grid"></div>
   <div class="math-bg" id="mathBg"></div>
+  <div class="hero-orb hero-orb-1"></div>
+  <div class="hero-orb hero-orb-2"></div>
 
   <div class="hero-inner">
     <div class="hero-left">
-      <div class="hero-eyebrow">✦ 수원 · 맞춤형 수학 전문</div>
+      <div class="hero-badge">
+        <div class="hero-badge-dot"></div>
+        수원 · 맞춤형 수학 전문
+      </div>
       <h1 class="hero-title">
         수학이 어렵다면,<br/>
         <span class="accent">우리가</span> 함께<br/>
-        풀어드립니다.
+        <span class="underline-text">풀어드립니다.</span>
       </h1>
       <p class="hero-desc">
         개념의 뿌리부터 심화까지 — 단순히 문제를 푸는 것이 아니라,
-        수학적 사고력을 키워 어떤 문제도 스스로 해결할 수 있는 힘을 길러드립니다.
+        수학적 사고력을 키워 어떤 문제도 스스로 해결하는
+        진짜 수학 실력을 만들어 드립니다.
       </p>
       <div class="hero-actions">
-        <a href="#contact" class="btn-primary">무료 상담 신청</a>
-        <a href="#curriculum" class="btn-outline">커리큘럼 보기</a>
+        <a href="#contact" class="btn-primary">무료 상담 신청 →</a>
+        <a href="#curriculum" class="btn-ghost">커리큘럼 보기</a>
+      </div>
+      <div class="hero-trust">
+        <div class="hero-trust-item"><span>★★★★★</span><span>후기 4.9점</span></div>
+        <div class="trust-divider"></div>
+        <div class="hero-trust-item"><span>🎓</span><span>누적 수강생 500+</span></div>
+        <div class="trust-divider"></div>
+        <div class="hero-trust-item"><span>📈</span><span>성적 향상 98%</span></div>
       </div>
     </div>
 
     <div class="hero-right">
-      <div class="hero-stats">
-        <div class="stat-card">
-          <div class="stat-num">98%</div>
-          <div class="stat-label">수강생 성적 향상률</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-num">15+</div>
-          <div class="stat-label">수학 전문 지도 경력</div>
-        </div>
-        <div class="stat-card highlight">
-          <div class="stat-icon">📐</div>
+      <div class="stat-card featured">
+        <div class="stat-top">
           <div>
-            <div class="stat-num">1:1 맞춤</div>
-            <div class="stat-label">학생 한 명 한 명의 수준과 속도에 맞춘 개인 맞춤 지도</div>
+            <div class="stat-num">1 : 1</div>
+            <div class="stat-label" style="margin-top:0.4rem">완전 개인 맞춤 수업</div>
           </div>
+          <div class="stat-icon-wrap">📐</div>
+        </div>
+        <div style="font-size:0.78rem;color:rgba(255,255,255,0.7);margin-top:0.8rem;line-height:1.7">
+          학생 한 명의 수준과 속도에 맞춰, 그 어디서도 받을 수 없는 나만의 수업을 설계합니다.
+        </div>
+      </div>
+      <div class="stat-row">
+        <div class="stat-card">
+          <div class="stat-top">
+            <div>
+              <div class="stat-num count-up" data-target="98">0</div>
+              <div class="stat-label" style="margin-top:0.3rem">성적 향상률 %</div>
+            </div>
+            <div class="stat-icon-wrap">📊</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-top">
+            <div>
+              <div class="stat-num count-up" data-target="15">0</div>
+              <div class="stat-label" style="margin-top:0.3rem">지도 경력 년+</div>
+            </div>
+            <div class="stat-icon-wrap">🏆</div>
+          </div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-top">
+          <div>
+            <div class="stat-num count-up" data-target="500">0</div>
+            <div class="stat-label" style="margin-top:0.3rem">누적 수강생 명+</div>
+          </div>
+          <div class="stat-icon-wrap">🎓</div>
         </div>
       </div>
     </div>
   </div>
 </section>
 
+<!-- TRUST BAR -->
+<div class="trust-bar">
+  <div class="trust-bar-inner">
+    <div class="trust-bar-item"><span>🏫</span><span>교육부 등록 교습소</span></div>
+    <div class="trust-bar-sep"></div>
+    <div class="trust-bar-item"><span>📋</span><span>매월 학습리포트 제공</span></div>
+    <div class="trust-bar-sep"></div>
+    <div class="trust-bar-item"><span>💬</span><span>카카오톡 실시간 질문</span></div>
+    <div class="trust-bar-sep"></div>
+    <div class="trust-bar-item"><span>🔄</span><span>첫 수업 만족 보장</span></div>
+    <div class="trust-bar-sep"></div>
+    <div class="trust-bar-item"><span>📱</span><span>학부모 앱 진도 공유</span></div>
+  </div>
+</div>
+
 <!-- FEATURES -->
 <section id="features">
   <div class="section-inner">
-    <p class="section-label">우리의 약속</p>
-    <h2 class="section-title">우리수학교습소가<br/>특별한 이유</h2>
-    <p class="section-sub">암기가 아닌 이해, 속도가 아닌 깊이. 진짜 수학 실력은 여기서 시작됩니다.</p>
-
+    <div class="section-header-row">
+      <div>
+        <div class="section-eyebrow reveal">우리의 차별점</div>
+        <h2 class="section-title reveal reveal-delay-1">우리수학교습소가<br/>특별한 이유</h2>
+      </div>
+      <p class="section-sub reveal reveal-delay-2">암기가 아닌 이해, 속도가 아닌 깊이.<br/>진짜 수학 실력은 여기서 시작됩니다.</p>
+    </div>
     <div class="features-grid">
-      <div class="feature-card">
-        <div class="feature-icon">🎯</div>
+      <div class="feature-card reveal">
+        <div class="feature-icon-wrap">🎯</div>
         <h3>개념 완성 학습</h3>
-        <p>공식을 외우는 것이 아니라 왜 그 공식이 성립하는지를 이해합니다. 개념을 완전히 내 것으로 만들어야 응용이 가능합니다.</p>
+        <p>공식을 외우는 것이 아니라 왜 그 공식이 성립하는지 완전히 이해합니다. 개념을 내 것으로 만들어야 어떤 응용 문제도 풀 수 있습니다.</p>
+        <div class="feature-tag">개념 중심</div>
       </div>
-      <div class="feature-card">
-        <div class="feature-icon">📋</div>
+      <div class="feature-card reveal reveal-delay-1">
+        <div class="feature-icon-wrap">📋</div>
         <h3>수준별 맞춤 커리큘럼</h3>
-        <p>초등부터 고등까지, 학생의 현재 수준을 정확히 진단하고 그에 맞는 최적의 학습 경로를 설계합니다.</p>
+        <p>초등부터 고등까지, 정밀한 진단 테스트로 학생의 현재 수준을 파악하고 그에 맞는 최적의 학습 경로를 설계합니다.</p>
+        <div class="feature-tag">개인 맞춤</div>
       </div>
-      <div class="feature-card">
-        <div class="feature-icon">🔄</div>
+      <div class="feature-card reveal reveal-delay-2">
+        <div class="feature-icon-wrap">🔍</div>
         <h3>오답 분석 & 반복 훈련</h3>
-        <p>틀린 문제에는 반드시 이유가 있습니다. 오답 패턴을 분석하고 같은 실수를 반복하지 않도록 집중 훈련합니다.</p>
+        <p>틀린 문제에는 반드시 이유가 있습니다. 오답 패턴을 분석하고 같은 실수를 반복하지 않도록 데이터 기반 집중 훈련합니다.</p>
+        <div class="feature-tag">데이터 기반</div>
       </div>
-      <div class="feature-card">
-        <div class="feature-icon">📊</div>
+      <div class="feature-card reveal reveal-delay-3">
+        <div class="feature-icon-wrap">📊</div>
         <h3>정기 학부모 소통</h3>
-        <p>학습 진도와 성취도를 정기적으로 공유합니다. 학생과 학부모, 선생님이 함께 목표를 향해 나아갑니다.</p>
+        <p>매월 학습 리포트를 제공하고 정기 상담을 진행합니다. 학생·학부모·선생님이 함께 목표를 향해 나아갑니다.</p>
+        <div class="feature-tag">투명한 소통</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ABOUT -->
+<section id="about">
+  <div class="section-inner">
+    <div class="about-layout">
+      <div class="about-image-wrap reveal">
+        <div class="about-image-box">
+          <span style="position:relative;z-index:1">👨‍🏫</span>
+          <div class="about-image-badge">
+            <strong>15+</strong>
+            <span>년 경력</span>
+          </div>
+        </div>
+      </div>
+      <div class="about-content">
+        <div class="section-eyebrow reveal">강사 소개</div>
+        <h2 class="section-title reveal reveal-delay-1">수학을 두려워하는<br/>학생을 위한 선생님</h2>
+        <p class="section-sub reveal reveal-delay-2" style="margin-bottom:0">
+          수학이 어렵다고 느끼는 학생일수록, 더 섬세한 설명과 더 많은 시간이 필요합니다.
+          15년간의 경험으로 쌓은 노하우로 모든 학생이 수학의 즐거움을 발견할 수 있도록 돕겠습니다.
+        </p>
+        <ul class="about-list reveal reveal-delay-3">
+          <li>
+            <div class="about-list-icon">🎓</div>
+            <div><strong>학력 · 자격</strong>수학교육학과 졸업 · 중등수학 정교사 2급 자격증 보유</div>
+          </li>
+          <li>
+            <div class="about-list-icon">📚</div>
+            <div><strong>지도 경력</strong>학원 수석강사 8년 · 개인 과외 7년 · 누적 수강생 500명 이상</div>
+          </li>
+          <li>
+            <div class="about-list-icon">🏆</div>
+            <div><strong>지도 성과</strong>수능 수학 1등급 배출 다수 · 내신 평균 2등급 이상 향상</div>
+          </li>
+          <li>
+            <div class="about-list-icon">💡</div>
+            <div><strong>교육 철학</strong>정답을 찾는 방법이 아닌, 문제를 이해하는 눈을 키워드립니다</div>
+          </li>
+        </ul>
+        <a href="#contact" class="btn-primary reveal reveal-delay-4" style="display:inline-flex">상담 예약하기 →</a>
       </div>
     </div>
   </div>
@@ -586,52 +221,116 @@
 <!-- CURRICULUM -->
 <section id="curriculum">
   <div class="section-inner">
-    <p class="section-label">수업 과정</p>
-    <h2 class="section-title">체계적인 수학 커리큘럼</h2>
-    <p class="section-sub">학년과 목표에 맞게 설계된 단계별 학습 과정으로, 수학의 전 영역을 빠짐없이 다룹니다.</p>
+    <div class="section-eyebrow reveal">수업 과정</div>
+    <h2 class="section-title reveal reveal-delay-1">체계적인 수학 커리큘럼</h2>
+    <p class="section-sub reveal reveal-delay-2">학년과 목표에 맞게 설계된 단계별 학습 과정으로, 수학의 전 영역을 빠짐없이 다룹니다.</p>
 
-    <div class="curriculum-grid">
-      <div class="curriculum-item">
-        <div class="curriculum-grade">초등</div>
-        <div>
-          <h4>수와 연산의 기초</h4>
-          <p>수 감각, 사칙연산, 분수·소수, 기초 도형</p>
-        </div>
+    <div class="curriculum-tabs reveal reveal-delay-3">
+      <button class="tab-btn active" data-tab="all">전체</button>
+      <button class="tab-btn" data-tab="elem">초등</button>
+      <button class="tab-btn" data-tab="mid">중학교</button>
+      <button class="tab-btn" data-tab="high">고등학교</button>
+    </div>
+
+    <div class="curriculum-panel active curriculum-grid" data-panel="all">
+      <div class="curriculum-card reveal">
+        <div class="curr-head"><div class="curr-grade">초등 1–3</div><div class="curr-badge">기초</div></div>
+        <h4>수와 연산 기초</h4>
+        <p>수 감각 형성, 사칙연산의 원리, 기초 도형 이해</p>
+        <div class="curr-tags"><span class="curr-tag">자연수</span><span class="curr-tag">덧셈·뺄셈</span><span class="curr-tag">곱셈·나눗셈</span></div>
       </div>
-      <div class="curriculum-item">
-        <div class="curriculum-grade">중1-2</div>
-        <div>
-          <h4>중학 수학 기본</h4>
-          <p>정수·유리수, 방정식, 함수, 통계 입문</p>
-        </div>
+      <div class="curriculum-card reveal reveal-delay-1">
+        <div class="curr-head"><div class="curr-grade">초등 4–6</div><div class="curr-badge">기본</div></div>
+        <h4>분수·소수와 도형</h4>
+        <p>분수와 소수 연산, 비례, 기초 도형의 넓이·부피</p>
+        <div class="curr-tags"><span class="curr-tag">분수</span><span class="curr-tag">소수</span><span class="curr-tag">비례</span></div>
       </div>
-      <div class="curriculum-item">
-        <div class="curriculum-grade">중3</div>
-        <div>
-          <h4>중학 심화·고등 준비</h4>
-          <p>이차방정식, 이차함수, 피타고라스 정리</p>
-        </div>
+      <div class="curriculum-card reveal reveal-delay-2">
+        <div class="curr-head"><div class="curr-grade">중1–2</div><div class="curr-badge">기본</div></div>
+        <h4>중학 수학 기본</h4>
+        <p>정수·유리수, 일차방정식, 함수, 통계 입문</p>
+        <div class="curr-tags"><span class="curr-tag">정수</span><span class="curr-tag">방정식</span><span class="curr-tag">함수</span></div>
       </div>
-      <div class="curriculum-item">
-        <div class="curriculum-grade">고1</div>
-        <div>
-          <h4>수학(상·하)</h4>
-          <p>다항식, 방정식과 부등식, 도형의 방정식</p>
-        </div>
+      <div class="curriculum-card reveal reveal-delay-3">
+        <div class="curr-head"><div class="curr-grade">중3</div><div class="curr-badge">심화</div></div>
+        <h4>중학 심화 · 고등 준비</h4>
+        <p>이차방정식, 이차함수, 피타고라스 정리, 삼각비</p>
+        <div class="curr-tags"><span class="curr-tag">이차방정식</span><span class="curr-tag">이차함수</span><span class="curr-tag">피타고라스</span></div>
       </div>
-      <div class="curriculum-item">
-        <div class="curriculum-grade">고2</div>
-        <div>
-          <h4>수학 I · II</h4>
-          <p>지수·로그, 삼각함수, 수열, 미적분 기초</p>
-        </div>
+      <div class="curriculum-card reveal">
+        <div class="curr-head"><div class="curr-grade">고1</div><div class="curr-badge">기본</div></div>
+        <h4>수학 (상·하)</h4>
+        <p>다항식, 방정식과 부등식, 도형의 방정식, 집합</p>
+        <div class="curr-tags"><span class="curr-tag">다항식</span><span class="curr-tag">부등식</span><span class="curr-tag">도형</span></div>
       </div>
-      <div class="curriculum-item">
-        <div class="curriculum-grade">고3</div>
-        <div>
-          <h4>수능 대비 집중</h4>
-          <p>미적분·확률과 통계·기하, 기출문제 완전분석</p>
-        </div>
+      <div class="curriculum-card reveal reveal-delay-1">
+        <div class="curr-head"><div class="curr-grade">고2</div><div class="curr-badge">심화</div></div>
+        <h4>수학 I · II</h4>
+        <p>지수·로그함수, 삼각함수, 수열, 미적분 기초</p>
+        <div class="curr-tags"><span class="curr-tag">지수·로그</span><span class="curr-tag">삼각함수</span><span class="curr-tag">수열</span></div>
+      </div>
+      <div class="curriculum-card reveal reveal-delay-2">
+        <div class="curr-head"><div class="curr-grade">고3</div><div class="curr-badge">🔥 수능</div></div>
+        <h4>수능 대비 완성</h4>
+        <p>미적분·확률과 통계·기하, 수능 기출 완전 분석</p>
+        <div class="curr-tags"><span class="curr-tag">미적분</span><span class="curr-tag">확률통계</span><span class="curr-tag">기출분석</span></div>
+      </div>
+      <div class="curriculum-card reveal reveal-delay-3">
+        <div class="curr-head"><div class="curr-grade">내신특강</div><div class="curr-badge">⚡ 단기</div></div>
+        <h4>내신 집중 특강</h4>
+        <p>시험 4–6주 전 집중 대비, 학교별 출제 경향 분석</p>
+        <div class="curr-tags"><span class="curr-tag">시험대비</span><span class="curr-tag">집중수업</span><span class="curr-tag">오답풀이</span></div>
+      </div>
+    </div>
+
+    <div class="curriculum-panel curriculum-grid" data-panel="elem">
+      <div class="curriculum-card">
+        <div class="curr-head"><div class="curr-grade">초등 1–3</div><div class="curr-badge">기초</div></div>
+        <h4>수와 연산 기초</h4>
+        <p>수 감각 형성, 사칙연산의 원리, 기초 도형 이해</p>
+        <div class="curr-tags"><span class="curr-tag">자연수</span><span class="curr-tag">덧셈·뺄셈</span><span class="curr-tag">곱셈·나눗셈</span></div>
+      </div>
+      <div class="curriculum-card">
+        <div class="curr-head"><div class="curr-grade">초등 4–6</div><div class="curr-badge">기본</div></div>
+        <h4>분수·소수와 도형</h4>
+        <p>분수와 소수 연산, 비례, 기초 도형의 넓이·부피</p>
+        <div class="curr-tags"><span class="curr-tag">분수</span><span class="curr-tag">소수</span><span class="curr-tag">비례</span></div>
+      </div>
+    </div>
+
+    <div class="curriculum-panel curriculum-grid" data-panel="mid">
+      <div class="curriculum-card">
+        <div class="curr-head"><div class="curr-grade">중1–2</div><div class="curr-badge">기본</div></div>
+        <h4>중학 수학 기본</h4>
+        <p>정수·유리수, 일차방정식, 함수, 통계 입문</p>
+        <div class="curr-tags"><span class="curr-tag">정수</span><span class="curr-tag">방정식</span><span class="curr-tag">함수</span></div>
+      </div>
+      <div class="curriculum-card">
+        <div class="curr-head"><div class="curr-grade">중3</div><div class="curr-badge">심화</div></div>
+        <h4>중학 심화 · 고등 준비</h4>
+        <p>이차방정식, 이차함수, 피타고라스 정리, 삼각비</p>
+        <div class="curr-tags"><span class="curr-tag">이차방정식</span><span class="curr-tag">이차함수</span><span class="curr-tag">피타고라스</span></div>
+      </div>
+    </div>
+
+    <div class="curriculum-panel curriculum-grid" data-panel="high">
+      <div class="curriculum-card">
+        <div class="curr-head"><div class="curr-grade">고1</div><div class="curr-badge">기본</div></div>
+        <h4>수학 (상·하)</h4>
+        <p>다항식, 방정식과 부등식, 도형의 방정식, 집합</p>
+        <div class="curr-tags"><span class="curr-tag">다항식</span><span class="curr-tag">부등식</span><span class="curr-tag">도형</span></div>
+      </div>
+      <div class="curriculum-card">
+        <div class="curr-head"><div class="curr-grade">고2</div><div class="curr-badge">심화</div></div>
+        <h4>수학 I · II</h4>
+        <p>지수·로그함수, 삼각함수, 수열, 미적분 기초</p>
+        <div class="curr-tags"><span class="curr-tag">지수·로그</span><span class="curr-tag">삼각함수</span><span class="curr-tag">수열</span></div>
+      </div>
+      <div class="curriculum-card">
+        <div class="curr-head"><div class="curr-grade">고3</div><div class="curr-badge">🔥 수능</div></div>
+        <h4>수능 대비 완성</h4>
+        <p>미적분·확률과 통계·기하, 수능 기출 완전 분석</p>
+        <div class="curr-tags"><span class="curr-tag">미적분</span><span class="curr-tag">확률통계</span><span class="curr-tag">기출분석</span></div>
       </div>
     </div>
   </div>
@@ -639,36 +338,70 @@
 
 <!-- PROCESS -->
 <section id="process">
-  <div class="section-inner">
-    <p class="section-label">학습 흐름</p>
-    <h2 class="section-title">입학부터 목표 달성까지</h2>
-    <p class="section-sub">처음 오시는 분도 걱정 없습니다. 단계별로 함께합니다.</p>
+  <div class="section-inner" style="position:relative;z-index:1">
+    <div class="section-eyebrow reveal" style="color:var(--orange)">학습 흐름</div>
+    <h2 class="section-title light reveal reveal-delay-1">입학부터 목표 달성까지</h2>
+    <p class="section-sub light reveal reveal-delay-2">처음 오시는 분도 걱정 없습니다. 5단계로 함께합니다.</p>
+    <div style="position:relative">
+      <div class="process-connector"></div>
+      <div class="process-steps reveal reveal-delay-3">
+        <div class="process-step">
+          <div class="step-num">1</div>
+          <div class="step-circle">📞</div>
+          <h3>무료 상담</h3>
+          <p>현재 수준과 목표를 파악하는 첫 번째 단계. 부담 없이 연락 주세요.</p>
+        </div>
+        <div class="process-step">
+          <div class="step-num">2</div>
+          <div class="step-circle">📝</div>
+          <h3>수준 진단</h3>
+          <p>진단 테스트로 정확한 출발점과 취약 단원을 파악합니다.</p>
+        </div>
+        <div class="process-step">
+          <div class="step-num">3</div>
+          <div class="step-circle">🗺️</div>
+          <h3>학습 설계</h3>
+          <p>개인 맞춤 커리큘럼과 월별 학습 일정을 함께 계획합니다.</p>
+        </div>
+        <div class="process-step">
+          <div class="step-num">4</div>
+          <div class="step-circle">📚</div>
+          <h3>집중 수업</h3>
+          <p>개념 → 유형 → 심화 순으로 탄탄하게 실력을 쌓아갑니다.</p>
+        </div>
+        <div class="process-step">
+          <div class="step-num">5</div>
+          <div class="step-circle">🏆</div>
+          <h3>목표 달성</h3>
+          <p>성적 향상과 수학 자신감, 두 가지를 함께 얻습니다.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
 
-    <div class="process-steps">
-      <div class="process-step">
-        <div class="step-circle">📞</div>
-        <h3>무료 상담</h3>
-        <p>현재 수준과 목표를 파악하는 첫 번째 단계</p>
+<!-- RESULTS -->
+<section id="results">
+  <div class="section-inner">
+    <div class="section-eyebrow reveal">성과</div>
+    <h2 class="section-title reveal reveal-delay-1">숫자로 증명합니다</h2>
+    <p class="section-sub reveal reveal-delay-2">우리수학교습소 학생들의 실제 성과입니다.</p>
+    <div class="results-numbers reveal reveal-delay-3">
+      <div class="result-num-item">
+        <div class="result-big"><span class="count-up" data-target="98">0</span><span>%</span></div>
+        <div class="result-label">수강생 성적 향상률</div>
       </div>
-      <div class="process-step">
-        <div class="step-circle">📝</div>
-        <h3>수준 진단</h3>
-        <p>진단 테스트로 정확한 출발점을 설정합니다</p>
+      <div class="result-num-item">
+        <div class="result-big"><span class="count-up" data-target="500">0</span><span>+</span></div>
+        <div class="result-label">누적 수강생</div>
       </div>
-      <div class="process-step">
-        <div class="step-circle">🗺️</div>
-        <h3>학습 설계</h3>
-        <p>개인 맞춤 커리큘럼과 일정을 함께 계획합니다</p>
+      <div class="result-num-item">
+        <div class="result-big"><span class="count-up" data-target="15">0</span><span>년+</span></div>
+        <div class="result-label">수학 전문 지도 경력</div>
       </div>
-      <div class="process-step">
-        <div class="step-circle">📚</div>
-        <h3>집중 수업</h3>
-        <p>개념→유형→심화 순으로 탄탄하게 쌓아갑니다</p>
-      </div>
-      <div class="process-step">
-        <div class="step-circle">🏆</div>
-        <h3>목표 달성</h3>
-        <p>성적 향상과 수학 자신감을 함께 얻습니다</p>
+      <div class="result-num-item">
+        <div class="result-big"><span class="count-up-dec" data-target="4.9">0</span></div>
+        <div class="result-label">평균 후기 점수 (/5)</div>
       </div>
     </div>
   </div>
@@ -677,91 +410,109 @@
 <!-- TESTIMONIALS -->
 <section id="testimonials">
   <div class="section-inner">
-    <p class="section-label">수강 후기</p>
-    <h2 class="section-title">학생과 학부모의 이야기</h2>
-    <p class="section-sub">우리수학교습소에서의 변화를 직접 들어보세요.</p>
-
+    <div class="section-eyebrow reveal">수강 후기</div>
+    <h2 class="section-title reveal reveal-delay-1">학생과 학부모의 이야기</h2>
+    <p class="section-sub reveal reveal-delay-2">우리수학교습소에서의 변화를 직접 들어보세요.</p>
     <div class="testimonials-grid">
-      <div class="testimonial-card">
-        <div class="testimonial-stars">★★★★★</div>
-        <blockquote>
-          "수학을 아예 포기했었는데, 개념부터 다시 잡아주시니까 지금은 제가 제일 좋아하는 과목이 됐어요. 내신도 3등급이 올랐습니다."
-        </blockquote>
-        <div class="testimonial-author">김○○ 학생</div>
-        <div class="testimonial-role">고등학교 2학년 · 수학 3등급 → 1등급</div>
+      <div class="testimonial-card reveal">
+        <div class="testimonial-stars"><span>★</span><span>★</span><span>★</span><span>★</span><span>★</span></div>
+        <blockquote>"수학을 완전히 포기했었는데, 개념부터 다시 잡아주시니까 지금은 제가 제일 좋아하는 과목이 됐어요. 내신도 3등급이 올랐습니다. 선생님께서 포기하지 않고 끝까지 같이 해주셔서 너무 감사해요."</blockquote>
+        <div class="testimonial-foot">
+          <div class="testimonial-avatar">👦</div>
+          <div>
+            <div class="testimonial-author">김○○ 학생</div>
+            <div class="testimonial-role">고등학교 2학년</div>
+          </div>
+          <div class="testimonial-chip">3등급 ↑</div>
+        </div>
       </div>
-      <div class="testimonial-card">
-        <div class="testimonial-stars">★★★★★</div>
-        <blockquote>
-          "아이가 수학을 무서워했는데 3개월 만에 '수학 재밌어!'라고 하더라고요. 선생님께서 아이 페이스에 맞춰 주신 덕분입니다."
-        </blockquote>
-        <div class="testimonial-author">학부모 박○○님</div>
-        <div class="testimonial-role">초등학교 5학년 자녀 학부모</div>
+      <div class="testimonial-card reveal reveal-delay-1">
+        <div class="testimonial-stars"><span>★</span><span>★</span><span>★</span><span>★</span><span>★</span></div>
+        <blockquote>"아이가 수학을 무서워했는데 3개월 만에 '수학 재밌어!'라고 하더라고요. 선생님께서 아이 페이스에 맞춰 천천히 설명해 주신 덕분입니다. 다음 학기도 계속 다닐 예정입니다."</blockquote>
+        <div class="testimonial-foot">
+          <div class="testimonial-avatar">👩</div>
+          <div>
+            <div class="testimonial-author">박○○님</div>
+            <div class="testimonial-role">초등 5학년 학부모</div>
+          </div>
+          <div class="testimonial-chip">자신감 ↑</div>
+        </div>
       </div>
-      <div class="testimonial-card">
-        <div class="testimonial-stars">★★★★★</div>
-        <blockquote>
-          "오답 분석을 꼼꼼히 해주셔서 제가 어디서 막히는지 정확히 알게 됐어요. 수능 수학 1등급 받았습니다!"
-        </blockquote>
-        <div class="testimonial-author">이○○ 학생</div>
-        <div class="testimonial-role">고등학교 3학년 · 수능 수학 1등급</div>
+      <div class="testimonial-card reveal reveal-delay-2">
+        <div class="testimonial-stars"><span>★</span><span>★</span><span>★</span><span>★</span><span>★</span></div>
+        <blockquote>"오답 분석을 꼼꼼히 해주셔서 제가 어디서 막히는지 정확히 알게 됐어요. 고3 때 수능 수학 1등급 받았습니다! 정말 우리수학 아니었으면 못 했을 것 같아요."</blockquote>
+        <div class="testimonial-foot">
+          <div class="testimonial-avatar">👧</div>
+          <div>
+            <div class="testimonial-author">이○○ 학생</div>
+            <div class="testimonial-role">고등학교 3학년 졸업</div>
+          </div>
+          <div class="testimonial-chip">수능 1등급</div>
+        </div>
       </div>
     </div>
   </div>
 </section>
 
+<!-- CTA BAND -->
+<div class="cta-band">
+  <div class="cta-band-inner">
+    <div>
+      <h2>지금 바로 무료 상담을 신청하세요</h2>
+      <p>첫 상담은 완전 무료입니다. 부담 없이 연락 주세요.</p>
+    </div>
+    <a href="#contact" class="btn-white">무료 상담 신청 →</a>
+  </div>
+</div>
+
 <!-- CONTACT -->
 <section id="contact">
   <div class="section-inner">
     <div class="contact-layout">
-      <div class="contact-info">
-        <p class="section-label">오시는 길 & 연락처</p>
-        <h2 class="section-title">언제든지<br/>문의해주세요</h2>
-        <p class="section-sub">처음 상담은 무료입니다. 부담 없이 연락 주세요.</p>
-
-        <div class="contact-detail">
-          <div class="contact-detail-icon">📍</div>
-          <div>
-            <h4>위치</h4>
-            <p>경기도 수원시 ○○구 ○○로 123<br/>○○빌딩 3층</p>
-          </div>
+      <div>
+        <div class="section-eyebrow reveal">오시는 길 & 연락처</div>
+        <h2 class="section-title reveal reveal-delay-1">언제든지<br/>문의해주세요</h2>
+        <p class="section-sub reveal reveal-delay-2" style="margin-bottom:2rem">처음 상담은 무료입니다.<br/>부담 없이 연락 주세요.</p>
+        <div class="contact-detail reveal">
+          <div class="contact-icon">📍</div>
+          <div><h4>위치</h4><p>경기도 수원시 ○○구 ○○로 123<br/>○○빌딩 3층</p></div>
         </div>
-        <div class="contact-detail">
-          <div class="contact-detail-icon">📞</div>
-          <div>
-            <h4>전화</h4>
-            <p>031-000-0000</p>
-          </div>
+        <div class="contact-detail reveal reveal-delay-1">
+          <div class="contact-icon">📞</div>
+          <div><h4>전화</h4><p>031-000-0000</p></div>
         </div>
-        <div class="contact-detail">
-          <div class="contact-detail-icon">🕐</div>
-          <div>
-            <h4>운영시간</h4>
-            <p>월–금 14:00 – 22:00<br/>토요일 10:00 – 18:00</p>
-          </div>
+        <div class="contact-detail reveal reveal-delay-2">
+          <div class="contact-icon">🕐</div>
+          <div><h4>운영시간</h4><p>월–금 14:00 – 22:00<br/>토요일 10:00 – 18:00 · 일요일 휴무</p></div>
         </div>
-        <div class="contact-detail">
-          <div class="contact-detail-icon">💬</div>
-          <div>
-            <h4>카카오톡</h4>
-            <p>@우리수학교습소</p>
-          </div>
+        <div class="contact-detail reveal reveal-delay-3">
+          <div class="contact-icon">💬</div>
+          <div><h4>카카오톡 채널</h4><p>@우리수학교습소<br/><span style="font-size:0.8rem;color:var(--text-light)">평일 09:00 – 22:00 운영</span></p></div>
+        </div>
+        <div class="contact-map reveal">
+          <span style="position:relative;z-index:1;font-size:0.82rem;color:rgba(255,255,255,0.35);margin-bottom:3rem">경기도 수원시</span>
         </div>
       </div>
 
-      <div class="contact-form-card">
-        <h3>✉️ 상담 신청하기</h3>
-        <div class="form-group">
-          <label>학생 이름</label>
-          <input type="text" placeholder="이름을 입력해주세요" />
+      <div class="contact-form-card reveal">
+        <div class="form-header">
+          <div class="form-header-icon">✉️</div>
+          <h3>상담 신청하기</h3>
         </div>
-        <div class="form-group">
-          <label>연락처</label>
-          <input type="tel" placeholder="010-0000-0000" />
+        <p class="form-subtitle">24시간 이내에 연락드립니다.</p>
+        <div class="form-row">
+          <div class="form-group">
+            <label>학생 이름</label>
+            <input type="text" id="f-name" placeholder="이름을 입력해주세요" />
+          </div>
+          <div class="form-group">
+            <label>연락처</label>
+            <input type="tel" id="f-phone" placeholder="010-0000-0000" />
+          </div>
         </div>
         <div class="form-group">
           <label>학년</label>
-          <select>
+          <select id="f-grade">
             <option value="">학년을 선택해주세요</option>
             <option>초등 저학년 (1–3학년)</option>
             <option>초등 고학년 (4–6학년)</option>
@@ -770,14 +521,18 @@
             <option>중학교 3학년</option>
             <option>고등학교 1학년</option>
             <option>고등학교 2학년</option>
-            <option>고등학교 3학년</option>
+            <option>고등학교 3학년 (수능)</option>
           </select>
         </div>
         <div class="form-group">
-          <label>문의 내용</label>
-          <textarea placeholder="궁금한 점이나 현재 상황을 간단히 적어주세요"></textarea>
+          <label>현재 고민 / 문의 내용</label>
+          <textarea id="f-msg" placeholder="현재 성적, 목표 성적, 어려운 단원 등을 간단히 적어주시면 맞춤 상담이 가능합니다."></textarea>
         </div>
-        <button class="form-submit">상담 신청 보내기</button>
+        <button class="form-submit" id="formSubmit">
+          <span>상담 신청 보내기</span>
+          <span>→</span>
+        </button>
+        <p class="form-note">🔒 개인정보는 상담 목적으로만 사용됩니다.</p>
       </div>
     </div>
   </div>
@@ -785,36 +540,68 @@
 
 <!-- FOOTER -->
 <footer>
-  <p><strong>우리수학교습소</strong> &nbsp;|&nbsp; 경기도 수원시 ○○구 ○○로 123 &nbsp;|&nbsp; 031-000-0000</p>
-  <p style="margin-top: 0.5rem;">© 2025 우리수학교습소. All rights reserved.</p>
+  <div class="footer-inner">
+    <div class="footer-top">
+      <div class="footer-brand">
+        <a href="#home" class="nav-logo">
+          <div class="nav-logo-mark">✦</div>
+          우리<span>수학</span>교습소
+        </a>
+        <p>개념의 뿌리부터 심화까지, 모든 학생이 수학의 자신감을 가질 수 있도록 함께합니다.</p>
+      </div>
+      <div>
+        <p class="footer-links-title">메뉴</p>
+        <ul class="footer-links">
+          <li><a href="#features">특징</a></li>
+          <li><a href="#about">강사소개</a></li>
+          <li><a href="#curriculum">커리큘럼</a></li>
+          <li><a href="#process">학습과정</a></li>
+        </ul>
+      </div>
+      <div>
+        <p class="footer-links-title">연락처</p>
+        <ul class="footer-links">
+          <li><a href="tel:031-000-0000">031-000-0000</a></li>
+          <li><a href="#">카카오톡 @우리수학교습소</a></li>
+          <li><a href="#">경기도 수원시 ○○구 ○○로 123</a></li>
+          <li><a href="#">월–금 14:00–22:00 · 토 10:00–18:00</a></li>
+        </ul>
+      </div>
+      <div>
+        <p class="footer-links-title">바로가기</p>
+        <ul class="footer-links">
+          <li><a href="#testimonials">수강 후기</a></li>
+          <li><a href="#contact">무료 상담 신청</a></li>
+          <li><a href="#">네이버 블로그</a></li>
+          <li><a href="#">카카오 채널</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <div>
+        <strong style="color:rgba(255,255,255,0.5)">우리수학교습소</strong>
+        &nbsp;|&nbsp; 경기도 수원시 ○○구 ○○로 123
+        &nbsp;|&nbsp; 031-000-0000
+        &nbsp;|&nbsp; © 2025 우리수학교습소. All rights reserved.
+      </div>
+      <div class="footer-badges">
+        <span class="footer-badge">교육부 등록</span>
+        <span class="footer-badge">정교사 자격</span>
+        <span class="footer-badge">개인정보 보호</span>
+      </div>
+    </div>
+  </div>
 </footer>
 
-<script>
-  // 수학 기호 배경 생성 (시그니처 요소)
-  const symbols = ['∑', '∫', '∞', '√', 'π', 'Δ', '∂', '≈', '≠', '∈', '∀', '∃', 'θ', 'α', 'β', 'λ', 'σ', '±', '×', '÷', 'f(x)', 'dx', 'lim', '→', '⊂', 'log', 'sin', 'cos'];
-  const bg = document.getElementById('mathBg');
-  const heroHeight = window.innerHeight;
-  const heroWidth = window.innerWidth;
+<!-- FLOATING BUTTONS -->
+<div class="float-buttons">
+  <a href="#" class="float-btn float-kakao" title="카카오톡 문의" aria-label="카카오톡">💬</a>
+  <button class="float-btn float-top" id="scrollTopBtn" title="맨 위로" aria-label="맨 위로">↑</button>
+</div>
 
-  for (let i = 0; i < 38; i++) {
-    const el = document.createElement('div');
-    el.className = 'math-symbol';
-    el.textContent = symbols[Math.floor(Math.random() * symbols.length)];
-    const size = Math.random() * 60 + 24;
-    el.style.cssText = `
-      left: ${Math.random() * 100}%;
-      top: ${Math.random() * 100}%;
-      font-size: ${size}px;
-      transform: rotate(${(Math.random() - 0.5) * 40}deg);
-      opacity: ${Math.random() * 0.5 + 0.5};
-    `;
-    bg.appendChild(el);
-  }
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
 
-  // 상담 폼 제출
-  document.querySelector('.form-submit').addEventListener('click', function() {
-    alert('상담 신청이 접수되었습니다!\n빠른 시간 내에 연락드리겠습니다. 감사합니다 😊');
-  });
-</script>
+<script type="module" src="/src/main.js"></script>
 </body>
 </html>
