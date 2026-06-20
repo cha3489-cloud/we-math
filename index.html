@@ -3,24 +3,27 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>우리수학교습소 – 수학의 자신감을 키우는 곳</title>
-  <meta name="description" content="개념부터 심화까지, 1:1 맞춤 수학 지도. 수원 우리수학교습소에서 수학 자신감을 키우세요." />
+  <title>시퀀스 수학 — 매일의 한 항이 결과로 수렴합니다</title>
+  <meta name="description" content="속도보다 방향, 방향보다 꾸준함. 시퀀스 수학에서 개념부터 심화까지 1:1 맞춤 수학을 경험하세요. 경기도 수원시 · 2026년 12월 개원." />
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 </head>
 <body>
 
-<!-- NAV -->
+<!-- ── NAV ─────────────────────────────────── -->
 <nav id="mainNav">
   <a href="#home" class="nav-logo">
-    <div class="nav-logo-mark">✦</div>
-    우리<span>수학</span>교습소
+    <div class="seqmark md"><span class="u"></span><span class="u"></span><span class="u"></span><span class="u"></span></div>
+    <div>
+      <div class="nav-brand-kr">시퀀스 수학</div>
+      <div class="nav-brand-en">Sequence Math</div>
+    </div>
   </a>
   <ul class="nav-links">
-    <li><a href="#features">특징</a></li>
-    <li><a href="#about">강사소개</a></li>
+    <li><a href="#features">시스템</a></li>
+    <li><a href="#about">원장소개</a></li>
     <li><a href="#curriculum">커리큘럼</a></li>
     <li><a href="#process">학습과정</a></li>
-    <li><a href="#testimonials">수강후기</a></li>
+    <li><a href="#testimonials">후기</a></li>
     <li><a href="#contact" class="nav-cta">무료 상담 →</a></li>
   </ul>
   <button class="hamburger" id="hamburger" aria-label="메뉴 열기">
@@ -28,434 +31,472 @@
   </button>
 </nav>
 
-<!-- MOBILE MENU -->
+<!-- 모바일 메뉴 -->
 <nav class="mobile-menu" id="mobileMenu">
-  <a href="#features" class="m-link">특징</a>
-  <a href="#about" class="m-link">강사소개</a>
-  <a href="#curriculum" class="m-link">커리큘럼</a>
-  <a href="#process" class="m-link">학습과정</a>
-  <a href="#testimonials" class="m-link">수강후기</a>
-  <a href="#contact" class="m-cta m-link">무료 상담 신청 →</a>
+  <a href="#features"     class="m-link">시스템</a>
+  <a href="#about"        class="m-link">원장소개</a>
+  <a href="#curriculum"   class="m-link">커리큘럼</a>
+  <a href="#process"      class="m-link">학습과정</a>
+  <a href="#testimonials" class="m-link">후기</a>
+  <a href="#contact"      class="m-cta m-link">무료 상담 신청 →</a>
 </nav>
 
-<!-- HERO -->
-<section class="hero" id="home">
-  <div class="hero-grid"></div>
-  <div class="math-bg" id="mathBg"></div>
-  <div class="hero-orb hero-orb-1"></div>
-  <div class="hero-orb hero-orb-2"></div>
-
+<!-- ── HERO ────────────────────────────────── -->
+<section id="home" class="grid-bg-dark">
   <div class="hero-inner">
+    <!-- 왼쪽 -->
     <div class="hero-left">
-      <div class="hero-badge">
-        <div class="hero-badge-dot"></div>
-        수원 · 맞춤형 수학 전문
-      </div>
+      <p class="hero-tag">Sequence Math Academy · Suwon · Est. 2026</p>
+
       <h1 class="hero-title">
-        수학이 어렵다면,<br/>
-        <span class="accent">우리가</span> 함께<br/>
-        <span class="underline-text">풀어드립니다.</span>
+        매일의<br>
+        <span class="dim">작은</span><br>
+        <span class="hl">수렴</span>
       </h1>
+
       <p class="hero-desc">
-        개념의 뿌리부터 심화까지 — 단순히 문제를 푸는 것이 아니라,
-        수학적 사고력을 키워 어떤 문제도 스스로 해결하는
-        진짜 수학 실력을 만들어 드립니다.
+        a₁, a₂, a₃ — 하루의 학습이 하나의 항.<br>
+        <strong>속도보다 방향</strong>, <strong>방향보다 꾸준함</strong>.<br>
+        시퀀스 수학은 매일의 누적이 결과가 되는<br>
+        그 과정을 함께합니다.
       </p>
+
       <div class="hero-actions">
-        <a href="#contact" class="btn-primary">무료 상담 신청 →</a>
-        <a href="#curriculum" class="btn-ghost">커리큘럼 보기</a>
+        <a href="#contact" class="btn-fill">무료 상담 신청</a>
+        <a href="#features" class="btn-ghost-mono">수업 시스템 보기 →</a>
       </div>
+
       <div class="hero-trust">
-        <div class="hero-trust-item"><span>★★★★★</span><span>후기 4.9점</span></div>
-        <div class="trust-divider"></div>
-        <div class="hero-trust-item"><span>🎓</span><span>누적 수강생 500+</span></div>
-        <div class="trust-divider"></div>
-        <div class="hero-trust-item"><span>📈</span><span>성적 향상 98%</span></div>
+        <div class="hero-trust-item">
+          <span class="hero-trust-num">1:1</span>
+          <span class="hero-trust-label">개별 맞춤</span>
+        </div>
+        <div class="hero-trust-sep"></div>
+        <div class="hero-trust-item">
+          <span class="hero-trust-num count-up" data-target="15">0</span>
+          <span class="hero-trust-label">지도 경력 년+</span>
+        </div>
+        <div class="hero-trust-sep"></div>
+        <div class="hero-trust-item">
+          <span class="hero-trust-num count-up" data-target="500">0</span>
+          <span class="hero-trust-label">누적 수강생+</span>
+        </div>
+        <div class="hero-trust-sep"></div>
+        <div class="hero-trust-item">
+          <span class="hero-trust-num">12월</span>
+          <span class="hero-trust-label">2026 개원</span>
+        </div>
       </div>
     </div>
 
+    <!-- 오른쪽 — 수열 카드 -->
     <div class="hero-right">
-      <div class="stat-card featured">
-        <div class="stat-top">
-          <div>
-            <div class="stat-num">1 : 1</div>
-            <div class="stat-label" style="margin-top:0.4rem">완전 개인 맞춤 수업</div>
-          </div>
-          <div class="stat-icon-wrap">📐</div>
+      <div class="seq-card featured">
+        <div class="seq-card-top">
+          <div class="seq-card-num">1 : 1</div>
+          <div class="seq-card-tag">개별 맞춤 수업</div>
         </div>
-        <div style="font-size:0.78rem;color:rgba(255,255,255,0.7);margin-top:0.8rem;line-height:1.7">
-          학생 한 명의 수준과 속도에 맞춰, 그 어디서도 받을 수 없는 나만의 수업을 설계합니다.
+        <div class="seq-card-label">학생 한 명의 수준과 속도에 맞춰 설계하는 나만의 수업. 어느 학원에서도 받을 수 없는 완전 개별 관리입니다.</div>
+      </div>
+      <div class="seq-row">
+        <div class="seq-card">
+          <div class="seq-card-top">
+            <div class="seq-card-num count-up" data-target="98" style="color:var(--paper)">0</div>
+            <div class="seq-card-tag">%</div>
+          </div>
+          <div class="seq-card-label" style="color:var(--ink-500)">성적 향상률</div>
+        </div>
+        <div class="seq-card">
+          <div class="seq-card-top">
+            <div class="seq-card-num count-up" data-target="15" style="color:var(--paper)">0</div>
+            <div class="seq-card-tag">년+</div>
+          </div>
+          <div class="seq-card-label" style="color:var(--ink-500)">지도 경력</div>
         </div>
       </div>
-      <div class="stat-row">
-        <div class="stat-card">
-          <div class="stat-top">
-            <div>
-              <div class="stat-num count-up" data-target="98">0</div>
-              <div class="stat-label" style="margin-top:0.3rem">성적 향상률 %</div>
-            </div>
-            <div class="stat-icon-wrap">📊</div>
-          </div>
+      <div class="seq-card">
+        <div class="seq-card-top">
+          <div class="seq-card-num count-up" data-target="500" style="color:var(--paper)">0</div>
+          <div class="seq-card-tag">명+</div>
         </div>
-        <div class="stat-card">
-          <div class="stat-top">
-            <div>
-              <div class="stat-num count-up" data-target="15">0</div>
-              <div class="stat-label" style="margin-top:0.3rem">지도 경력 년+</div>
-            </div>
-            <div class="stat-icon-wrap">🏆</div>
-          </div>
-        </div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-top">
-          <div>
-            <div class="stat-num count-up" data-target="500">0</div>
-            <div class="stat-label" style="margin-top:0.3rem">누적 수강생 명+</div>
-          </div>
-          <div class="stat-icon-wrap">🎓</div>
-        </div>
+        <div class="seq-card-label" style="color:var(--ink-500)">누적 수강생</div>
       </div>
     </div>
   </div>
 </section>
 
-<!-- TRUST BAR -->
+<!-- ── TRUST BAR ────────────────────────────── -->
 <div class="trust-bar">
   <div class="trust-bar-inner">
-    <div class="trust-bar-item"><span>🏫</span><span>교육부 등록 교습소</span></div>
-    <div class="trust-bar-sep"></div>
-    <div class="trust-bar-item"><span>📋</span><span>매월 학습리포트 제공</span></div>
-    <div class="trust-bar-sep"></div>
-    <div class="trust-bar-item"><span>💬</span><span>카카오톡 실시간 질문</span></div>
-    <div class="trust-bar-sep"></div>
-    <div class="trust-bar-item"><span>🔄</span><span>첫 수업 만족 보장</span></div>
-    <div class="trust-bar-sep"></div>
-    <div class="trust-bar-item"><span>📱</span><span>학부모 앱 진도 공유</span></div>
+    <div class="trust-item">교육청 등록 교습소</div>
+    <div class="trust-sep"></div>
+    <div class="trust-item">매월 학습 리포트</div>
+    <div class="trust-sep"></div>
+    <div class="trust-item">녹화 강의 무제한 제공</div>
+    <div class="trust-sep"></div>
+    <div class="trust-item">1:1 진도 관리</div>
+    <div class="trust-sep"></div>
+    <div class="trust-item">첫 상담 무료</div>
   </div>
 </div>
 
-<!-- FEATURES -->
+<!-- ── FEATURES ─────────────────────────────── -->
 <section id="features">
-  <div class="section-inner">
-    <div class="section-header-row">
+  <div class="wrap">
+    <div class="features-head">
       <div>
-        <div class="section-eyebrow reveal">우리의 차별점</div>
-        <h2 class="section-title reveal reveal-delay-1">우리수학교습소가<br/>특별한 이유</h2>
+        <p class="eyebrow reveal">수업 시스템</p>
+        <h2 class="section-title reveal reveal-d1">인강 + 개별 관리의<br>완벽한 조합</h2>
       </div>
-      <p class="section-sub reveal reveal-delay-2">암기가 아닌 이해, 속도가 아닌 깊이.<br/>진짜 수학 실력은 여기서 시작됩니다.</p>
+      <p class="section-sub reveal reveal-d2">
+        녹화 강의로 시간을 유연하게,<br>
+        개별 피드백으로 성장을 확실하게.
+      </p>
     </div>
+
     <div class="features-grid">
       <div class="feature-card reveal">
-        <div class="feature-icon-wrap">🎯</div>
-        <h3>개념 완성 학습</h3>
-        <p>공식을 외우는 것이 아니라 왜 그 공식이 성립하는지 완전히 이해합니다. 개념을 내 것으로 만들어야 어떤 응용 문제도 풀 수 있습니다.</p>
-        <div class="feature-tag">개념 중심</div>
+        <div class="feature-mark">
+          <div class="seqmark md"><span class="u"></span><span class="u"></span><span class="u"></span><span class="u"></span></div>
+        </div>
+        <div class="feature-num">01 · Lecture</div>
+        <h3 class="feature-title">녹화 강의 제공</h3>
+        <p class="feature-desc">갤럭시 탭 판서 강의로 개념부터 심화까지. 언제든 반복해서 볼 수 있어 학생 페이스에 맞게 학습합니다.</p>
+        <span class="feature-tag">Video Lecture</span>
       </div>
-      <div class="feature-card reveal reveal-delay-1">
-        <div class="feature-icon-wrap">📋</div>
-        <h3>수준별 맞춤 커리큘럼</h3>
-        <p>초등부터 고등까지, 정밀한 진단 테스트로 학생의 현재 수준을 파악하고 그에 맞는 최적의 학습 경로를 설계합니다.</p>
-        <div class="feature-tag">개인 맞춤</div>
+      <div class="feature-card reveal reveal-d1">
+        <div class="feature-mark">
+          <div class="seqmark md"><span class="u"></span><span class="u"></span><span class="u"></span><span class="u"></span></div>
+        </div>
+        <div class="feature-num">02 · Manage</div>
+        <h3 class="feature-title">1:1 진도 관리</h3>
+        <p class="feature-desc">모든 학생의 취약점과 진도를 개별 파악합니다. 아무도 뒤처지지 않도록 맞춤 학습 경로를 설계합니다.</p>
+        <span class="feature-tag">Personal Track</span>
       </div>
-      <div class="feature-card reveal reveal-delay-2">
-        <div class="feature-icon-wrap">🔍</div>
-        <h3>오답 분석 & 반복 훈련</h3>
-        <p>틀린 문제에는 반드시 이유가 있습니다. 오답 패턴을 분석하고 같은 실수를 반복하지 않도록 데이터 기반 집중 훈련합니다.</p>
-        <div class="feature-tag">데이터 기반</div>
+      <div class="feature-card reveal reveal-d2">
+        <div class="feature-mark">
+          <div class="seqmark md"><span class="u"></span><span class="u"></span><span class="u"></span><span class="u"></span></div>
+        </div>
+        <div class="feature-num">03 · Test</div>
+        <h3 class="feature-title">테스트 & 오답 분석</h3>
+        <p class="feature-desc">강의마다 테스트지 제공. 오답 패턴을 분석해 같은 실수를 반복하지 않도록 집중 훈련합니다.</p>
+        <span class="feature-tag">Data Feedback</span>
       </div>
-      <div class="feature-card reveal reveal-delay-3">
-        <div class="feature-icon-wrap">📊</div>
-        <h3>정기 학부모 소통</h3>
-        <p>매월 학습 리포트를 제공하고 정기 상담을 진행합니다. 학생·학부모·선생님이 함께 목표를 향해 나아갑니다.</p>
-        <div class="feature-tag">투명한 소통</div>
+      <div class="feature-card reveal reveal-d3">
+        <div class="feature-mark">
+          <div class="seqmark md"><span class="u"></span><span class="u"></span><span class="u"></span><span class="u"></span></div>
+        </div>
+        <div class="feature-num">04 · Report</div>
+        <h3 class="feature-title">월간 성장 리포트</h3>
+        <p class="feature-desc">출결·테스트·숙제 현황을 매월 투명하게 공유합니다. 학부모님이 아이의 성장을 직접 확인합니다.</p>
+        <span class="feature-tag">Monthly Report</span>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ABOUT -->
+<!-- ── ABOUT ─────────────────────────────────── -->
 <section id="about">
-  <div class="section-inner">
+  <div class="wrap">
     <div class="about-layout">
-      <div class="about-image-wrap reveal">
-        <div class="about-image-box">
-          <span style="position:relative;z-index:1">👨‍🏫</span>
-          <div class="about-image-badge">
-            <strong>15+</strong>
-            <span>년 경력</span>
+      <!-- 왼쪽 — 철학 카드 -->
+      <div class="about-visual grid-bg-dark reveal">
+        <div class="about-visual-inner">
+          <p class="about-visual-label">시퀀스 수학의 철학</p>
+          <h3 class="about-philosophy">
+            속도보다 <span class="hl">방향</span>,<br>
+            방향보다 <span class="hl">꾸준함</span>
+          </h3>
+          <div class="seq-list">
+            <div class="seq-list-item">
+              <span class="seq-list-term">a₁</span>
+              <span>매 수업 개념을 정확히 이해하고 넘어갑니다</span>
+            </div>
+            <div class="seq-list-item">
+              <span class="seq-list-term">a₂</span>
+              <span>이해한 개념을 테스트로 즉시 검증합니다</span>
+            </div>
+            <div class="seq-list-item">
+              <span class="seq-list-term">a₃</span>
+              <span>틀린 문제는 반드시 재도전해 완성합니다</span>
+            </div>
+            <div class="seq-list-item">
+              <span class="seq-list-term">aₙ</span>
+              <span>꾸준한 누적이 시험 성적으로 수렴합니다</span>
+            </div>
           </div>
         </div>
       </div>
+
+      <!-- 오른쪽 — 소개 텍스트 -->
       <div class="about-content">
-        <div class="section-eyebrow reveal">강사 소개</div>
-        <h2 class="section-title reveal reveal-delay-1">수학을 두려워하는<br/>학생을 위한 선생님</h2>
-        <p class="section-sub reveal reveal-delay-2" style="margin-bottom:0">
-          수학이 어렵다고 느끼는 학생일수록, 더 섬세한 설명과 더 많은 시간이 필요합니다.
-          15년간의 경험으로 쌓은 노하우로 모든 학생이 수학의 즐거움을 발견할 수 있도록 돕겠습니다.
+        <p class="eyebrow reveal">원장 소개</p>
+        <h2 class="section-title reveal reveal-d1">
+          수학을 두려워하는<br>학생을 위한 선생님
+        </h2>
+        <p class="section-sub reveal reveal-d2" style="margin-bottom:40px">
+          단순히 문제 푸는 법이 아닌, 왜 이 개념이 필요한지를 학생 스스로 납득할 때까지 함께합니다. 15년의 경험으로 쌓은 노하우로 모든 학생이 수학의 즐거움을 발견하도록 돕겠습니다.
         </p>
-        <ul class="about-list reveal reveal-delay-3">
-          <li>
-            <div class="about-list-icon">🎓</div>
-            <div><strong>학력 · 자격</strong>수학교육학과 졸업 · 중등수학 정교사 2급 자격증 보유</div>
+
+        <ul class="about-list reveal reveal-d3">
+          <li class="about-list-item">
+            <div class="about-list-icon">
+              <div class="seqmark sm"><span class="u"></span><span class="u"></span><span class="u"></span><span class="u"></span></div>
+            </div>
+            <div>
+              <strong>학력 · 자격</strong>
+              수학교육학과 졸업 · 중등수학 정교사 2급 자격증
+            </div>
           </li>
-          <li>
-            <div class="about-list-icon">📚</div>
-            <div><strong>지도 경력</strong>학원 수석강사 8년 · 개인 과외 7년 · 누적 수강생 500명 이상</div>
+          <li class="about-list-item">
+            <div class="about-list-icon">
+              <div class="seqmark sm"><span class="u"></span><span class="u"></span><span class="u"></span><span class="u"></span></div>
+            </div>
+            <div>
+              <strong>지도 경력</strong>
+              학원 수석강사 8년 · 개인 과외 7년 · 누적 수강생 500명+
+            </div>
           </li>
-          <li>
-            <div class="about-list-icon">🏆</div>
-            <div><strong>지도 성과</strong>수능 수학 1등급 배출 다수 · 내신 평균 2등급 이상 향상</div>
+          <li class="about-list-item">
+            <div class="about-list-icon">
+              <div class="seqmark sm"><span class="u"></span><span class="u"></span><span class="u"></span><span class="u"></span></div>
+            </div>
+            <div>
+              <strong>지도 성과</strong>
+              수능 수학 1등급 다수 배출 · 내신 평균 2등급 이상 향상
+            </div>
           </li>
-          <li>
-            <div class="about-list-icon">💡</div>
-            <div><strong>교육 철학</strong>정답을 찾는 방법이 아닌, 문제를 이해하는 눈을 키워드립니다</div>
+          <li class="about-list-item">
+            <div class="about-list-icon">
+              <div class="seqmark sm"><span class="u"></span><span class="u"></span><span class="u"></span><span class="u"></span></div>
+            </div>
+            <div>
+              <strong>교육 철학</strong>
+              정답을 찾는 방법이 아닌, 문제를 이해하는 눈을 키워드립니다
+            </div>
           </li>
         </ul>
-        <a href="#contact" class="btn-primary reveal reveal-delay-4" style="display:inline-flex">상담 예약하기 →</a>
+
+        <a href="#contact" class="btn-fill reveal reveal-d4">상담 예약하기 →</a>
       </div>
     </div>
   </div>
 </section>
 
-<!-- CURRICULUM -->
+<!-- ── CURRICULUM ────────────────────────────── -->
 <section id="curriculum">
-  <div class="section-inner">
-    <div class="section-eyebrow reveal">수업 과정</div>
-    <h2 class="section-title reveal reveal-delay-1">체계적인 수학 커리큘럼</h2>
-    <p class="section-sub reveal reveal-delay-2">학년과 목표에 맞게 설계된 단계별 학습 과정으로, 수학의 전 영역을 빠짐없이 다룹니다.</p>
+  <div class="wrap">
+    <div class="curriculum-head">
+      <p class="eyebrow reveal">수업 과정</p>
+      <h2 class="section-title reveal reveal-d1">체계적인 수학 커리큘럼</h2>
+      <p class="section-sub reveal reveal-d2" style="margin-top:12px">학년과 목표에 맞게 설계된 단계별 학습 과정으로, 수학 전 영역을 빠짐없이 다룹니다.</p>
+    </div>
 
-    <div class="curriculum-tabs reveal reveal-delay-3">
+    <div class="curriculum-tabs reveal reveal-d3">
       <button class="tab-btn active" data-tab="all">전체</button>
       <button class="tab-btn" data-tab="elem">초등</button>
       <button class="tab-btn" data-tab="mid">중학교</button>
       <button class="tab-btn" data-tab="high">고등학교</button>
     </div>
 
-    <div class="curriculum-panel active curriculum-grid" data-panel="all">
-      <div class="curriculum-card reveal">
+    <!-- 전체 -->
+    <div class="curriculum-panel active" data-panel="all">
+      <div class="curr-card reveal">
         <div class="curr-head"><div class="curr-grade">초등 1–3</div><div class="curr-badge">기초</div></div>
         <h4>수와 연산 기초</h4>
         <p>수 감각 형성, 사칙연산의 원리, 기초 도형 이해</p>
         <div class="curr-tags"><span class="curr-tag">자연수</span><span class="curr-tag">덧셈·뺄셈</span><span class="curr-tag">곱셈·나눗셈</span></div>
       </div>
-      <div class="curriculum-card reveal reveal-delay-1">
+      <div class="curr-card reveal reveal-d1">
         <div class="curr-head"><div class="curr-grade">초등 4–6</div><div class="curr-badge">기본</div></div>
         <h4>분수·소수와 도형</h4>
-        <p>분수와 소수 연산, 비례, 기초 도형의 넓이·부피</p>
+        <p>분수와 소수 연산, 비례, 기초 도형 넓이·부피</p>
         <div class="curr-tags"><span class="curr-tag">분수</span><span class="curr-tag">소수</span><span class="curr-tag">비례</span></div>
       </div>
-      <div class="curriculum-card reveal reveal-delay-2">
-        <div class="curr-head"><div class="curr-grade">중1–2</div><div class="curr-badge">기본</div></div>
+      <div class="curr-card reveal reveal-d2">
+        <div class="curr-head"><div class="curr-grade">중 1–2</div><div class="curr-badge">기본</div></div>
         <h4>중학 수학 기본</h4>
         <p>정수·유리수, 일차방정식, 함수, 통계 입문</p>
         <div class="curr-tags"><span class="curr-tag">정수</span><span class="curr-tag">방정식</span><span class="curr-tag">함수</span></div>
       </div>
-      <div class="curriculum-card reveal reveal-delay-3">
-        <div class="curr-head"><div class="curr-grade">중3</div><div class="curr-badge">심화</div></div>
+      <div class="curr-card reveal reveal-d3">
+        <div class="curr-head"><div class="curr-grade">중 3</div><div class="curr-badge">심화</div></div>
         <h4>중학 심화 · 고등 준비</h4>
-        <p>이차방정식, 이차함수, 피타고라스 정리, 삼각비</p>
+        <p>이차방정식, 이차함수, 피타고라스, 삼각비</p>
         <div class="curr-tags"><span class="curr-tag">이차방정식</span><span class="curr-tag">이차함수</span><span class="curr-tag">피타고라스</span></div>
       </div>
-      <div class="curriculum-card reveal">
-        <div class="curr-head"><div class="curr-grade">고1</div><div class="curr-badge">기본</div></div>
+      <div class="curr-card reveal">
+        <div class="curr-head"><div class="curr-grade">고 1</div><div class="curr-badge">기본</div></div>
         <h4>수학 (상·하)</h4>
-        <p>다항식, 방정식과 부등식, 도형의 방정식, 집합</p>
+        <p>다항식, 방정식·부등식, 도형의 방정식, 집합</p>
         <div class="curr-tags"><span class="curr-tag">다항식</span><span class="curr-tag">부등식</span><span class="curr-tag">도형</span></div>
       </div>
-      <div class="curriculum-card reveal reveal-delay-1">
-        <div class="curr-head"><div class="curr-grade">고2</div><div class="curr-badge">심화</div></div>
-        <h4>수학 I · II</h4>
+      <div class="curr-card reveal reveal-d1">
+        <div class="curr-head"><div class="curr-grade">고 2</div><div class="curr-badge">심화</div></div>
+        <h4>수학 Ⅰ · Ⅱ</h4>
         <p>지수·로그함수, 삼각함수, 수열, 미적분 기초</p>
         <div class="curr-tags"><span class="curr-tag">지수·로그</span><span class="curr-tag">삼각함수</span><span class="curr-tag">수열</span></div>
       </div>
-      <div class="curriculum-card reveal reveal-delay-2">
-        <div class="curr-head"><div class="curr-grade">고3</div><div class="curr-badge">🔥 수능</div></div>
+      <div class="curr-card reveal reveal-d2">
+        <div class="curr-head"><div class="curr-grade">고 3</div><div class="curr-badge">수능</div></div>
         <h4>수능 대비 완성</h4>
-        <p>미적분·확률과 통계·기하, 수능 기출 완전 분석</p>
+        <p>미적분·확률통계·기하, 수능 기출 완전 분석</p>
         <div class="curr-tags"><span class="curr-tag">미적분</span><span class="curr-tag">확률통계</span><span class="curr-tag">기출분석</span></div>
       </div>
-      <div class="curriculum-card reveal reveal-delay-3">
-        <div class="curr-head"><div class="curr-grade">내신특강</div><div class="curr-badge">⚡ 단기</div></div>
+      <div class="curr-card reveal reveal-d3">
+        <div class="curr-head"><div class="curr-grade">내신특강</div><div class="curr-badge">단기</div></div>
         <h4>내신 집중 특강</h4>
         <p>시험 4–6주 전 집중 대비, 학교별 출제 경향 분석</p>
         <div class="curr-tags"><span class="curr-tag">시험대비</span><span class="curr-tag">집중수업</span><span class="curr-tag">오답풀이</span></div>
       </div>
     </div>
 
-    <div class="curriculum-panel curriculum-grid" data-panel="elem">
-      <div class="curriculum-card">
-        <div class="curr-head"><div class="curr-grade">초등 1–3</div><div class="curr-badge">기초</div></div>
-        <h4>수와 연산 기초</h4>
-        <p>수 감각 형성, 사칙연산의 원리, 기초 도형 이해</p>
-        <div class="curr-tags"><span class="curr-tag">자연수</span><span class="curr-tag">덧셈·뺄셈</span><span class="curr-tag">곱셈·나눗셈</span></div>
-      </div>
-      <div class="curriculum-card">
-        <div class="curr-head"><div class="curr-grade">초등 4–6</div><div class="curr-badge">기본</div></div>
-        <h4>분수·소수와 도형</h4>
-        <p>분수와 소수 연산, 비례, 기초 도형의 넓이·부피</p>
-        <div class="curr-tags"><span class="curr-tag">분수</span><span class="curr-tag">소수</span><span class="curr-tag">비례</span></div>
-      </div>
+    <!-- 초등 -->
+    <div class="curriculum-panel" data-panel="elem">
+      <div class="curr-card"><div class="curr-head"><div class="curr-grade">초등 1–3</div><div class="curr-badge">기초</div></div><h4>수와 연산 기초</h4><p>수 감각 형성, 사칙연산의 원리, 기초 도형 이해</p><div class="curr-tags"><span class="curr-tag">자연수</span><span class="curr-tag">덧셈·뺄셈</span><span class="curr-tag">곱셈·나눗셈</span></div></div>
+      <div class="curr-card"><div class="curr-head"><div class="curr-grade">초등 4–6</div><div class="curr-badge">기본</div></div><h4>분수·소수와 도형</h4><p>분수와 소수 연산, 비례, 기초 도형 넓이·부피</p><div class="curr-tags"><span class="curr-tag">분수</span><span class="curr-tag">소수</span><span class="curr-tag">비례</span></div></div>
     </div>
 
-    <div class="curriculum-panel curriculum-grid" data-panel="mid">
-      <div class="curriculum-card">
-        <div class="curr-head"><div class="curr-grade">중1–2</div><div class="curr-badge">기본</div></div>
-        <h4>중학 수학 기본</h4>
-        <p>정수·유리수, 일차방정식, 함수, 통계 입문</p>
-        <div class="curr-tags"><span class="curr-tag">정수</span><span class="curr-tag">방정식</span><span class="curr-tag">함수</span></div>
-      </div>
-      <div class="curriculum-card">
-        <div class="curr-head"><div class="curr-grade">중3</div><div class="curr-badge">심화</div></div>
-        <h4>중학 심화 · 고등 준비</h4>
-        <p>이차방정식, 이차함수, 피타고라스 정리, 삼각비</p>
-        <div class="curr-tags"><span class="curr-tag">이차방정식</span><span class="curr-tag">이차함수</span><span class="curr-tag">피타고라스</span></div>
-      </div>
+    <!-- 중학교 -->
+    <div class="curriculum-panel" data-panel="mid">
+      <div class="curr-card"><div class="curr-head"><div class="curr-grade">중 1–2</div><div class="curr-badge">기본</div></div><h4>중학 수학 기본</h4><p>정수·유리수, 일차방정식, 함수, 통계 입문</p><div class="curr-tags"><span class="curr-tag">정수</span><span class="curr-tag">방정식</span><span class="curr-tag">함수</span></div></div>
+      <div class="curr-card"><div class="curr-head"><div class="curr-grade">중 3</div><div class="curr-badge">심화</div></div><h4>중학 심화 · 고등 준비</h4><p>이차방정식, 이차함수, 피타고라스, 삼각비</p><div class="curr-tags"><span class="curr-tag">이차방정식</span><span class="curr-tag">이차함수</span><span class="curr-tag">피타고라스</span></div></div>
     </div>
 
-    <div class="curriculum-panel curriculum-grid" data-panel="high">
-      <div class="curriculum-card">
-        <div class="curr-head"><div class="curr-grade">고1</div><div class="curr-badge">기본</div></div>
-        <h4>수학 (상·하)</h4>
-        <p>다항식, 방정식과 부등식, 도형의 방정식, 집합</p>
-        <div class="curr-tags"><span class="curr-tag">다항식</span><span class="curr-tag">부등식</span><span class="curr-tag">도형</span></div>
+    <!-- 고등학교 -->
+    <div class="curriculum-panel" data-panel="high">
+      <div class="curr-card"><div class="curr-head"><div class="curr-grade">고 1</div><div class="curr-badge">기본</div></div><h4>수학 (상·하)</h4><p>다항식, 방정식·부등식, 도형의 방정식, 집합</p><div class="curr-tags"><span class="curr-tag">다항식</span><span class="curr-tag">부등식</span><span class="curr-tag">도형</span></div></div>
+      <div class="curr-card"><div class="curr-head"><div class="curr-grade">고 2</div><div class="curr-badge">심화</div></div><h4>수학 Ⅰ · Ⅱ</h4><p>지수·로그함수, 삼각함수, 수열, 미적분 기초</p><div class="curr-tags"><span class="curr-tag">지수·로그</span><span class="curr-tag">삼각함수</span><span class="curr-tag">수열</span></div></div>
+      <div class="curr-card"><div class="curr-head"><div class="curr-grade">고 3</div><div class="curr-badge">수능</div></div><h4>수능 대비 완성</h4><p>미적분·확률통계·기하, 수능 기출 완전 분석</p><div class="curr-tags"><span class="curr-tag">미적분</span><span class="curr-tag">확률통계</span><span class="curr-tag">기출분석</span></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ── PROCESS ────────────────────────────────── -->
+<section id="process" class="grid-bg-dark">
+  <div class="wrap">
+    <div class="process-head">
+      <p class="eyebrow reveal">학습 흐름</p>
+      <h2 class="section-title reveal reveal-d1">입학부터 목표 달성까지</h2>
+      <p class="section-sub reveal reveal-d2">처음 오시는 분도 걱정 없습니다. 5단계로 함께합니다.</p>
+    </div>
+
+    <div class="process-steps reveal reveal-d3">
+      <div class="process-step">
+        <div class="step-num">01</div>
+        <h3 class="step-title">무료 상담</h3>
+        <p class="step-desc">현재 수준과 목표를 파악하는 첫 번째 단계. 부담 없이 연락 주세요.</p>
       </div>
-      <div class="curriculum-card">
-        <div class="curr-head"><div class="curr-grade">고2</div><div class="curr-badge">심화</div></div>
-        <h4>수학 I · II</h4>
-        <p>지수·로그함수, 삼각함수, 수열, 미적분 기초</p>
-        <div class="curr-tags"><span class="curr-tag">지수·로그</span><span class="curr-tag">삼각함수</span><span class="curr-tag">수열</span></div>
+      <div class="process-step">
+        <div class="step-num">02</div>
+        <h3 class="step-title">수준 진단</h3>
+        <p class="step-desc">진단 테스트로 출발점과 취약 단원을 정확히 파악합니다.</p>
       </div>
-      <div class="curriculum-card">
-        <div class="curr-head"><div class="curr-grade">고3</div><div class="curr-badge">🔥 수능</div></div>
-        <h4>수능 대비 완성</h4>
-        <p>미적분·확률과 통계·기하, 수능 기출 완전 분석</p>
-        <div class="curr-tags"><span class="curr-tag">미적분</span><span class="curr-tag">확률통계</span><span class="curr-tag">기출분석</span></div>
+      <div class="process-step">
+        <div class="step-num">03</div>
+        <h3 class="step-title">학습 설계</h3>
+        <p class="step-desc">개인 맞춤 커리큘럼과 월별 학습 일정을 함께 계획합니다.</p>
+      </div>
+      <div class="process-step">
+        <div class="step-num">04</div>
+        <h3 class="step-title">집중 수업</h3>
+        <p class="step-desc">개념 → 유형 → 심화 순으로 탄탄하게 실력을 쌓아갑니다.</p>
+      </div>
+      <div class="process-step">
+        <div class="step-num">05</div>
+        <h3 class="step-title">목표 달성</h3>
+        <p class="step-desc">성적 향상과 수학 자신감, 두 가지를 함께 얻습니다.</p>
       </div>
     </div>
   </div>
 </section>
 
-<!-- PROCESS -->
-<section id="process">
-  <div class="section-inner" style="position:relative;z-index:1">
-    <div class="section-eyebrow reveal" style="color:var(--orange)">학습 흐름</div>
-    <h2 class="section-title light reveal reveal-delay-1">입학부터 목표 달성까지</h2>
-    <p class="section-sub light reveal reveal-delay-2">처음 오시는 분도 걱정 없습니다. 5단계로 함께합니다.</p>
-    <div style="position:relative">
-      <div class="process-connector"></div>
-      <div class="process-steps reveal reveal-delay-3">
-        <div class="process-step">
-          <div class="step-num">1</div>
-          <div class="step-circle">📞</div>
-          <h3>무료 상담</h3>
-          <p>현재 수준과 목표를 파악하는 첫 번째 단계. 부담 없이 연락 주세요.</p>
-        </div>
-        <div class="process-step">
-          <div class="step-num">2</div>
-          <div class="step-circle">📝</div>
-          <h3>수준 진단</h3>
-          <p>진단 테스트로 정확한 출발점과 취약 단원을 파악합니다.</p>
-        </div>
-        <div class="process-step">
-          <div class="step-num">3</div>
-          <div class="step-circle">🗺️</div>
-          <h3>학습 설계</h3>
-          <p>개인 맞춤 커리큘럼과 월별 학습 일정을 함께 계획합니다.</p>
-        </div>
-        <div class="process-step">
-          <div class="step-num">4</div>
-          <div class="step-circle">📚</div>
-          <h3>집중 수업</h3>
-          <p>개념 → 유형 → 심화 순으로 탄탄하게 실력을 쌓아갑니다.</p>
-        </div>
-        <div class="process-step">
-          <div class="step-num">5</div>
-          <div class="step-circle">🏆</div>
-          <h3>목표 달성</h3>
-          <p>성적 향상과 수학 자신감, 두 가지를 함께 얻습니다.</p>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- RESULTS -->
+<!-- ── RESULTS ────────────────────────────────── -->
 <section id="results">
-  <div class="section-inner">
-    <div class="section-eyebrow reveal">성과</div>
-    <h2 class="section-title reveal reveal-delay-1">숫자로 증명합니다</h2>
-    <p class="section-sub reveal reveal-delay-2">우리수학교습소 학생들의 실제 성과입니다.</p>
-    <div class="results-numbers reveal reveal-delay-3">
-      <div class="result-num-item">
-        <div class="result-big"><span class="count-up" data-target="98">0</span><span>%</span></div>
-        <div class="result-label">수강생 성적 향상률</div>
+  <div class="wrap">
+    <p class="eyebrow reveal">성과</p>
+    <h2 class="section-title reveal reveal-d1">숫자로 증명합니다</h2>
+    <p class="section-sub reveal reveal-d2">시퀀스 수학 학생들의 실제 성과입니다.</p>
+
+    <div class="results-grid reveal reveal-d3">
+      <div class="result-item">
+        <div class="result-big"><span class="count-up" data-target="98">0</span><span class="unit">%</span></div>
+        <div class="result-label">성적 향상률</div>
       </div>
-      <div class="result-num-item">
-        <div class="result-big"><span class="count-up" data-target="500">0</span><span>+</span></div>
+      <div class="result-item">
+        <div class="result-big"><span class="count-up" data-target="500">0</span><span class="unit">+</span></div>
         <div class="result-label">누적 수강생</div>
       </div>
-      <div class="result-num-item">
-        <div class="result-big"><span class="count-up" data-target="15">0</span><span>년+</span></div>
-        <div class="result-label">수학 전문 지도 경력</div>
+      <div class="result-item">
+        <div class="result-big"><span class="count-up" data-target="15">0</span><span class="unit">년+</span></div>
+        <div class="result-label">수학 전문 지도</div>
       </div>
-      <div class="result-num-item">
+      <div class="result-item">
         <div class="result-big"><span class="count-up-dec" data-target="4.9">0</span></div>
-        <div class="result-label">평균 후기 점수 (/5)</div>
+        <div class="result-label">평균 후기 점수</div>
       </div>
     </div>
   </div>
 </section>
 
-<!-- TESTIMONIALS -->
+<!-- ── TESTIMONIALS ──────────────────────────── -->
 <section id="testimonials">
-  <div class="section-inner">
-    <div class="section-eyebrow reveal">수강 후기</div>
-    <h2 class="section-title reveal reveal-delay-1">학생과 학부모의 이야기</h2>
-    <p class="section-sub reveal reveal-delay-2">우리수학교습소에서의 변화를 직접 들어보세요.</p>
+  <div class="wrap">
+    <p class="eyebrow reveal">수강 후기</p>
+    <h2 class="section-title reveal reveal-d1">학생과 학부모의 이야기</h2>
+    <p class="section-sub reveal reveal-d2">시퀀스 수학에서의 변화를 직접 들어보세요.</p>
+
     <div class="testimonials-grid">
       <div class="testimonial-card reveal">
-        <div class="testimonial-stars"><span>★</span><span>★</span><span>★</span><span>★</span><span>★</span></div>
-        <blockquote>"수학을 완전히 포기했었는데, 개념부터 다시 잡아주시니까 지금은 제가 제일 좋아하는 과목이 됐어요. 내신도 3등급이 올랐습니다. 선생님께서 포기하지 않고 끝까지 같이 해주셔서 너무 감사해요."</blockquote>
-        <div class="testimonial-foot">
-          <div class="testimonial-avatar">👦</div>
+        <div class="t-stars">★ ★ ★ ★ ★</div>
+        <div class="t-quote">
+          <p>"수학을 완전히 포기했었는데, 개념부터 다시 잡아주시니까 지금은 제가 제일 좋아하는 과목이 됐어요. 내신도 3등급이 올랐습니다. 선생님께서 포기하지 않고 끝까지 함께해 주셔서 너무 감사해요."</p>
+        </div>
+        <div class="t-foot">
+          <div class="t-avatar"><div class="seqmark sm inv"><span class="u"></span><span class="u"></span><span class="u"></span><span class="u"></span></div></div>
           <div>
-            <div class="testimonial-author">김○○ 학생</div>
-            <div class="testimonial-role">고등학교 2학년</div>
+            <div class="t-author">김○○ 학생</div>
+            <div class="t-role">고등학교 2학년</div>
           </div>
-          <div class="testimonial-chip">3등급 ↑</div>
+          <span class="t-chip">3등급 ↑</span>
         </div>
       </div>
-      <div class="testimonial-card reveal reveal-delay-1">
-        <div class="testimonial-stars"><span>★</span><span>★</span><span>★</span><span>★</span><span>★</span></div>
-        <blockquote>"아이가 수학을 무서워했는데 3개월 만에 '수학 재밌어!'라고 하더라고요. 선생님께서 아이 페이스에 맞춰 천천히 설명해 주신 덕분입니다. 다음 학기도 계속 다닐 예정입니다."</blockquote>
-        <div class="testimonial-foot">
-          <div class="testimonial-avatar">👩</div>
+
+      <div class="testimonial-card reveal reveal-d1">
+        <div class="t-stars">★ ★ ★ ★ ★</div>
+        <div class="t-quote">
+          <p>"아이가 수학을 무서워했는데 3개월 만에 '수학 재밌어!'라고 하더라고요. 선생님께서 아이 페이스에 맞춰 천천히 설명해 주신 덕분입니다. 다음 학기도 계속 다닐 예정입니다."</p>
+        </div>
+        <div class="t-foot">
+          <div class="t-avatar"><div class="seqmark sm inv"><span class="u"></span><span class="u"></span><span class="u"></span><span class="u"></span></div></div>
           <div>
-            <div class="testimonial-author">박○○님</div>
-            <div class="testimonial-role">초등 5학년 학부모</div>
+            <div class="t-author">박○○님</div>
+            <div class="t-role">초등 5학년 학부모</div>
           </div>
-          <div class="testimonial-chip">자신감 ↑</div>
+          <span class="t-chip">자신감 ↑</span>
         </div>
       </div>
-      <div class="testimonial-card reveal reveal-delay-2">
-        <div class="testimonial-stars"><span>★</span><span>★</span><span>★</span><span>★</span><span>★</span></div>
-        <blockquote>"오답 분석을 꼼꼼히 해주셔서 제가 어디서 막히는지 정확히 알게 됐어요. 고3 때 수능 수학 1등급 받았습니다! 정말 우리수학 아니었으면 못 했을 것 같아요."</blockquote>
-        <div class="testimonial-foot">
-          <div class="testimonial-avatar">👧</div>
+
+      <div class="testimonial-card reveal reveal-d2">
+        <div class="t-stars">★ ★ ★ ★ ★</div>
+        <div class="t-quote">
+          <p>"오답 분석을 꼼꼼히 해주셔서 제가 어디서 막히는지 정확히 알게 됐어요. 고3 때 수능 수학 1등급 받았습니다! 정말 시퀀스 수학 아니었으면 못 했을 것 같아요."</p>
+        </div>
+        <div class="t-foot">
+          <div class="t-avatar"><div class="seqmark sm inv"><span class="u"></span><span class="u"></span><span class="u"></span><span class="u"></span></div></div>
           <div>
-            <div class="testimonial-author">이○○ 학생</div>
-            <div class="testimonial-role">고등학교 3학년 졸업</div>
+            <div class="t-author">이○○ 학생</div>
+            <div class="t-role">고등학교 3학년 졸업</div>
           </div>
-          <div class="testimonial-chip">수능 1등급</div>
+          <span class="t-chip">수능 1등급</span>
         </div>
       </div>
     </div>
   </div>
 </section>
 
-<!-- CTA BAND -->
-<div class="cta-band">
+<!-- ── CTA BAND ──────────────────────────────── -->
+<div class="cta-band grid-bg-dark">
   <div class="cta-band-inner">
     <div>
       <h2>지금 바로 무료 상담을 신청하세요</h2>
@@ -465,41 +506,52 @@
   </div>
 </div>
 
-<!-- CONTACT -->
+<!-- ── CONTACT ────────────────────────────────── -->
 <section id="contact">
-  <div class="section-inner">
+  <div class="wrap">
     <div class="contact-layout">
+      <!-- 왼쪽 -->
       <div>
-        <div class="section-eyebrow reveal">오시는 길 & 연락처</div>
-        <h2 class="section-title reveal reveal-delay-1">언제든지<br/>문의해주세요</h2>
-        <p class="section-sub reveal reveal-delay-2" style="margin-bottom:2rem">처음 상담은 무료입니다.<br/>부담 없이 연락 주세요.</p>
+        <p class="eyebrow reveal">오시는 길 · 연락처</p>
+        <h2 class="section-title reveal reveal-d1">언제든지<br>문의해주세요</h2>
+        <p class="section-sub reveal reveal-d2" style="margin-bottom:32px">처음 상담은 무료입니다. 부담 없이 연락 주세요.</p>
+
         <div class="contact-detail reveal">
           <div class="contact-icon">📍</div>
-          <div><h4>위치</h4><p>경기도 수원시 ○○구 ○○로 123<br/>○○빌딩 3층</p></div>
+          <div>
+            <h4>위치</h4>
+            <p>경기도 수원시 ○○구 ○○로 123<br>○○빌딩 3층</p>
+          </div>
         </div>
-        <div class="contact-detail reveal reveal-delay-1">
+        <div class="contact-detail reveal reveal-d1">
           <div class="contact-icon">📞</div>
-          <div><h4>전화</h4><p>031-000-0000</p></div>
+          <div>
+            <h4>전화</h4>
+            <p>031-000-0000</p>
+          </div>
         </div>
-        <div class="contact-detail reveal reveal-delay-2">
+        <div class="contact-detail reveal reveal-d2">
           <div class="contact-icon">🕐</div>
-          <div><h4>운영시간</h4><p>월–금 14:00 – 22:00<br/>토요일 10:00 – 18:00 · 일요일 휴무</p></div>
+          <div>
+            <h4>운영시간</h4>
+            <p>월–금 14:00 – 22:00<br>토요일 10:00 – 18:00 · 일요일 휴무</p>
+          </div>
         </div>
-        <div class="contact-detail reveal reveal-delay-3">
+        <div class="contact-detail reveal reveal-d3">
           <div class="contact-icon">💬</div>
-          <div><h4>카카오톡 채널</h4><p>@우리수학교습소<br/><span style="font-size:0.8rem;color:var(--text-light)">평일 09:00 – 22:00 운영</span></p></div>
-        </div>
-        <div class="contact-map reveal">
-          <span style="position:relative;z-index:1;font-size:0.82rem;color:rgba(255,255,255,0.35);margin-bottom:3rem">경기도 수원시</span>
+          <div>
+            <h4>카카오톡 채널</h4>
+            <p>@시퀀스수학</p>
+          </div>
         </div>
       </div>
 
+      <!-- 오른쪽 — 폼 -->
       <div class="contact-form-card reveal">
         <div class="form-header">
-          <div class="form-header-icon">✉️</div>
           <h3>상담 신청하기</h3>
+          <p>24시간 이내에 연락드립니다</p>
         </div>
-        <p class="form-subtitle">24시간 이내에 연락드립니다.</p>
         <div class="form-row">
           <div class="form-group">
             <label>학생 이름</label>
@@ -532,60 +584,58 @@
           <span>상담 신청 보내기</span>
           <span>→</span>
         </button>
-        <p class="form-note">🔒 개인정보는 상담 목적으로만 사용됩니다.</p>
+        <p class="form-note">🔒 개인정보는 상담 목적으로만 사용됩니다</p>
       </div>
     </div>
   </div>
 </section>
 
-<!-- FOOTER -->
+<!-- ── FOOTER ──────────────────────────────────── -->
 <footer>
   <div class="footer-inner">
     <div class="footer-top">
       <div class="footer-brand">
-        <a href="#home" class="nav-logo">
-          <div class="nav-logo-mark">✦</div>
-          우리<span>수학</span>교습소
+        <a href="#home" style="display:flex;align-items:center;gap:12px;color:var(--paper)">
+          <div class="seqmark md inv"><span class="u"></span><span class="u"></span><span class="u"></span><span class="u"></span></div>
+          <div>
+            <div style="font-size:16px;font-weight:800;letter-spacing:-0.03em">시퀀스 수학</div>
+            <div style="font-family:var(--font-mono);font-size:9px;letter-spacing:0.3em;text-transform:uppercase;color:var(--ink-600);margin-top:2px">Sequence Math</div>
+          </div>
         </a>
-        <p>개념의 뿌리부터 심화까지, 모든 학생이 수학의 자신감을 가질 수 있도록 함께합니다.</p>
+        <p>속도보다 방향, 방향보다 꾸준함. 매일의 한 항이 결과로 수렴합니다.</p>
       </div>
       <div>
-        <p class="footer-links-title">메뉴</p>
+        <p class="footer-col-title">메뉴</p>
         <ul class="footer-links">
-          <li><a href="#features">특징</a></li>
-          <li><a href="#about">강사소개</a></li>
+          <li><a href="#features">수업 시스템</a></li>
+          <li><a href="#about">원장 소개</a></li>
           <li><a href="#curriculum">커리큘럼</a></li>
-          <li><a href="#process">학습과정</a></li>
+          <li><a href="#process">학습 과정</a></li>
         </ul>
       </div>
       <div>
-        <p class="footer-links-title">연락처</p>
+        <p class="footer-col-title">연락처</p>
         <ul class="footer-links">
           <li><a href="tel:031-000-0000">031-000-0000</a></li>
-          <li><a href="#">카카오톡 @우리수학교습소</a></li>
-          <li><a href="#">경기도 수원시 ○○구 ○○로 123</a></li>
-          <li><a href="#">월–금 14:00–22:00 · 토 10:00–18:00</a></li>
+          <li><a href="#">카카오톡 @시퀀스수학</a></li>
+          <li><a href="#">경기도 수원시 ○○구</a></li>
+          <li><a href="#">월–금 14:00–22:00</a></li>
         </ul>
       </div>
       <div>
-        <p class="footer-links-title">바로가기</p>
+        <p class="footer-col-title">바로가기</p>
         <ul class="footer-links">
           <li><a href="#testimonials">수강 후기</a></li>
-          <li><a href="#contact">무료 상담 신청</a></li>
+          <li><a href="#contact">무료 상담</a></li>
           <li><a href="#">네이버 블로그</a></li>
-          <li><a href="#">카카오 채널</a></li>
+          <li><a href="#">인스타그램</a></li>
         </ul>
       </div>
     </div>
     <div class="footer-bottom">
-      <div>
-        <strong style="color:rgba(255,255,255,0.5)">우리수학교습소</strong>
-        &nbsp;|&nbsp; 경기도 수원시 ○○구 ○○로 123
-        &nbsp;|&nbsp; 031-000-0000
-        &nbsp;|&nbsp; © 2025 우리수학교습소. All rights reserved.
-      </div>
+      <span>시퀀스 수학 · 경기도 수원시 ○○구 ○○로 123 · 031-000-0000 · © 2026 Sequence Math. All rights reserved.</span>
       <div class="footer-badges">
-        <span class="footer-badge">교육부 등록</span>
+        <span class="footer-badge">교육청 등록</span>
         <span class="footer-badge">정교사 자격</span>
         <span class="footer-badge">개인정보 보호</span>
       </div>
@@ -593,7 +643,7 @@
   </div>
 </footer>
 
-<!-- FLOATING BUTTONS -->
+<!-- ── 플로팅 버튼 ────────────────────────────── -->
 <div class="float-buttons">
   <a href="#" class="float-btn float-kakao" title="카카오톡 문의" aria-label="카카오톡">💬</a>
   <button class="float-btn float-top" id="scrollTopBtn" title="맨 위로" aria-label="맨 위로">↑</button>
