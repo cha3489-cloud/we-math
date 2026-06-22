@@ -171,6 +171,13 @@ ul, ol { list-style: none; }
 .reveal-d4 { transition-delay: .4s; }
 
 /* ══ SEQMARK (로고 심볼) ══════════════════════ */
+.symbol-logo {
+  height: 40px;
+  width: auto;
+  flex-shrink: 0;
+  object-fit: contain;
+}
+
 .seqmark {
   display: flex;
   align-items: flex-end;
