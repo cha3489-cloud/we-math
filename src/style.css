@@ -726,6 +726,19 @@ ul, ol { list-style: none; }
   display: grid; grid-template-columns: repeat(3, 1fr);
   gap: 2px; margin-top: 64px;
 }
+
+.kakao-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+  margin-top: 64px;
+}
+.kakao-img {
+  width: 100%;
+  border-radius: 12px;
+  box-shadow: 0 2px 16px rgba(0,0,0,0.08);
+  object-fit: cover;
+}
 .testimonial-card {
   background: var(--paper);
   padding: 40px 36px;
