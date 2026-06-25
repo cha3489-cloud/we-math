@@ -169,37 +169,21 @@ ul, ol { list-style: none; }
 .reveal-d3 { transition-delay: .3s; }
 .reveal-d4 { transition-delay: .4s; }
 
-/* ══ SEQMARK (로고 심볼) ══════════════════════ */
-.symbol-logo {
-  height: 40px;
-  width: auto;
-  flex-shrink: 0;
-  object-fit: contain;
-}
-
+/* ══ SEQMARK (CSS 계단형 심볼) ════════════════ */
 .seqmark {
-  display: flex;
-  align-items: flex-end;
-  gap: var(--sm-gap, 3px);
-  flex-shrink: 0;
+  --u: 12px; --gap: 3px;
+  display: inline-flex; align-items: flex-end; gap: var(--gap);
+  color: var(--ink-900); line-height: 0; flex-shrink: 0;
 }
-.seqmark .u {
-  background: currentColor;
-  width: var(--sm-u, 10px);
-  border-radius: 1px;
-  flex-shrink: 0;
-}
-.seqmark .u:nth-child(1) { height: calc(var(--sm-u, 10px) * 1); }
-.seqmark .u:nth-child(2) { height: calc(var(--sm-u, 10px) * 2); }
-.seqmark .u:nth-child(3) { height: calc(var(--sm-u, 10px) * 3); }
-.seqmark .u:nth-child(4) { height: calc(var(--sm-u, 10px) * 4); }
+.seqcol { display: flex; flex-direction: column-reverse; gap: var(--gap); }
+.sequnit { width: var(--u); height: var(--u); background: currentColor; border-radius: 1px; }
 
 /* 크기 변형 */
-.seqmark.sm  { --sm-u: 7px;  --sm-gap: 2px; }
-.seqmark.md  { --sm-u: 10px; --sm-gap: 3px; }
-.seqmark.lg  { --sm-u: 14px; --sm-gap: 3px; }
-.seqmark.xl  { --sm-u: 20px; --sm-gap: 4px; }
-.seqmark.hero{ --sm-u: 28px; --sm-gap: 6px; }
+.seqmark.sm   { --u: 7px;  --gap: 2px; }
+.seqmark.md   { --u: 10px; --gap: 2px; }
+.seqmark.lg   { --u: 14px; --gap: 3px; }
+.seqmark.xl   { --u: 20px; --gap: 4px; }
+.seqmark.hero { --u: 28px; --gap: 6px; }
 
 /* 반전(다크 배경용) */
 .seqmark.inv { color: var(--paper); }
