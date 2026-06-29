@@ -1,0 +1,12 @@
+User-agent: *
+Allow: /
+
+# 네이버 봇
+User-agent: Yeti
+Allow: /
+
+# 구글 봇
+User-agent: Googlebot
+Allow: /
+
+Sitemap: https://we-math.com/sitemap.xml
