@@ -436,7 +436,7 @@ ul, ol { list-style: none; }
 
 .features-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(5, 1fr);
   gap: 2px;
 }
 .feature-card {
@@ -1219,6 +1219,24 @@ footer {
 }
 .consult-card:nth-child(4) { grid-column: span 3; }
 .consult-card:nth-child(5) { grid-column: span 3; }
+.consult-card:nth-child(6) {
+  grid-column: span 6;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  background: var(--ink-050);
+  border-color: var(--ink-100);
+}
+.consult-sub-items {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  font-size: 12px;
+  color: var(--ink-500);
+  font-family: var(--font-mono);
+  letter-spacing: 0.04em;
+  margin-top: 4px;
+}
 .consult-card:hover { border-color: var(--ink-900); }
 .consult-check {
   width: 32px;
@@ -1242,6 +1260,45 @@ footer {
   line-height: 1.4;
 }
 
+/* ══ #intro (어떤 학원인가요?) ═══════════════ */
+#intro {
+  padding: 80px var(--section-px);
+  background: var(--pure);
+  border-top: 1px solid var(--ink-100);
+  border-bottom: 1px solid var(--ink-100);
+}
+.intro-box {
+  max-width: 720px;
+  margin: 0 auto;
+  text-align: center;
+}
+.intro-box .eyebrow { justify-content: center; }
+.intro-box .section-title { margin-bottom: 32px; }
+.intro-body {
+  text-align: left;
+  font-size: 16px;
+  color: var(--ink-600);
+  line-height: 1.85;
+  margin-bottom: 36px;
+}
+.intro-body p + p { margin-top: 16px; }
+.intro-body strong { color: var(--ink-900); font-weight: 700; }
+.intro-pills {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.intro-pill {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  color: var(--ink-500);
+  border: 1px solid var(--ink-100);
+  padding: 5px 12px;
+  border-radius: var(--radius-sm);
+}
+
 /* ══ 반응형 ═══════════════════════════════════ */
 @media (max-width: 900px) {
   :root { --section-py: 80px; --section-px: 28px; }
@@ -1254,6 +1311,7 @@ footer {
   .hero-right { display: none; }
 
   .features-grid { grid-template-columns: 1fr 1fr; }
+  .feature-card:nth-child(5) { grid-column: span 2; }
   .about-layout  { grid-template-columns: 1fr; }
   .about-visual  { display: none; }
 
@@ -1275,11 +1333,14 @@ footer {
   .consult-grid { grid-template-columns: 1fr; }
   .consult-card,
   .consult-card:nth-child(4),
-  .consult-card:nth-child(5) { grid-column: span 1; }
+  .consult-card:nth-child(5),
+  .consult-card:nth-child(6) { grid-column: span 1; }
+  .consult-card:nth-child(6) { flex-direction: row; align-items: center; }
 }
 
 @media (max-width: 600px) {
   .features-grid { grid-template-columns: 1fr; }
+  .feature-card:nth-child(5) { grid-column: span 1; }
   .process-steps { grid-template-columns: 1fr; }
   .results-grid  { grid-template-columns: 1fr 1fr; }
   .form-row      { grid-template-columns: 1fr; }
