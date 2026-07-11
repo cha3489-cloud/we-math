@@ -18,9 +18,13 @@ function padPin(pin) {
   return PIN_PREFIX + pin + PIN_SUFFIX;
 }
 
-export async function signUp(phone, pin) {
+export async function signUp(phone, pin, name) {
   const email = phoneToEmail(phone);
-  const { data, error } = await supabase.auth.signUp({ email, password: padPin(pin) });
+  const { data, error } = await supabase.auth.signUp({
+    email,
+    password: padPin(pin),
+    options: { data: { name } },
+  });
   if (error) throw error;
   return data;
 }
@@ -46,4 +50,14 @@ export function onAuthChange(callback) {
 export async function getUser() {
   const { data } = await supabase.auth.getUser();
   return data.user;
+}
+
+export async function getProfile(userId) {
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('name, phone')
+    .eq('id', userId)
+    .single();
+  if (error) throw error;
+  return data;
 }

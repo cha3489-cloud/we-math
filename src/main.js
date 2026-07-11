@@ -1,5 +1,5 @@
 import './style.css';
-import { signUp, signIn, signOut, onAuthChange } from './auth.js';
+import { signUp, signIn, signOut, onAuthChange, getProfile } from './auth.js';
 
 // ── Nav 스크롤 ─────────────────────────────────
 function initNav() {
@@ -211,10 +211,12 @@ function initAuth() {
 
   // 회원가입
   document.getElementById('signupSubmit').addEventListener('click', async () => {
+    const name    = document.getElementById('signupName').value.trim();
     const phone   = document.getElementById('signupPhone').value.trim();
     const pin     = document.getElementById('signupPin').value;
     const pinConf = document.getElementById('signupPinConfirm').value;
 
+    if (!name)                 { setError('signupError', '학생 이름을 입력하세요'); return; }
     if (!validatePhone(phone)) { setError('signupError', '올바른 전화번호를 입력하세요 (예: 01012345678)'); return; }
     if (!validatePin(pin))     { setError('signupError', 'PIN은 숫자 4자리여야 합니다'); return; }
     if (pin !== pinConf)       { setError('signupError', 'PIN이 일치하지 않습니다'); return; }
@@ -222,7 +224,7 @@ function initAuth() {
     const btn = document.getElementById('signupSubmit');
     btn.disabled = true; btn.textContent = '처리 중...';
     try {
-      await signUp(phone, pin);
+      await signUp(phone, pin, name);
       closeModal();
       showToast('회원가입이 완료되었습니다! 로그인해 주세요.');
       // 로그인 탭으로 전환
@@ -259,12 +261,17 @@ function initAuth() {
   });
 
   // 인증 상태 구독
-  onAuthChange(user => {
+  onAuthChange(async user => {
     if (user) {
       const phone = user.email?.split('@')[0] ?? '';
-      navAuthBtn.textContent = `${phone} ▾`;
+      let displayName = phone;
+      try {
+        const profile = await getProfile(user.id);
+        if (profile?.name) displayName = profile.name;
+      } catch { /* 프로필 조회 실패 시 전화번호로 대체 표시 */ }
+      navAuthBtn.textContent = `${displayName} ▾`;
       navAuthBtn.classList.add('logged-in');
-      dropPhone.textContent = phone + ' ';
+      dropPhone.textContent = displayName + ' ';
     } else {
       navAuthBtn.textContent = '로그인';
       navAuthBtn.classList.remove('logged-in');
