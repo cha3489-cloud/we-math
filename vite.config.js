@@ -2,7 +2,7 @@ import { defineConfig } from 'vite';
 
 export default defineConfig({
   root: '.',
-  base: '/we-math/',
+  base: './',
   build: {
     outDir: 'dist',
     emptyOutDir: true,
