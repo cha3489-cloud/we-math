@@ -72,3 +72,10 @@ export async function deleteAccount() {
   if (error) throw error;
   await supabase.auth.signOut();
 }
+
+export async function isWithdrawnPhone(phone) {
+  const cleanPhone = phone.replace(/[^0-9]/g, '');
+  const { data, error } = await supabase.rpc('is_withdrawn_phone', { p_phone: cleanPhone });
+  if (error) throw error;
+  return data;
+}

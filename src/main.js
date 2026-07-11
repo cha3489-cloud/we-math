@@ -1,5 +1,5 @@
 import './style.css';
-import { signUp, signIn, signOut, onAuthChange, getProfile, updateProfileName, deleteAccount } from './auth.js';
+import { signUp, signIn, signOut, onAuthChange, getProfile, updateProfileName, deleteAccount, isWithdrawnPhone } from './auth.js';
 
 // ── Nav 스크롤 ─────────────────────────────────
 function initNav() {
@@ -223,8 +223,20 @@ function initAuth() {
       closeModal();
       showToast('로그인되었습니다');
     } catch (err) {
-      const msg = err.message?.includes('Invalid login') ? '전화번호 또는 PIN이 올바르지 않습니다' : err.message;
-      setError('loginError', msg);
+      if (err.message?.includes('Invalid login')) {
+        let withdrawn = false;
+        try { withdrawn = await isWithdrawnPhone(phone); } catch { /* 확인 실패 시 일반 안내로 처리 */ }
+        if (withdrawn) {
+          document.querySelector('[data-auth-tab="signup"]').click();
+          document.getElementById('signupPhone').value = phone;
+          setError('signupError', '탈퇴한 계정입니다. 다시 회원가입해 주세요.');
+          showToast('탈퇴한 계정입니다. 다시 회원가입해 주세요.', 4000);
+        } else {
+          setError('loginError', '전화번호 또는 PIN이 올바르지 않습니다');
+        }
+      } else {
+        setError('loginError', err.message);
+      }
     } finally {
       btn.disabled = false; btn.textContent = '로그인';
     }
