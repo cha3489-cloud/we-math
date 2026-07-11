@@ -1258,10 +1258,10 @@ footer {
 .nav-auth-btn {
   display: flex; align-items: center; gap: 6px;
   padding: 8px 16px;
-  border: 1.5px solid var(--ink-200);
+  border: 1.5px solid var(--ink-900);
   border-radius: var(--radius-sm);
-  background: transparent;
-  color: var(--ink-700);
+  background: var(--ink-900);
+  color: var(--paper);
   font-size: 14px; font-weight: 600;
   cursor: pointer;
   transition: border-color .2s, color .2s, background .2s;
@@ -1269,11 +1269,12 @@ footer {
 }
 .nav-auth-btn:hover {
   border-color: var(--ink-700);
-  color: var(--ink-900);
+  background: var(--ink-700);
 }
 .nav-auth-btn.logged-in {
   border-color: var(--accent);
-  color: var(--accent);
+  background: var(--accent);
+  color: var(--paper);
 }
 
 .auth-overlay {
