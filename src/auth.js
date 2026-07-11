@@ -5,7 +5,7 @@ const supabase = createClient(
   import.meta.env.VITE_SUPABASE_ANON_KEY
 );
 
-const DOMAIN = '@wemath.local';
+const DOMAIN = '@wemath.kr';
 const PIN_PREFIX = 'wm';
 const PIN_SUFFIX = 'sq';
 
