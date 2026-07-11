@@ -301,6 +301,15 @@
     <li><a href="#curriculum">커리큘럼</a></li>
     <li><a href="#process">학습과정</a></li>
     <li><a href="#contact" class="nav-cta">상담 신청 →</a></li>
+    <li class="nav-auth-wrap">
+      <button class="nav-auth-btn" id="navAuthBtn">로그인</button>
+      <div class="auth-dropdown" id="authDropdown">
+        <div class="auth-dropdown-info">
+          <strong id="dropdownPhone">-</strong>로그인 중
+        </div>
+        <button class="auth-dropdown-btn danger" id="navLogoutBtn">로그아웃</button>
+      </div>
+    </li>
   </ul>
   <button class="hamburger" id="hamburger" aria-label="메뉴 열기">
     <span></span><span></span><span></span>
@@ -1173,6 +1182,53 @@
 
 <!-- TOAST -->
 <div class="toast" id="toast"></div>
+
+<!-- AUTH MODAL -->
+<div class="auth-overlay" id="authOverlay" role="dialog" aria-modal="true" aria-label="로그인/회원가입">
+  <div class="auth-modal">
+    <button class="auth-close" id="authClose" aria-label="닫기">&times;</button>
+    <p class="auth-title">시퀀스 수학</p>
+    <p class="auth-subtitle">학생 전화번호와 4자리 PIN으로 이용하세요</p>
+
+    <div class="auth-tabs">
+      <button class="auth-tab active" data-auth-tab="login">로그인</button>
+      <button class="auth-tab" data-auth-tab="signup">회원가입</button>
+    </div>
+
+    <!-- 로그인 패널 -->
+    <div class="auth-panel active" id="authPanelLogin">
+      <div class="auth-field">
+        <label for="loginPhone">학생 전화번호</label>
+        <input type="tel" id="loginPhone" placeholder="01012345678" maxlength="11" inputmode="numeric" />
+      </div>
+      <div class="auth-field">
+        <label for="loginPin">PIN (숫자 4자리)</label>
+        <input type="password" id="loginPin" placeholder="••••" maxlength="4" inputmode="numeric" />
+      </div>
+      <p class="auth-error" id="loginError"></p>
+      <button class="auth-submit" id="loginSubmit">로그인</button>
+    </div>
+
+    <!-- 회원가입 패널 -->
+    <div class="auth-panel" id="authPanelSignup">
+      <div class="auth-field">
+        <label for="signupPhone">학생 전화번호</label>
+        <input type="tel" id="signupPhone" placeholder="01012345678" maxlength="11" inputmode="numeric" />
+      </div>
+      <div class="auth-field">
+        <label for="signupPin">PIN (숫자 4자리)</label>
+        <input type="password" id="signupPin" placeholder="••••" maxlength="4" inputmode="numeric" />
+        <span class="auth-pin-hint">숫자 4자리만 사용 가능합니다</span>
+      </div>
+      <div class="auth-field">
+        <label for="signupPinConfirm">PIN 확인</label>
+        <input type="password" id="signupPinConfirm" placeholder="••••" maxlength="4" inputmode="numeric" />
+      </div>
+      <p class="auth-error" id="signupError"></p>
+      <button class="auth-submit" id="signupSubmit">회원가입</button>
+    </div>
+  </div>
+</div>
 
 <script type="module" src="/src/main.js"></script>
 </body>
