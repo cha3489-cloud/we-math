@@ -1,5 +1,5 @@
 import './style.css';
-import { signUp, signIn, signOut, onAuthChange, getProfile } from './auth.js';
+import { signUp, signIn, signOut, onAuthChange, getProfile, updateProfileName, deleteAccount } from './auth.js';
 
 // ── Nav 스크롤 ─────────────────────────────────
 function initNav() {
@@ -138,12 +138,22 @@ function initScrollTop() {
 
 // ── AUTH ────────────────────────────────────────
 function initAuth() {
-  const overlay      = document.getElementById('authOverlay');
-  const closeBtn     = document.getElementById('authClose');
-  const navAuthBtn   = document.getElementById('navAuthBtn');
-  const navLogoutBtn = document.getElementById('navLogoutBtn');
-  const dropdown     = document.getElementById('authDropdown');
-  const dropPhone    = document.getElementById('dropdownPhone');
+  const overlay        = document.getElementById('authOverlay');
+  const closeBtn       = document.getElementById('authClose');
+  const navAuthBtn     = document.getElementById('navAuthBtn');
+  const navLogoutBtn   = document.getElementById('navLogoutBtn');
+  const navMypageBtn   = document.getElementById('navMypageBtn');
+  const dropdown       = document.getElementById('authDropdown');
+  const dropPhone      = document.getElementById('dropdownPhone');
+
+  const mypageOverlay  = document.getElementById('mypageOverlay');
+  const mypageClose    = document.getElementById('mypageClose');
+  const mypageName     = document.getElementById('mypageName');
+  const mypagePhone    = document.getElementById('mypagePhone');
+  const mypageSave     = document.getElementById('mypageSave');
+  const mypageDeleteBtn = document.getElementById('mypageDeleteBtn');
+
+  let currentUser = null;
 
   if (!overlay) return;
 
@@ -156,7 +166,18 @@ function initAuth() {
 
   overlay.addEventListener('click', e => { if (e.target === overlay) closeModal(); });
   closeBtn.addEventListener('click', closeModal);
-  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') { closeModal(); closeMypageModal(); }
+  });
+
+  // 마이페이지 모달 열기/닫기
+  const openMypageModal = () => mypageOverlay.classList.add('open');
+  const closeMypageModal = () => {
+    mypageOverlay.classList.remove('open');
+    document.getElementById('mypageError').textContent = '';
+  };
+  mypageOverlay.addEventListener('click', e => { if (e.target === mypageOverlay) closeMypageModal(); });
+  mypageClose.addEventListener('click', closeMypageModal);
 
   // 탭 전환
   document.querySelectorAll('[data-auth-tab]').forEach(tab => {
@@ -260,8 +281,58 @@ function initAuth() {
     showToast('로그아웃되었습니다');
   });
 
+  // 마이페이지 열기
+  navMypageBtn.addEventListener('click', async () => {
+    dropdown.classList.remove('open');
+    if (!currentUser) return;
+    const phone = currentUser.email?.split('@')[0] ?? '';
+    mypagePhone.textContent = phone;
+    mypageName.value = '';
+    try {
+      const profile = await getProfile(currentUser.id);
+      mypageName.value = profile?.name ?? '';
+    } catch { /* 조회 실패 시 빈 값으로 둠 */ }
+    openMypageModal();
+  });
+
+  // 마이페이지 — 이름 저장
+  mypageSave.addEventListener('click', async () => {
+    const name = mypageName.value.trim();
+    if (!name) { document.getElementById('mypageError').textContent = '이름을 입력하세요'; return; }
+
+    mypageSave.disabled = true; mypageSave.textContent = '저장 중...';
+    try {
+      await updateProfileName(currentUser.id, name);
+      navAuthBtn.textContent = `${name} ▾`;
+      dropPhone.textContent = name + ' ';
+      showToast('저장되었습니다');
+      closeMypageModal();
+    } catch (err) {
+      document.getElementById('mypageError').textContent = err.message;
+    } finally {
+      mypageSave.disabled = false; mypageSave.textContent = '저장';
+    }
+  });
+
+  // 마이페이지 — 회원 탈퇴
+  mypageDeleteBtn.addEventListener('click', async () => {
+    if (!confirm('정말 탈퇴하시겠습니까? 모든 정보가 삭제되며 복구할 수 없습니다.')) return;
+
+    mypageDeleteBtn.disabled = true; mypageDeleteBtn.textContent = '처리 중...';
+    try {
+      await deleteAccount();
+      closeMypageModal();
+      showToast('탈퇴가 완료되었습니다');
+    } catch (err) {
+      document.getElementById('mypageError').textContent = err.message;
+    } finally {
+      mypageDeleteBtn.disabled = false; mypageDeleteBtn.textContent = '회원 탈퇴';
+    }
+  });
+
   // 인증 상태 구독
   onAuthChange(async user => {
+    currentUser = user;
     if (user) {
       const phone = user.email?.split('@')[0] ?? '';
       let displayName = phone;

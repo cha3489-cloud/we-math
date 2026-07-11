@@ -61,3 +61,14 @@ export async function getProfile(userId) {
   if (error) throw error;
   return data;
 }
+
+export async function updateProfileName(userId, name) {
+  const { error } = await supabase.from('profiles').update({ name }).eq('id', userId);
+  if (error) throw error;
+}
+
+export async function deleteAccount() {
+  const { error } = await supabase.rpc('delete_own_account');
+  if (error) throw error;
+  await supabase.auth.signOut();
+}

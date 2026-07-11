@@ -1528,3 +1528,33 @@ footer {
 .auth-dropdown-btn.danger:hover { background: rgba(200,75,49,.07); }
 
 .nav-auth-wrap { position: relative; }
+
+/* ── 마이페이지 ───────────────────────────────── */
+.mypage-readonly {
+  padding: 12px 14px;
+  border: 1.5px solid var(--ink-100);
+  border-radius: var(--radius-sm);
+  font-size: 16px; color: var(--ink-500);
+  background: var(--ink-050);
+  letter-spacing: 0.05em;
+}
+.mypage-divider {
+  height: 1px;
+  background: var(--ink-100);
+  margin: 28px 0 20px;
+}
+.mypage-delete-btn {
+  width: 100%;
+  padding: 11px;
+  background: none;
+  border: 1.5px solid var(--ink-200);
+  border-radius: var(--radius-sm);
+  color: var(--accent);
+  font-size: 13px; font-weight: 600;
+  cursor: pointer;
+  transition: border-color .2s, background .2s;
+}
+.mypage-delete-btn:hover {
+  border-color: var(--accent);
+  background: rgba(200,75,49,.06);
+}
