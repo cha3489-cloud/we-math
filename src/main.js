@@ -1,5 +1,5 @@
 import './style.css';
-import { signUp, signIn, signOut, onAuthChange, getProfile, updateProfileName, deleteAccount, isWithdrawnPhone } from './auth.js';
+import { signUp, signIn, signOut, onAuthChange, getProfile, updateProfileName, updatePin, deleteAccount, isWithdrawnPhone } from './auth.js';
 
 // ── Nav 스크롤 ─────────────────────────────────
 function initNav() {
@@ -151,6 +151,9 @@ function initAuth() {
   const mypageName     = document.getElementById('mypageName');
   const mypagePhone    = document.getElementById('mypagePhone');
   const mypageSave     = document.getElementById('mypageSave');
+  const mypageNewPin        = document.getElementById('mypageNewPin');
+  const mypageNewPinConfirm = document.getElementById('mypageNewPinConfirm');
+  const mypagePinSave       = document.getElementById('mypagePinSave');
   const mypageDeleteBtn = document.getElementById('mypageDeleteBtn');
 
   let currentUser = null;
@@ -175,6 +178,9 @@ function initAuth() {
   const closeMypageModal = () => {
     mypageOverlay.classList.remove('open');
     document.getElementById('mypageError').textContent = '';
+    document.getElementById('mypagePinError').textContent = '';
+    mypageNewPin.value = '';
+    mypageNewPinConfirm.value = '';
   };
   mypageOverlay.addEventListener('click', e => { if (e.target === mypageOverlay) closeMypageModal(); });
   mypageClose.addEventListener('click', closeMypageModal);
@@ -323,6 +329,28 @@ function initAuth() {
       document.getElementById('mypageError').textContent = err.message;
     } finally {
       mypageSave.disabled = false; mypageSave.textContent = '저장';
+    }
+  });
+
+  // 마이페이지 — PIN 변경
+  mypagePinSave.addEventListener('click', async () => {
+    const pin     = mypageNewPin.value;
+    const pinConf = mypageNewPinConfirm.value;
+    const errEl   = document.getElementById('mypagePinError');
+    if (!validatePin(pin))  { errEl.textContent = 'PIN은 숫자 4자리여야 합니다'; return; }
+    if (pin !== pinConf)    { errEl.textContent = 'PIN이 일치하지 않습니다'; return; }
+
+    mypagePinSave.disabled = true; mypagePinSave.textContent = '변경 중...';
+    try {
+      await updatePin(pin);
+      errEl.textContent = '';
+      mypageNewPin.value = '';
+      mypageNewPinConfirm.value = '';
+      showToast('PIN이 변경되었습니다');
+    } catch (err) {
+      errEl.textContent = err.message;
+    } finally {
+      mypagePinSave.disabled = false; mypagePinSave.textContent = 'PIN 변경';
     }
   });
 

@@ -67,6 +67,11 @@ export async function updateProfileName(userId, name) {
   if (error) throw error;
 }
 
+export async function updatePin(pin) {
+  const { error } = await supabase.auth.updateUser({ password: padPin(pin) });
+  if (error) throw error;
+}
+
 export async function deleteAccount() {
   const { error } = await supabase.rpc('delete_own_account');
   if (error) throw error;

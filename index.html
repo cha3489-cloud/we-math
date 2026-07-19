@@ -1259,6 +1259,22 @@
 
     <div class="mypage-divider"></div>
 
+    <p class="mypage-section-label">비밀번호(PIN) 변경</p>
+    <div class="auth-form">
+      <div class="auth-field">
+        <label for="mypageNewPin">새 PIN (숫자 4자리)</label>
+        <input type="password" id="mypageNewPin" placeholder="••••" maxlength="4" inputmode="numeric" />
+      </div>
+      <div class="auth-field">
+        <label for="mypageNewPinConfirm">새 PIN 확인</label>
+        <input type="password" id="mypageNewPinConfirm" placeholder="••••" maxlength="4" inputmode="numeric" />
+      </div>
+      <p class="auth-error" id="mypagePinError"></p>
+      <button class="auth-submit" id="mypagePinSave">PIN 변경</button>
+    </div>
+
+    <div class="mypage-divider"></div>
+
     <button class="mypage-delete-btn" id="mypageDeleteBtn">회원 탈퇴</button>
   </div>
 </div>
