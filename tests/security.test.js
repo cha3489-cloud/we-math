@@ -83,6 +83,14 @@ describe('student portal security boundary', () => {
     for (const allowed of ['https://we-math.pages.dev', 'https://abc-123.we-math.pages.dev', 'http://localhost:5173', 'http://127.0.0.1:4173']) expect(isAllowedOrigin(allowed)).toBe(true);
     for (const denied of ['http://we-math.pages.dev', 'https://we-math.pages.dev.evil.test', 'https://evilwe-math.pages.dev', 'https://abc.we-math.pages.dev.evil.test', 'https://we-math.pages.dev/path', 'https://user@we-math.pages.dev', 'null']) expect(isAllowedOrigin(denied)).toBe(false);
   });
+  it('blocks suspended users even while an old access token remains valid', () => {
+    const sql = read('supabase/migrations/20260724000000_student_portal_mvp.sql');
+    expect(sql).toMatch(/create or replace function public[.]is_active_user[(][)][\s\S]*suspended_at is null/i);
+    expect(sql).toMatch(/create or replace function public[.]is_admin[(][)][\s\S]*suspended_at is null/i);
+    expect(sql).toMatch(/prepare_submission_attempt[\s\S]*not public[.]is_active_user[(][)]/i);
+    expect(sql).toMatch(/roles visible to self or admin[^;]*public[.]is_active_user[(][)]/i);
+    expect(read('supabase/functions/admin-users/index.ts')).toMatch(/suspended_at[\s\S]*forbidden/);
+  });
   it('keeps service credentials server-side only', () => {
     const browser = [read("src/auth.js"), read("src/portal/student.js"), read("src/portal/admin.js")].join();
     expect(browser).not.toMatch(/SERVICE_ROLE|service_role/i);

@@ -17,8 +17,11 @@ Deno.serve(async (request) => {
   const { data: { user: caller } } = await callerClient.auth.getUser(token);
   if (!caller) return json({ error: 'unauthorized' }, 401, origin);
   const service = createClient(url, serviceKey, { auth: { persistSession: false, autoRefreshToken: false } });
-  const { data: role } = await service.from('user_roles').select('role').eq('user_id', caller.id).single();
-  if (role?.role !== 'admin') return json({ error: 'forbidden' }, 403, origin);
+  const [{ data: role }, { data: profile }] = await Promise.all([
+    service.from('user_roles').select('role').eq('user_id', caller.id).single(),
+    service.from('profiles').select('suspended_at').eq('id', caller.id).single(),
+  ]);
+  if (role?.role !== 'admin' || profile?.suspended_at) return json({ error: 'forbidden' }, 403, origin);
   try {
     const body = await request.json();
     if (body.action === 'create') {
