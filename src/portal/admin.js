@@ -73,7 +73,11 @@ async function showAdmin(user) {
   byId('pinChange').hidden = true; byId('admin').hidden = false; await Promise.all([loadUsers(), loadWorkflows()]);
 }
 byId('loginForm').addEventListener('submit', async (event) => { event.preventDefault(); try { const input = validateLoginInput(byId('phone').value, byId('pin').value); const result = await signIn(input.phone, input.pin); await showAdmin(result.user); } catch (error) { byId('loginError').textContent = error.message; } });
-byId('accountForm').addEventListener('submit', async (event) => { event.preventDefault(); const output = byId('accountResult'); try { const input = validateAccountInput(Object.fromEntries(new FormData(event.currentTarget))); await callAdmin({ action: 'create', ...input }); output.textContent = '계정을 발급했습니다.'; event.currentTarget.reset(); await loadUsers(); } catch (error) { output.textContent = error.message; } });
+byId('accountForm').addEventListener('submit', async (event) => {
+  event.preventDefault(); const form = event.currentTarget; const output = byId('accountResult'); const button = form.querySelector('button'); button.disabled = true;
+  try { const input = validateAccountInput(Object.fromEntries(new FormData(form))); await callAdmin({ action: 'create', ...input }); output.textContent = '계정을 발급했습니다.'; form.reset(); await loadUsers(); }
+  catch (error) { output.textContent = error.message; } finally { button.disabled = false; }
+});
 byId('assignmentForm').addEventListener('submit', async (event) => {
   event.preventDefault(); const form = event.currentTarget; const output = byId('assignmentResult'); const button = form.querySelector('button'); const data = new FormData(form); const file = data.get('attachment'); const paths = []; let inserted = false; button.disabled = true;
   try {
