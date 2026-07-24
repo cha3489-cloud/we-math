@@ -308,7 +308,7 @@
         <div class="auth-dropdown-info">
           <strong id="dropdownPhone">-</strong>로그인 중
         </div>
-        <button class="auth-dropdown-btn" id="navMypageBtn">마이페이지</button>
+        <a class="auth-dropdown-btn" id="navPortalLink" href="./student/">학생 포털</a>
         <button class="auth-dropdown-btn danger" id="navLogoutBtn">로그아웃</button>
       </div>
     </li>
@@ -1187,95 +1187,14 @@
 <div class="toast" id="toast"></div>
 
 <!-- AUTH MODAL -->
-<div class="auth-overlay" id="authOverlay" role="dialog" aria-modal="true" aria-label="로그인/회원가입">
-  <div class="auth-modal">
-    <button class="auth-close" id="authClose" aria-label="닫기">&times;</button>
-    <p class="auth-title">시퀀스 수학</p>
-    <p class="auth-subtitle">학생 전화번호와 4자리 PIN으로 이용하세요</p>
-
-    <div class="auth-tabs">
-      <button class="auth-tab active" data-auth-tab="login">로그인</button>
-      <button class="auth-tab" data-auth-tab="signup">회원가입</button>
+<div class='auth-overlay' id='authOverlay' role='dialog' aria-modal='true' aria-label='로그인'>
+  <div class='auth-modal'><button class='auth-close' id='authClose' aria-label='닫기'>&times;</button>
+    <p class='auth-title'>시퀀스 수학</p><p class='auth-subtitle'>원장님이 발급한 학생 계정으로 이용하세요</p>
+    <div class='auth-panel active' id='authPanelLogin'>
+      <div class='auth-field'><label for='loginPhone'>학생 전화번호</label><input type='tel' id='loginPhone' placeholder='01012345678' maxlength='11' inputmode='numeric'></div>
+      <div class='auth-field'><label for='loginPin'>PIN (숫자 6자리)</label><input type='password' id='loginPin' minlength='4' maxlength='6' inputmode='numeric'></div>
+      <p class='auth-error' id='loginError'></p><button class='auth-submit' id='loginSubmit'>로그인</button>
     </div>
-
-    <!-- 로그인 패널 -->
-    <div class="auth-panel active" id="authPanelLogin">
-      <div class="auth-field">
-        <label for="loginPhone">학생 전화번호</label>
-        <input type="tel" id="loginPhone" placeholder="01012345678" maxlength="11" inputmode="numeric" />
-      </div>
-      <div class="auth-field">
-        <label for="loginPin">PIN (숫자 4자리)</label>
-        <input type="password" id="loginPin" placeholder="••••" maxlength="4" inputmode="numeric" />
-      </div>
-      <p class="auth-error" id="loginError"></p>
-      <button class="auth-submit" id="loginSubmit">로그인</button>
-    </div>
-
-    <!-- 회원가입 패널 -->
-    <div class="auth-panel" id="authPanelSignup">
-      <div class="auth-field">
-        <label for="signupName">학생 이름</label>
-        <input type="text" id="signupName" placeholder="홍길동" maxlength="20" />
-      </div>
-      <div class="auth-field">
-        <label for="signupPhone">학생 전화번호</label>
-        <input type="tel" id="signupPhone" placeholder="01012345678" maxlength="11" inputmode="numeric" />
-      </div>
-      <div class="auth-field">
-        <label for="signupPin">PIN (숫자 4자리)</label>
-        <input type="password" id="signupPin" placeholder="••••" maxlength="4" inputmode="numeric" />
-        <span class="auth-pin-hint">숫자 4자리만 사용 가능합니다</span>
-      </div>
-      <div class="auth-field">
-        <label for="signupPinConfirm">PIN 확인</label>
-        <input type="password" id="signupPinConfirm" placeholder="••••" maxlength="4" inputmode="numeric" />
-      </div>
-      <p class="auth-error" id="signupError"></p>
-      <button class="auth-submit" id="signupSubmit">회원가입</button>
-    </div>
-  </div>
-</div>
-
-<!-- 마이페이지 모달 -->
-<div class="auth-overlay" id="mypageOverlay" role="dialog" aria-modal="true" aria-label="마이페이지">
-  <div class="auth-modal">
-    <button class="auth-close" id="mypageClose" aria-label="닫기">&times;</button>
-    <p class="auth-title">마이페이지</p>
-    <p class="auth-subtitle">내 정보를 확인하고 관리하세요</p>
-
-    <div class="auth-form">
-      <div class="auth-field">
-        <label for="mypageName">이름</label>
-        <input type="text" id="mypageName" maxlength="20" />
-      </div>
-      <div class="auth-field">
-        <label>전화번호</label>
-        <p class="mypage-readonly" id="mypagePhone">-</p>
-      </div>
-      <p class="auth-error" id="mypageError"></p>
-      <button class="auth-submit" id="mypageSave">저장</button>
-    </div>
-
-    <div class="mypage-divider"></div>
-
-    <p class="mypage-section-label">비밀번호(PIN) 변경</p>
-    <div class="auth-form">
-      <div class="auth-field">
-        <label for="mypageNewPin">새 PIN (숫자 4자리)</label>
-        <input type="password" id="mypageNewPin" placeholder="••••" maxlength="4" inputmode="numeric" />
-      </div>
-      <div class="auth-field">
-        <label for="mypageNewPinConfirm">새 PIN 확인</label>
-        <input type="password" id="mypageNewPinConfirm" placeholder="••••" maxlength="4" inputmode="numeric" />
-      </div>
-      <p class="auth-error" id="mypagePinError"></p>
-      <button class="auth-submit" id="mypagePinSave">PIN 변경</button>
-    </div>
-
-    <div class="mypage-divider"></div>
-
-    <button class="mypage-delete-btn" id="mypageDeleteBtn">회원 탈퇴</button>
   </div>
 </div>
 
