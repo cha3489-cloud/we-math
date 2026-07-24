@@ -1,6 +1,6 @@
 import './portal.css';
 import { invokeAuthenticated, supabase } from './client.js';
-import { validatePin, validateLoginInput, validateSubmissionInput, assignmentStatus, latestAttempt, canSubmitAttempt } from './domain.js';
+import { validatePin, validateLoginInput, validateSubmissionInput, assignmentStatus, latestAttempt, canSubmitAttempt, feedbackItems } from './domain.js';
 import { signIn, signOut } from '../auth.js';
 const byId = (id) => document.getElementById(id);
 const statusLabel = { submitted: '검토 대기', needs_revision: '수정 필요', completed: '완료', overdue: '기한 지남', open: '진행 중' };
@@ -35,7 +35,7 @@ function assignmentCard(item, userId) {
     const heading = document.createElement('h3'); heading.textContent = attempt.attempt_no + '차 제출 · ' + statusLabel[attempt.status]; section.append(heading);
     if (attempt.body) { const body = document.createElement('p'); body.textContent = attempt.body; section.append(body); }
     for (const path of attempt.file_paths || []) { const link = document.createElement('button'); link.type = 'button'; link.textContent = '내 제출 파일 받기'; link.addEventListener('click', () => download('submission-files', path)); section.append(link); }
-    for (const note of attempt.feedback || []) { const feedback = document.createElement('p'); feedback.className = 'feedback'; feedback.textContent = '선생님 피드백: ' + note.body; section.append(feedback); }
+    for (const note of feedbackItems(attempt.feedback)) { const feedback = document.createElement('p'); feedback.className = 'feedback'; feedback.textContent = '선생님 피드백: ' + note.body; section.append(feedback); }
     card.append(section);
   }
   if (canSubmitAttempt(attempts)) card.append(submissionForm(item, userId, latest ? '수정 제출' : '과제 제출'));

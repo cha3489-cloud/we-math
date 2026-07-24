@@ -18,6 +18,7 @@ export function validateSubmissionInput(body, files = []) {
   if (!clean && !files.length) throw new Error('제출 내용 또는 파일을 추가하세요.');
   return { body: clean, hasFiles: files.length > 0 };
 }
+export function feedbackItems(value) { return Array.isArray(value) ? value : value ? [value] : []; }
 export function latestAttempt(attempts = []) {
   return [...attempts].sort((a, b) => Number(b.attempt_no) - Number(a.attempt_no))[0] ?? null;
 }

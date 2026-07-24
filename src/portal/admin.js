@@ -1,6 +1,6 @@
 import './portal.css';
 import { invokeAuthenticated, supabase } from './client.js';
-import { validatePin, validateLoginInput, validateAccountInput, latestAttempt } from './domain.js';
+import { validatePin, validateLoginInput, validateAccountInput, latestAttempt, feedbackItems } from './domain.js';
 import { signIn, signOut } from '../auth.js';
 const byId = (id) => document.getElementById(id);
 let currentAdmin;
@@ -47,7 +47,7 @@ function workflowCard(item) {
     const heading = document.createElement('h3'); heading.textContent = attempt.attempt_no + '차 제출 · ' + ({ submitted: '검토 대기', needs_revision: '수정 필요', completed: '완료' }[attempt.status] || attempt.status); section.append(heading);
     if (attempt.body) { const body = document.createElement('p'); body.textContent = attempt.body; section.append(body); }
     for (const path of attempt.file_paths || []) { const button = document.createElement('button'); button.type = 'button'; button.textContent = '제출 파일 받기'; button.addEventListener('click', () => download('submission-files', path)); section.append(button); }
-    for (const note of attempt.feedback || []) { const text = document.createElement('p'); text.className = 'feedback'; text.textContent = '피드백: ' + note.body; section.append(text); }
+    for (const note of feedbackItems(attempt.feedback)) { const text = document.createElement('p'); text.className = 'feedback'; text.textContent = '피드백: ' + note.body; section.append(text); }
     if (attempt === latestAttempt(attempts) && attempt.status === 'submitted') {
       const form = document.createElement('form'); const feedback = document.createElement('textarea'); feedback.required = true; feedback.maxLength = 4000; feedback.placeholder = '학생에게 전달할 피드백';
       const revise = document.createElement('button'); revise.textContent = '수정 필요'; revise.value = 'needs_revision';
