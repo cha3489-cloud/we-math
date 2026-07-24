@@ -14,6 +14,7 @@ export function validateAccountInput(input) {
 }
 export function validateSubmissionInput(body, files = []) {
   const clean = String(body ?? '').trim();
+  if (files.length > 3) throw new Error('제출 파일은 최대 3개까지 가능합니다.');
   if (!clean && !files.length) throw new Error('제출 내용 또는 파일을 추가하세요.');
   return { body: clean, hasFiles: files.length > 0 };
 }

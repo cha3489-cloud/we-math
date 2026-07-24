@@ -1,5 +1,5 @@
 import './portal.css';
-import { supabase, padPin } from './client.js';
+import { supabase } from './client.js';
 import { validatePin, validateLoginInput, validateSubmissionInput, assignmentStatus, latestAttempt, canSubmitAttempt } from './domain.js';
 import { signIn, signOut } from '../auth.js';
 const byId = (id) => document.getElementById(id);
@@ -42,7 +42,7 @@ function assignmentCard(item, userId) {
   return card;
 }
 function submissionForm(item, userId, label) {
-  const form = document.createElement('form'); const body = document.createElement('textarea'); body.placeholder = '풀이 과정이나 질문을 적어주세요.'; const file = document.createElement('input'); file.type = 'file'; file.multiple = true; const button = document.createElement('button'); button.textContent = label; form.append(body, file, button);
+  const form = document.createElement('form'); const body = document.createElement('textarea'); body.placeholder = '풀이 과정이나 질문을 적어주세요.'; const file = document.createElement('input'); file.type = 'file'; file.accept = '.pdf,image/jpeg,image/png,image/webp'; file.multiple = true; const button = document.createElement('button'); button.textContent = label; form.append(body, file, button);
   form.addEventListener('submit', async (event) => {
     event.preventDefault(); button.disabled = true; const paths = []; let inserted = false;
     try {
@@ -59,8 +59,8 @@ byId('pinChangeForm').addEventListener('submit', async (event) => {
   event.preventDefault(); const output = byId('pinChangeError'); const button = event.currentTarget.querySelector('button'); output.textContent = '';
   try {
     const pin = validatePin(byId('newPin').value); if (pin !== byId('confirmPin').value) throw new Error('새 PIN이 일치하지 않습니다.'); button.disabled = true;
-    const { error: updateError } = await supabase.auth.updateUser({ password: padPin(pin) }); if (updateError) throw updateError;
-    const { error: rpcError } = await supabase.rpc('complete_pin_change'); if (rpcError) throw rpcError;
+    const { data, error } = await supabase.functions.invoke('change-pin', { body: { pin } });
+    if (error) throw error; if (data?.error) throw new Error(data.error);
     const { data: { user } } = await supabase.auth.getUser(); if (!user) throw new Error('다시 로그인하세요.'); event.currentTarget.reset(); await loadDashboard(user);
   } catch (error) { output.textContent = error.message; } finally { button.disabled = false; }
 });
