@@ -103,6 +103,7 @@ describe('student portal security boundary', () => {
       expect(source).not.toContain('auth.updateUser');
       expect(source).not.toContain("rpc('complete_pin_change')");
     }
+    expect(read('src/portal/admin.js')).toContain("event.preventDefault(); const form = event.currentTarget; const output = byId('accountResult')");
   });
   it('routes landing users by their protected role', () => {
     const main = read('src/main.js');
