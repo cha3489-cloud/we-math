@@ -96,6 +96,7 @@ describe('student portal security boundary', () => {
       const source = read(path);
       expect(source).toContain("select('name,must_change_pin')");
       expect(source).toContain("invokeAuthenticated('change-pin'");
+      expect(source).toContain("await signIn(currentUser.email.split('@')[0], pin)");
       expect(source).not.toContain("functions.invoke('change-pin'");
       expect(source).not.toContain('auth.updateUser');
       expect(source).not.toContain("rpc('complete_pin_change')");
@@ -113,7 +114,8 @@ describe('student portal security boundary', () => {
       expect(config).toMatch(new RegExp(`\\[functions\\.${name}\\][\\s\\S]*?verify_jwt = false`));
       const source = read(`supabase/functions/${name}/index.ts`);
       expect(source).toContain("request.headers.get('authorization')");
-      expect(source).toContain('auth.getUser(token)');
+      expect(source).toContain('/auth/v1/user');
+      expect(source).not.toContain('auth.getUser(token)');
     }
   });
   it('allows only production, owned HTTPS previews, and explicit localhost origins', () => {

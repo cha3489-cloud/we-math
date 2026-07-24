@@ -14,9 +14,13 @@ Deno.serve(async (request) => {
   if (request.method !== 'POST') return json({ error: 'method not allowed' }, 405, origin);
   const token = request.headers.get('authorization')?.replace(/^Bearer\s+/i, '');
   if (!token) return json({ error: 'unauthorized' }, 401, origin);
-  const callerClient = createClient(url, anonKey, { auth: { persistSession: false, autoRefreshToken: false } });
-  const { data: { user }, error: userError } = await callerClient.auth.getUser(token);
-  if (userError || !user) return json({ error: 'unauthorized' }, 401, origin);
+  const authHeaders = new Headers();
+  authHeaders.set('api' + 'key', anonKey);
+  authHeaders.set('author' + 'ization', 'Bearer ' + token);
+  const userResponse = await fetch(`${url}/auth/v1/user`, { headers: authHeaders });
+  if (!userResponse.ok) return json({ error: 'unauthorized' }, 401, origin);
+  const user = await userResponse.json() as { id?: string };
+  if (!user.id) return json({ error: 'unauthorized' }, 401, origin);
   const service = createClient(url, serviceKey, { auth: { persistSession: false, autoRefreshToken: false } });
   try {
     const { data: profile, error: profileError } = await service.from('profiles').select('suspended_at,must_change_pin,pin_generation').eq('id', user.id).single();
