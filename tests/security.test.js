@@ -22,6 +22,10 @@ describe('student portal security boundary', () => {
     expect(sql).toMatch(/insert into storage[.]buckets[\s\S]+false/i);
     expect(sql).toContain("bucket_id = 'submission-files'");
   });
+  it('keeps historically unrecorded schema migrations idempotent', () => {
+    expect(read('supabase/migrations/20260711174427_add_profile_name.sql')).toMatch(/add column if not exists name text/i);
+    expect(read('supabase/migrations/20260711190000_withdrawn_phones.sql')).toMatch(/create table if not exists public[.]withdrawn_phones/i);
+  });
   it('revokes legacy security-definer functions from every API role', () => {
     const sql = read('supabase/migrations/20260724000000_student_portal_mvp.sql');
     expect(sql).toMatch(/revoke all on function public[.]delete_own_account[(][)] from public, anon, authenticated/i);
