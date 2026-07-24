@@ -106,6 +106,15 @@ describe('student portal security boundary', () => {
     expect(main).toMatch(/role === 'admin'[^\n]*['"`]\.\/admin\//);
     expect(read('index.html')).toContain('id="navPortalLink"');
   });
+  it('lets CORS preflight reach functions that authenticate callers internally', () => {
+    const config = read('supabase/config.toml');
+    for (const name of ['admin-users', 'change-pin']) {
+      expect(config).toMatch(new RegExp(`\\[functions\\.${name}\\][\\s\\S]*?verify_jwt = false`));
+      const source = read(`supabase/functions/${name}/index.ts`);
+      expect(source).toContain("request.headers.get('authorization')");
+      expect(source).toContain('auth.getUser(token)');
+    }
+  });
   it('allows only production, owned HTTPS previews, and explicit localhost origins', () => {
     const edge = read('supabase/functions/admin-users/index.ts') + read('supabase/functions/_shared/origin.ts');
     expect(edge).toContain("hostname.endsWith(previewSuffix)");
