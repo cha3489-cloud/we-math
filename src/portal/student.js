@@ -56,14 +56,14 @@ function submissionForm(item, userId, label) {
 async function download(bucket, path) { const { data, error } = await supabase.storage.from(bucket).createSignedUrl(path, 60); if (error) alert(error.message); else location.assign(data.signedUrl); }
 byId('loginForm').addEventListener('submit', async (event) => { event.preventDefault(); byId('loginError').textContent = ''; try { const input = validateLoginInput(byId('phone').value, byId('pin').value); const result = await signIn(input.phone, input.pin); await loadDashboard(result.user); } catch (error) { byId('loginError').textContent = error.message; } });
 byId('pinChangeForm').addEventListener('submit', async (event) => {
-  event.preventDefault(); const output = byId('pinChangeError'); const button = event.currentTarget.querySelector('button'); output.textContent = '';
+  event.preventDefault(); const form = event.currentTarget; const output = byId('pinChangeError'); const button = form.querySelector('button'); output.textContent = '';
   try {
     const pin = validatePin(byId('newPin').value); if (pin !== byId('confirmPin').value) throw new Error('새 PIN이 일치하지 않습니다.'); button.disabled = true;
     const { data: { user: currentUser }, error: userError } = await supabase.auth.getUser();
     if (userError || !currentUser?.email) throw new Error('다시 로그인하세요.');
     await invokeAuthenticated('change-pin', { pin });
     const result = await signIn(currentUser.email.split('@')[0], pin);
-    event.currentTarget.reset(); await loadDashboard(result.user);
+    form.reset(); await loadDashboard(result.user);
   } catch (error) { output.textContent = error.message; } finally { button.disabled = false; }
 });
 byId('logout').addEventListener('click', async () => { await signOut(); location.reload(); });

@@ -97,6 +97,8 @@ describe('student portal security boundary', () => {
       expect(source).toContain("select('name,must_change_pin')");
       expect(source).toContain("invokeAuthenticated('change-pin'");
       expect(source).toContain("await signIn(currentUser.email.split('@')[0], pin)");
+      expect(source).toContain("event.preventDefault(); const form = event.currentTarget; const output = byId('pinChangeError')");
+      expect(source).toContain('form.reset();');
       expect(source).not.toContain("functions.invoke('change-pin'");
       expect(source).not.toContain('auth.updateUser');
       expect(source).not.toContain("rpc('complete_pin_change')");
