@@ -1,5 +1,5 @@
 -- 학생 이름 컬럼 추가
-alter table public.profiles add column name text;
+alter table public.profiles add column if not exists name text;
 
 -- 회원가입 시 이름도 함께 저장하도록 트리거 갱신
 create or replace function public.handle_new_user()

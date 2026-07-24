@@ -1,5 +1,5 @@
 -- 탈퇴한 전화번호 기록 (로그인 실패 시 "탈퇴한 계정" 안내용)
-create table public.withdrawn_phones (
+create table if not exists public.withdrawn_phones (
   phone        text primary key,
   withdrawn_at timestamptz default now()
 );
