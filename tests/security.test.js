@@ -95,7 +95,8 @@ describe('student portal security boundary', () => {
     for (const path of ['src/portal/admin.js', 'src/portal/student.js']) {
       const source = read(path);
       expect(source).toContain("select('name,must_change_pin')");
-      expect(source).toContain("functions.invoke('change-pin'");
+      expect(source).toContain("invokeAuthenticated('change-pin'");
+      expect(source).not.toContain("functions.invoke('change-pin'");
       expect(source).not.toContain('auth.updateUser');
       expect(source).not.toContain("rpc('complete_pin_change')");
     }

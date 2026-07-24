@@ -1,5 +1,5 @@
 import './portal.css';
-import { supabase } from './client.js';
+import { invokeAuthenticated, supabase } from './client.js';
 import { validatePin, validateLoginInput, validateAccountInput, latestAttempt } from './domain.js';
 import { signIn, signOut } from '../auth.js';
 const byId = (id) => document.getElementById(id);
@@ -9,10 +9,7 @@ async function ensureAdmin(user) {
   if (error || data?.role !== 'admin') { await signOut(); throw new Error('관리자 권한이 필요합니다.'); }
 }
 async function callAdmin(payload) {
-  const { data, error } = await supabase.functions.invoke('admin-users', { body: payload });
-  if (error) throw error;
-  if (data?.error) throw new Error(data.error);
-  return data;
+  return invokeAuthenticated('admin-users', payload);
 }
 function safeName(name) { return name.replace(/[^a-zA-Z0-9._-]/g, '_'); }
 async function cleanup(bucket, paths) { if (paths.length) await supabase.storage.from(bucket).remove(paths); }
@@ -90,8 +87,7 @@ byId('pinChangeForm').addEventListener('submit', async (event) => {
   event.preventDefault(); const output = byId('pinChangeError'); const button = event.currentTarget.querySelector('button'); output.textContent = '';
   try {
     const pin = validatePin(byId('newPin').value); if (pin !== byId('confirmPin').value) throw new Error('새 PIN이 일치하지 않습니다.'); button.disabled = true;
-    const { data, error } = await supabase.functions.invoke('change-pin', { body: { pin } });
-    if (error) throw error; if (data?.error) throw new Error(data.error);
+    await invokeAuthenticated('change-pin', { pin });
     const { data: { user } } = await supabase.auth.getUser(); if (!user) throw new Error('다시 로그인하세요.'); event.currentTarget.reset(); await showAdmin(user);
   } catch (error) { output.textContent = error.message; } finally { button.disabled = false; }
 });
