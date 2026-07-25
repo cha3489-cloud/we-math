@@ -22,7 +22,7 @@ describe('student portal security boundary', () => {
     expect(sql).toMatch(/insert into storage[.]buckets[\s\S]+false/i);
     expect(sql).toContain('allowed_mime_types');
     for (const mime of ['application/pdf', 'image/jpeg', 'image/png', 'image/webp']) expect(sql).toContain(mime);
-    expect(read('src/portal/student.js')).toContain('file.accept');
+    expect(read('src/portal/student.js')).toMatch(/fileInput[.]accept\s*=\s*['"][^'"]*(?:pdf|image\/jpeg)[^'"]*['"]/i);
     expect(read('admin/index.html')).toMatch(/type=(?:"file"|file)[^>]*accept=/i);
     expect(sql).toContain("bucket_id = 'submission-files'");
   });
@@ -76,8 +76,12 @@ describe('student portal security boundary', () => {
     for (const path of ['admin/index.html', 'student/index.html', 'index.html']) { const html = read(path); expect(html).not.toContain('4자리'); expect(html).toMatch(/maxlength=['"]?6/); }
     expect(read('PORTAL_MVP.md')).toContain('정확히 숫자 6자리');
     expect(read('admin/index.html')).toContain('assignmentForm');
+    expect(read('admin/index.html')).toContain('reviewSection');
+    expect(read('admin/index.html')).toContain('queue');
     expect(read('admin/index.html')).toContain('workflows');
-    expect(read('src/portal/admin.js')).toContain("rpc('review_submission'");
+    expect(read('src/portal/admin.js')).toContain('loadWorkflows');
+    expect(read('src/portal/admin.js')).toContain("rpc('review_submission_v2'");
+    expect(read('src/portal/admin.js')).not.toContain("rpc('review_submission'");
     expect(read('src/portal/student.js')).toContain('canSubmitAttempt');
   });
   it('forces initial and reset PIN changes at the server boundary', () => {
