@@ -1,3 +1,6 @@
+// 적용 경로: src/portal/domain.js (전체 교체 — 기존 export 전부 유지 + 신규 추가)
+
+// ── 기존 함수 (변경 없음) ────────────────────────────────────────────────
 export function normalizePhone(value) {
   const phone = String(value ?? '').replace(/[^0-9]/g, '');
   if (!/^01[016789][0-9]{7,8}$/.test(phone)) throw new Error('올바른 휴대전화 번호를 입력하세요.');
@@ -18,7 +21,6 @@ export function validateSubmissionInput(body, files = []) {
   if (!clean && !files.length) throw new Error('제출 내용 또는 파일을 추가하세요.');
   return { body: clean, hasFiles: files.length > 0 };
 }
-export function feedbackItems(value) { return Array.isArray(value) ? value : value ? [value] : []; }
 export function latestAttempt(attempts = []) {
   return [...attempts].sort((a, b) => Number(b.attempt_no) - Number(a.attempt_no))[0] ?? null;
 }
@@ -27,8 +29,133 @@ export function canSubmitAttempt(attempts = []) {
   return !latest || latest.status === 'needs_revision';
 }
 export function assignmentStatus(assignment, now = new Date()) {
-  const latest = latestAttempt(assignment.submissions);
+  const latest = latestAttempt(normalizeRelation(assignment.submissions));
   if (latest) return latest.status;
   if (assignment.due_at && new Date(assignment.due_at) < now) return 'overdue';
   return 'open';
+}
+
+// ── 관계 데이터 정규화: null / object / array 어떤 형태든 배열로 ──────────
+export function normalizeRelation(value) {
+  if (Array.isArray(value)) return value;
+  if (value === null || value === undefined) return [];
+  return [value];
+}
+// 기존 호출부 호환 유지
+export function feedbackItems(value) { return normalizeRelation(value); }
+
+// ── 상태 표시 (문구 + 아이콘, 색상 단독 구분 금지) ─────────────────────
+export const STATUS_META = {
+  open: { icon: '📝', label: '제출할 과제' },
+  overdue: { icon: '⏰', label: '기한이 지났어요 · 지금도 제출할 수 있어요' },
+  submitted: { icon: '⏳', label: '선생님 확인 중' },
+  needs_revision: { icon: '✏️', label: '다시 확인할 부분 있음' },
+  completed: { icon: '✅', label: '완료' },
+};
+
+// ── 1차 피드백 태그: 성격·태도 평가가 아니라 이번 풀이의 확인 지점 ─────
+export const REVIEW_TAGS = [
+  '풀이 시작 보완',
+  '조건·문제 이해 확인',
+  '개념 연결 보완',
+  '계산·부호 확인',
+  '풀이 마무리·검산',
+];
+
+export function validateProblemRef(value) {
+  const clean = String(value ?? '').trim();
+  if (!clean || clean.length > 40) throw new Error('문제 번호는 1~40자로 입력하세요.');
+  return clean;
+}
+
+export function validateFeedbackItems(items = []) {
+  if (!Array.isArray(items)) throw new Error('피드백 항목 형식이 올바르지 않습니다.');
+  if (items.length > 20) throw new Error('피드백 항목은 최대 20개까지 가능합니다.');
+  return items.map((item) => {
+    const tag = String(item?.review_tag ?? '');
+    if (!REVIEW_TAGS.includes(tag)) throw new Error('허용되지 않은 확인 태그입니다.');
+    const comment = String(item?.comment ?? '').trim();
+    if (comment.length > 1000) throw new Error('항목 코멘트는 1000자 이내로 입력하세요.');
+    return {
+      problem_ref: validateProblemRef(item?.problem_ref),
+      review_tag: tag,
+      comment,
+      redo_required: Boolean(item?.redo_required),
+    };
+  });
+}
+
+export function checkItemsForStatus(status, items = []) {
+  const redo = items.filter((item) => item.redo_required).length;
+  if (status === 'needs_revision' && redo === 0) throw new Error('수정 필요로 확정하려면 다시 풀 문제를 1개 이상 지정하세요.');
+  if (status === 'completed' && redo > 0) throw new Error('완료로 확정하려면 다시 풀 문제 지정을 해제하세요.');
+  return true;
+}
+
+// 총평이 비어 있으면 항목으로 하위 호환용 feedback.body를 구성
+export function composeFeedbackBody(items = [], comment = '') {
+  const clean = String(comment ?? '').trim();
+  if (clean) return clean.slice(0, 4000);
+  if (!items.length) throw new Error('총평 또는 확인 항목을 1개 이상 입력하세요.');
+  const lines = items.map((item) =>
+    item.problem_ref + ' · ' + item.review_tag + (item.comment ? ' — ' + item.comment : ''));
+  return ['이번 제출에서 다시 확인할 부분입니다.', ...lines].join('\n').slice(0, 4000);
+}
+
+// ── 검토 대기열: 최신 attempt가 submitted인 것만, 오래된 순 ─────────────
+export function reviewQueue(assignments = []) {
+  const rows = [];
+  for (const assignment of assignments) {
+    const attempts = normalizeRelation(assignment.submissions);
+    const latest = latestAttempt(attempts);
+    if (latest && latest.status === 'submitted') rows.push({ assignment, attempt: latest });
+  }
+  return rows.sort((a, b) => new Date(a.attempt.submitted_at) - new Date(b.attempt.submitted_at));
+}
+
+export function waitingLabel(submittedAt, now = new Date()) {
+  const ms = now - new Date(submittedAt);
+  if (!Number.isFinite(ms) || ms < 60000) return '방금 제출';
+  const minutes = Math.floor(ms / 60000);
+  if (minutes < 60) return minutes + '분 대기';
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return hours + '시간 대기';
+  return Math.floor(hours / 24) + '일 대기';
+}
+
+// ── 학생 대시보드 그룹: 수정 필요 → 제출할 것 → 확인 중 → 완료 ──────────
+export function groupAssignments(assignments = [], now = new Date()) {
+  const groups = { redo: [], open: [], review: [], done: [] };
+  for (const assignment of assignments) {
+    const status = assignmentStatus(assignment, now);
+    if (status === 'needs_revision') groups.redo.push(assignment);
+    else if (status === 'submitted') groups.review.push(assignment);
+    else if (status === 'completed') groups.done.push(assignment);
+    else groups.open.push(assignment); // open + overdue
+  }
+  return groups;
+}
+
+// 최신 피드백에서 다시 풀 문제 목록 추출
+export function redoProblems(feedbackValue) {
+  const items = normalizeRelation(feedbackValue)
+    .flatMap((entry) => normalizeRelation(entry?.feedback_items));
+  return items.filter((item) => item?.redo_required).map((item) => item.problem_ref);
+}
+export function allFeedbackItems(feedbackValue) {
+  return normalizeRelation(feedbackValue)
+    .flatMap((entry) => normalizeRelation(entry?.feedback_items));
+}
+
+// ── 업로드 품질 검사(순수 판정부): 경고만, 제출 차단 금지 ────────────────
+export function assessImageQuality(metrics, { minDimension = 900, blurThreshold = 60 } = {}) {
+  if (!metrics) return []; // 분석 실패 시 경고 없이 제출 허용
+  const warnings = [];
+  if (Math.max(metrics.width || 0, metrics.height || 0) < minDimension) {
+    warnings.push({ code: 'low_resolution', message: '해상도가 낮아요. 조금 더 가까이에서 찍으면 선생님이 정확히 볼 수 있어요.' });
+  }
+  if (typeof metrics.blurScore === 'number' && metrics.blurScore < blurThreshold) {
+    warnings.push({ code: 'blurry', message: '사진이 흐릿하게 보여요. 초점을 맞춰 다시 찍는 것을 권해요.' });
+  }
+  return warnings;
 }

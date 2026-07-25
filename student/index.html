@@ -1,1 +1,49 @@
-<!doctype html><html lang=ko><head><meta charset=UTF-8><meta name=viewport content='width=device-width, initial-scale=1'><title>학생 포털 | 시퀀스 수학</title></head><body><main class=portal><header><a href=../>시퀀스 수학</a><button id=logout hidden>로그아웃</button></header><section id=login class=panel><h1>학생 포털</h1><p>원장님이 발급한 전화번호와 숫자 6자리 PIN으로 로그인하세요.</p><form id=loginForm><label>학생 전화번호<input id=phone type=tel inputmode=numeric required></label><label>PIN<input id=pin type=password inputmode=numeric minlength=4 maxlength=6 required></label><button>로그인</button><p id=loginError class=error role=alert></p></form></section><section id=pinChange hidden class=panel><h1>새 PIN 설정</h1><p>계속하려면 숫자 6자리 PIN으로 변경하세요.</p><form id=pinChangeForm><label>새 PIN<input id=newPin type=password inputmode=numeric minlength=6 maxlength=6 required autocomplete=new-password></label><label>새 PIN 확인<input id=confirmPin type=password inputmode=numeric minlength=6 maxlength=6 required autocomplete=new-password></label><button>PIN 변경</button><p id=pinChangeError class=error role=alert></p></form></section><section id=dashboard hidden><h1><span id=studentName>학생</span>님의 과제</h1><p id=empty>등록된 과제가 없습니다.</p><div id=assignments class=cards></div></section></main><script type=module src=/src/portal/student.js></script></body></html>
+<!doctype html><html lang=ko><head><meta charset=UTF-8><meta name=viewport content='width=device-width, initial-scale=1'><title>학생 포털 | 시퀀스 수학</title></head><body><main class=portal>
+<header><a href=../>시퀀스 수학</a><button id=logout hidden>로그아웃</button></header>
+
+<section id=login class=panel>
+  <h1>학생 포털</h1>
+  <p>원장님이 발급한 전화번호와 숫자 6자리 PIN으로 로그인하세요.</p>
+  <form id=loginForm>
+    <label>학생 전화번호<input id=phone type=tel inputmode=numeric required></label>
+    <label>PIN<input id=pin type=password inputmode=numeric minlength=4 maxlength=6 required></label>
+    <button>로그인</button>
+    <p id=loginError class=error role=alert></p>
+  </form>
+</section>
+
+<section id=pinChange hidden class=panel>
+  <h1>새 PIN 설정</h1>
+  <p>계속하려면 숫자 6자리 PIN으로 변경하세요.</p>
+  <form id=pinChangeForm>
+    <label>새 PIN<input id=newPin type=password inputmode=numeric minlength=6 maxlength=6 required autocomplete=new-password></label>
+    <label>새 PIN 확인<input id=confirmPin type=password inputmode=numeric minlength=6 maxlength=6 required autocomplete=new-password></label>
+    <button>PIN 변경</button>
+    <p id=pinChangeError class=error role=alert></p>
+  </form>
+</section>
+
+<section id=dashboard hidden>
+  <h1><span id=studentName>학생</span>님, 안녕하세요</h1>
+  <div id=summary class=summary role=status></div>
+  <p id=globalError class=error role=alert></p>
+  <p id=empty hidden>등록된 과제가 없습니다.</p>
+  <section id=groupRedo class=group hidden><h2>✏️ 다시 낼 과제</h2><div class=cards></div></section>
+  <section id=groupOpen class=group hidden><h2>📝 제출할 과제</h2><div class=cards></div></section>
+  <section id=groupReview class=group hidden><h2>⏳ 선생님 확인 중</h2><div class=cards></div></section>
+  <section id=groupDone class="group group-done" hidden><h2>✅ 완료</h2><div class=cards></div></section>
+</section>
+
+<div id=viewerOverlay class=viewer-overlay role=dialog aria-modal=true aria-labelledby=viewerTitle tabindex=-1 hidden>
+  <div class=viewer-box>
+    <h2 id=viewerTitle class=sr-only>제출 파일 보기</h2>
+    <img id=viewerImage alt="제출 이미지">
+    <iframe id=viewerFrame title="제출 PDF" hidden></iframe><!-- private-bucket PDF signed URL; sandbox blocks built-in PDF viewers -->
+    <div class=viewer-controls>
+      <button type=button id=viewerClose>닫기</button>
+    </div>
+    <p id=viewerError class=error role=alert></p>
+  </div>
+</div>
+
+</main><script type=module src=/src/portal/student.js></script></body></html>
