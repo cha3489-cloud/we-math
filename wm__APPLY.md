@@ -1,6 +1,6 @@
 # we-math 학생 포털 1차 수직 흐름 — 적용 안내
 
-첨부된 `wm__` 파일을 `feature/portal-review-v1` 로컬 브랜치에 매핑해 검증했습니다. 2026-07-25 운영 Supabase에 `20260726000000_portal_review_v2.sql`을 적용하고 catalog 불변식을 확인했으며, `main` 병합은 아직 수행하지 않았습니다.
+첨부된 `wm__` 파일을 `feature/portal-review-v1` 로컬 브랜치에 매핑해 검증했습니다. 2026-07-25 운영 Supabase에 `20260726000000_portal_review_v2.sql`을 적용하고 catalog 불변식을 확인했으며, GitHub PR #6을 squash merge해 `main`과 Cloudflare Pages 배포까지 완료했습니다.
 
 ## 파일 매핑
 
@@ -84,7 +84,7 @@ git push -u origin feature/portal-review-v1
 - [x] 실제 학생 UI 이미지 파일 선택→미리보기·품질 경고→Storage 업로드·제출→관리자 이미지 뷰어→구조화 수정 요청→학생 다시 풀 문제→재제출→대기열 재등장
 - [ ] 375px 모바일 viewport에서 위 전체 흐름 확인 (원격 브라우저가 `resizeTo(375)`를 무시해 미검증)
 - [x] 학생·관리자 실제 임시 프로젝트 연결 브라우저 콘솔 오류 0건
-- [x] 운영 Supabase migration `20260726000000` 적용·post catalog 검증 완료 / main 병합 전
+- [x] 운영 Supabase migration `20260726000000` 적용·post catalog 검증, PR #6 squash merge, Cloudflare Pages 배포 완료
 
 
 ## 원격 임시 프로젝트 검증 기록
@@ -103,6 +103,8 @@ git push -u origin feature/portal-review-v1
 - 적용 전 dry-run: 신규 migration 1개만 대상임을 확인
 - 적용 후 migration history: 로컬·원격 8개 일치
 - 적용 후 dry-run: `Remote database is up to date`
+- GitHub PR: `#6` squash merge (`35ff75c7f804`)
+- Cloudflare Pages: merge commit 배포 checks 2개 성공, 공개 관리자 페이지 새 asset smoke test·콘솔 오류 0건
 - 실제 catalog 검사: `feedback_items`·`review_events`·`review_submission_v2`·구형 호환 래퍼·RLS 정책·authenticated GRANT 불변식 PASS
 - 사용자 행 데이터는 조회·복제하지 않았습니다.
 - 적용 전 catalog SHA-256: `768d47a988a08eb304130006394c58c9bf0552d88968ce37f7c2d1c9725875f0`
