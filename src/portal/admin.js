@@ -26,10 +26,18 @@ async function loadUsers() {
   const cards = (profilesResult.data || []).map((user) => {
     const card = document.createElement('article'); card.className = 'card';
     const name = document.createElement('h2'); name.textContent = user.name;
-    const meta = document.createElement('p'); meta.textContent = user.phone + ' · ' + (roles.get(user.id) || 'student'); card.append(name, meta);
-    for (const [action, label] of [['reset', 'PIN 재설정'], [user.suspended_at ? 'reactivate' : 'suspend', user.suspended_at ? '재활성화' : '정지']]) {
+    const role = roles.get(user.id) ?? '역할 없음';
+    const meta = document.createElement('p'); meta.textContent = user.phone + ' · ' + role; card.append(name, meta);
+    const actions = [[user.suspended_at ? 'reactivate' : 'suspend', user.suspended_at ? '재활성화' : '정지']];
+    if (role === 'student') actions.unshift(['reset', 'PIN 재설정']);
+    for (const [action, label] of actions) {
       const button = document.createElement('button'); button.type = 'button'; button.textContent = label;
-      button.addEventListener('click', async () => { const newPin = action === 'reset' ? prompt('새 숫자 6자리 PIN') : undefined; if (action === 'reset' && !newPin) return; try { if (action === 'reset') validatePin(newPin); await callAdmin({ action, userId: user.id, pin: newPin }); await loadUsers(); } catch (error) { alert(error.message); } }); card.append(button);
+      button.addEventListener('click', async () => {
+        if (action === 'reset' && !confirm(`${user.name} 학생 PIN을 123456으로 초기화할까요? 학생은 로그인 후 새 PIN을 설정해야 합니다.`)) return;
+        button.disabled = true;
+        try { await callAdmin({ action, userId: user.id }); if (action === 'reset') alert('PIN을 123456으로 초기화했습니다. 학생은 로그인 후 새 PIN을 설정해야 합니다.'); await loadUsers(); }
+        catch (error) { alert(error.message); } finally { button.disabled = false; }
+      }); card.append(button);
     }
     return card;
   });

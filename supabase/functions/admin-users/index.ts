@@ -6,6 +6,11 @@ const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 const json = (body: unknown, status = 200, origin = productionOrigin) => new Response(JSON.stringify(body), { status, headers: { 'content-type': 'application/json', 'access-control-allow-origin': origin, 'vary': 'Origin' } });
 const phone = (value: unknown) => { const clean = String(value ?? '').replace(/[^0-9]/g, ''); if (!/^01[016789][0-9]{7,8}$/.test(clean)) throw new Error('invalid phone'); return clean; };
 const pin = (value: unknown) => { const clean = String(value ?? ''); if (!/^\d{6}$/.test(clean)) throw new Error('invalid PIN'); return clean; };
+const resetPin = '123456';
+const boundedFetch: typeof fetch = async (input, init = {}) => {
+  const controller = new AbortController(); const timer = setTimeout(() => controller.abort(), 20_000);
+  try { return await fetch(input, { ...init, signal: controller.signal }); } finally { clearTimeout(timer); }
+};
 Deno.serve(async (request) => {
   const origin = request.headers.get('origin') ?? productionOrigin;
   if (!isAllowedOrigin(origin)) return new Response(JSON.stringify({ error: 'origin denied' }), { status: 403, headers: { 'content-type': 'application/json', 'vary': 'Origin' } });
@@ -20,7 +25,7 @@ Deno.serve(async (request) => {
   if (!userResponse.ok) return json({ error: 'unauthorized' }, 401, origin);
   const caller = await userResponse.json() as { id?: string };
   if (!caller.id) return json({ error: 'unauthorized' }, 401, origin);
-  const service = createClient(url, serviceKey, { auth: { persistSession: false, autoRefreshToken: false } });
+  const service = createClient(url, serviceKey, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: boundedFetch } });
   const [{ data: role, error: roleError }, { data: profile, error: profileError }] = await Promise.all([
     service.from('user_roles').select('role').eq('user_id', caller.id).single(),
     service.from('profiles').select('suspended_at,must_change_pin').eq('id', caller.id).single(),
@@ -43,10 +48,13 @@ Deno.serve(async (request) => {
     }
     const userId = String(body.userId ?? ''); if (!/^[0-9a-f-]{36}$/i.test(userId)) throw new Error('invalid user');
     if (body.action === 'reset') {
-      const cleanPin = pin(body.pin);
-      const { error } = await service.auth.admin.updateUserById(userId, { password: 'wm' + cleanPin + 'sq' }); if (error) throw error;
-      const { error: resetStateError } = await service.rpc('mark_pin_reset', { p_user_id: userId });
-      if (resetStateError) { await service.auth.admin.updateUserById(userId, { ban_duration: '876000h' }); throw resetStateError; }
+      const operationId = crypto.randomUUID();
+      const { data: generation, error: resetStateError } = await service.rpc('begin_student_pin_reset', { p_user_id: userId, p_operation_id: operationId });
+      if (resetStateError) throw resetStateError;
+      const { error } = await service.auth.admin.updateUserById(userId, { password: 'wm' + resetPin + 'sq' }); if (error) throw error;
+      const { data: finished, error: finishError } = await service.rpc('finish_student_pin_reset', { p_user_id: userId, p_generation: generation, p_operation_id: operationId });
+      if (finishError) throw finishError;
+      if (!finished) return json({ error: 'PIN reset completion lost its operation lease; retry reset' }, 409, origin);
     }
     else if (body.action === 'suspend') { if (userId === caller.id) throw new Error('cannot suspend self'); await updateProfile(userId, { suspended_at: new Date().toISOString() }); const { error } = await service.auth.admin.updateUserById(userId, { ban_duration: '876000h' }); if (error) throw error; }
     else if (body.action === 'reactivate') { const { error } = await service.auth.admin.updateUserById(userId, { ban_duration: 'none' }); if (error) throw error; await updateProfile(userId, { suspended_at: null }); }
