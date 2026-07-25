@@ -2,8 +2,8 @@
 
 ## 보안 전제
 - 공개 회원가입은 UI와 로컬 Supabase 설정에서 비활성화되어 있습니다. 운영 Supabase Dashboard의 Auth 설정에서도 신규 가입을 반드시 끄세요.
-- 레거시 계정 전환 기간에는 로그인만 숫자 4자리 또는 6자리를 허용합니다. 계정 발급, 재설정, 새 PIN은 정확히 숫자 6자리이며 내부 Auth 비밀번호 래퍼 `wm + PIN + sq`를 유지합니다.
-- 최초 로그인과 관리자 재설정 뒤에는 `change-pin` Edge Function이 Auth 비밀번호를 변경한 뒤 `must_change_pin=false`로 전환합니다. 변경 전에는 역할·본인 프로필·PIN 변경 외 포털 데이터 및 관리자 작업이 RLS에서 차단됩니다.
+- 레거시 계정 전환 기간에는 로그인만 숫자 4자리 또는 6자리를 허용합니다. 계정 발급, 재설정, 새 PIN은 정확히 숫자 6자리이며 새 PIN으로 임시 PIN `123456`을 재사용할 수 없습니다. 내부 Auth 비밀번호 래퍼 `wm + PIN + sq`를 유지합니다.
+- 학생이 PIN을 잊으면 관리자는 학생 카드의 `PIN 재설정`으로 임시 PIN `123456`을 발급합니다. 임시 PIN의 새 PIN 변경 자격은 기본 10분이며 만료되면 관리자가 다시 재설정해야 합니다(최초 계정의 강제 변경은 만료 없음). 서버는 활성 학생을 잠금 확인한 뒤 `must_change_pin=true`, 새 `pin_generation`, 작업 nonce/1분 lease를 먼저 기록하고 Auth를 변경한 다음 자기 작업만 완료합니다. `change-pin`도 같은 begin → Auth → finish 순서를 사용합니다. Auth 실패나 프로세스 중단 시 `must_change_pin`을 해제하지 않고 lease 만료 뒤 재시도할 수 있으며 장기 ban 보상은 하지 않습니다. 변경 전에는 역할·본인 프로필·PIN 변경 외 포털 데이터 및 관리자 작업이 RLS에서 차단됩니다. 혼합 버전 경쟁을 막기 위해 이 변경은 `change-pin` → `admin-users` 신규 Edge Function을 먼저 배포하고, 기존 호출이 끝나도록 5분간 PIN 작업 점검 시간을 둔 뒤 migration을 적용합니다. 점검 중 reset/change 요청은 Auth 변경 전에 실패하며, migration은 레거시 `mark_pin_reset` RPC를 제거합니다.
 - 브라우저에는 `VITE_SUPABASE_URL`과 anon key만 둡니다. service-role key는 Edge Function secret으로만 사용합니다.
 - `user_roles`는 브라우저 사용자가 insert/update/delete할 수 없습니다. 최초 관리자는 Dashboard와 SQL Editor에서 부트스트랩합니다.
 - `admin-users`와 `change-pin` Edge Function은 운영 `https://we-math.pages.dev`, 이 프로젝트의 HTTPS Pages 미리보기 하위 도메인, 명시적 localhost 개발 Origin만 허용합니다.
@@ -12,9 +12,9 @@
 
 ## 적용 순서
 1. 운영 Auth 공개 가입 비활성화 확인
-2. migration 적용 및 RLS·GRANT 정책 확인
-3. 기존 단일 계정을 최초 관리자 역할로 부트스트랩
-4. `admin-users`, `change-pin` Edge Function 배포
+2. PIN lease 변경 배포 시 `change-pin`, `admin-users` 신규 Edge Function을 먼저 배포
+3. 5분간 기존 Edge 호출을 배출한 뒤 migration 적용 및 RLS·GRANT 정책 확인
+4. 기존 단일 계정을 최초 관리자 역할로 부트스트랩
 5. 관리자/학생 계정으로 RLS 교차 검증
 6. 레거시 4자리 로그인 → 6자리 PIN 강제 변경 → 기존 PIN 로그인 실패 확인
 

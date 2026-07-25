@@ -87,10 +87,10 @@ describe('student portal security boundary', () => {
     expect(sql).toMatch(/profiles add column if not exists must_change_pin boolean not null default true/i);
     expect(sql).not.toContain('complete_pin_change');
     expect(sql).toMatch(/create or replace function public[.]is_active_user[(][)][\s\S]*must_change_pin = false/i);
-    expect(changePin).toMatch(/auth[.]admin[.]updateUserById[\s\S]*must_change_pin: false/);
+    expect(changePin).toMatch(/begin_student_pin_change[\s\S]*auth[.]admin[.]updateUserById[\s\S]*finish_student_pin_change/);
     expect(changePin).toContain('SUPABASE_SERVICE_ROLE_KEY');
     expect(adminUsers).toMatch(/select[(]'suspended_at,must_change_pin'[)][\s\S]*must_change_pin[\s\S]*forbidden/);
-    expect(adminUsers).toMatch(/action === 'reset'[\s\S]*rpc\('mark_pin_reset'/);
+    expect(adminUsers).toMatch(/action === 'reset'[\s\S]*rpc\('begin_student_pin_reset'/);
     for (const path of ['admin/index.html', 'student/index.html']) expect(read(path)).toContain('pinChangeForm');
     for (const path of ['src/portal/admin.js', 'src/portal/student.js']) {
       const source = read(path);
@@ -104,6 +104,36 @@ describe('student portal security boundary', () => {
       expect(source).not.toContain("rpc('complete_pin_change')");
     }
     expect(read('src/portal/admin.js')).toContain("event.preventDefault(); const form = event.currentTarget; const output = byId('accountResult')");
+  });
+  it('atomically begins active student PIN resets before setting the fixed temporary password', () => {
+    const edge = read('supabase/functions/admin-users/index.ts');
+    const sql = read('supabase/migrations/20260725000000_atomic_student_pin_reset.sql');
+    const resetBlock = edge.slice(edge.indexOf("body.action === 'reset'"), edge.indexOf("body.action === 'suspend'"));
+    const admin = read('src/portal/admin.js');
+    expect(sql).toMatch(/drop function if exists public[.]mark_pin_reset[(]uuid[)]/i);
+    expect(sql).toMatch(/create or replace function public[.]begin_student_pin_reset[(]p_user_id uuid, p_operation_id uuid[)][\s\S]*security definer[\s\S]*set search_path = ''/i);
+    expect(sql).toMatch(/user_roles as r[\s\S]*join public[.]profiles as p[\s\S]*for update of r, p/i);
+    expect(sql).toMatch(/target_role is distinct from 'student'::public[.]app_role/i);
+    expect(sql).toMatch(/target_suspended_at is not null/i);
+    expect(sql).toMatch(/must_change_pin = true[\s\S]*pin_generation = pin_generation [+] 1[\s\S]*reset_pin_expires_at = now[(][)] [+] interval '10 minutes'[\s\S]*returning pin_generation/i);
+    expect(sql).toMatch(/revoke all on function public[.]begin_student_pin_reset[(]uuid, uuid[)] from public, anon, authenticated/i);
+    expect(sql).toMatch(/grant execute on function public[.]begin_student_pin_reset[(]uuid, uuid[)] to service_role/i);
+    expect(edge).toContain("const resetPin = '123456'");
+    expect(resetBlock).toContain("rpc('begin_student_pin_reset'");
+    expect(resetBlock).toContain("password: 'wm' + resetPin + 'sq'");
+    expect(resetBlock.indexOf("rpc('begin_student_pin_reset'")).toBeLessThan(resetBlock.indexOf('updateUserById(userId'));
+    expect(resetBlock.indexOf('updateUserById(userId')).toBeLessThan(resetBlock.indexOf("rpc('finish_student_pin_reset'"));
+    expect(resetBlock).not.toContain('body.pin');
+    expect(resetBlock).not.toContain('ban_duration');
+    expect(admin).toContain("PIN을 123456으로 초기화할까요?");
+    expect(admin).toContain("callAdmin({ action, userId: user.id })");
+    expect(admin).not.toContain("prompt('새 숫자 6자리 PIN')");
+  });
+  it('does not present a missing role as student or offer it a PIN reset', () => {
+    const admin = read('src/portal/admin.js');
+    expect(admin).toContain("const role = roles.get(user.id) ?? '역할 없음'");
+    expect(admin).not.toMatch(/roles[.]get[(]user[.]id[)] (?:[|][|]|[?][?]) ['"]student['"]/);
+    expect(admin).toContain("if (role === 'student') actions.unshift(['reset', 'PIN 재설정'])");
   });
   it('routes landing users by their protected role', () => {
     const main = read('src/main.js');
@@ -138,17 +168,47 @@ describe('student portal security boundary', () => {
     expect(sql).toMatch(/roles visible to self or admin[^;]*public[.]is_not_suspended[(][)]/i);
     expect(read('supabase/functions/admin-users/index.ts')).toMatch(/suspended_at[\s\S]*forbidden/);
   });
-  it('prevents a concurrent admin reset from being cleared by an older PIN change', () => {
-    const sql = read('supabase/migrations/20260724000000_student_portal_mvp.sql');
+  it('preserves generation protection and a forced change across concurrent resets', () => {
+    const baseSql = read('supabase/migrations/20260724000000_student_portal_mvp.sql');
+    const resetSql = read('supabase/migrations/20260725000000_atomic_student_pin_reset.sql');
     const adminEdge = read('supabase/functions/admin-users/index.ts');
     const changeEdge = read('supabase/functions/change-pin/index.ts');
-    expect(sql).toMatch(/pin_generation bigint not null default 0/i);
-    expect(sql).toMatch(/mark_pin_reset[\s\S]*pin_generation = pin_generation [+] 1/i);
-    expect(sql).toMatch(/grant execute on function public[.]mark_pin_reset[(]uuid[)] to service_role/i);
-    expect(adminEdge).toContain("rpc('mark_pin_reset'");
-    expect(adminEdge.indexOf('updateUserById(userId')).toBeLessThan(adminEdge.indexOf("rpc('mark_pin_reset'"));
+    expect(baseSql).toMatch(/pin_generation bigint not null default 0/i);
+    expect(resetSql).toMatch(/must_change_pin = true[\s\S]*pin_generation = pin_generation [+] 1/i);
+    expect(adminEdge).toContain("rpc('begin_student_pin_reset'");
+    expect(adminEdge.indexOf("rpc('begin_student_pin_reset'")).toBeLessThan(adminEdge.indexOf('updateUserById(userId'));
     expect(changeEdge).toContain('pin_generation');
-    expect(changeEdge).toMatch(/[.]eq[(]'pin_generation', profile[.]pin_generation[)]/);
+    expect(changeEdge).toContain("rpc('begin_student_pin_change'");
+    expect(changeEdge).toContain("rpc('finish_student_pin_change'");
+    expect(changeEdge).toContain('p_generation: profile.pin_generation');
+  });
+  it('defines service-only owned operation leases and reset expiry', () => {
+    const sql = read('supabase/migrations/20260725000000_atomic_student_pin_reset.sql');
+    for (const name of ['begin_student_pin_reset', 'finish_student_pin_reset', 'begin_student_pin_change', 'finish_student_pin_change']) {
+      expect(sql).toMatch(new RegExp(String.raw`create or replace function public[.]${name}[\s\S]*?security definer set search_path = ''`, 'i'));
+      expect(sql).toMatch(new RegExp(`revoke all on function public[.]${name}[^;]+from public, anon, authenticated`, 'i'));
+      expect(sql).toMatch(new RegExp(`grant execute on function public[.]${name}[^;]+to service_role`, 'i'));
+    }
+    expect(sql).toContain("pin_operation_expires_at = now() + interval '1 minute'");
+    expect(sql).toMatch(/reset_pin_expires_at is not null and target[.]reset_pin_expires_at <= now[(][)]/i);
+    expect(sql).toMatch(/finish_student_pin_reset[\s\S]*pin_operation_id = p_operation_id[\s\S]*pin_operation_kind = 'reset'/i);
+    expect(sql).toMatch(/finish_student_pin_change[\s\S]*must_change_pin = false[\s\S]*pin_operation_id = p_operation_id[\s\S]*pin_operation_kind = 'change'/i);
+    expect(sql).not.toMatch(/create or replace function public[.]mark_pin_reset/i);
+    expect(read('PORTAL_MVP.md')).toMatch(/change-pin[\s\S]*admin-users[\s\S]*5분[\s\S]*migration/i);
+  });
+  it('never allows the fixed temporary reset PIN to become a permanent PIN', () => {
+    const edge = read('supabase/functions/change-pin/index.ts');
+    expect(edge).toMatch(/clean === '123456'[\s\S]*throw new Error/);
+    expect(edge.indexOf("clean === '123456'")).toBeLessThan(edge.indexOf("rpc('begin_student_pin_change'"));
+    expect(read('PORTAL_MVP.md')).toContain('새 PIN으로 임시 PIN `123456`을 재사용할 수 없습니다');
+  });
+  it('creates operation IDs in Edge Functions and never accepts a client nonce', () => {
+    for (const path of ['supabase/functions/admin-users/index.ts', 'supabase/functions/change-pin/index.ts']) {
+      const edge = read(path);
+      expect(edge).toContain('crypto.randomUUID()');
+      expect(edge).not.toMatch(/body[.](?:operation|nonce)|body\[['"](?:operation|nonce)/i);
+      expect(edge).toContain('20_000');
+    }
   });
   it('fails closed when account profile mutations are partial', () => {
     const edge = read('supabase/functions/admin-users/index.ts');
