@@ -1,12 +1,13 @@
 import { describe, expect, it } from 'vitest';
 
 const minute = 60_000;
+const operationLease = 2 * minute;
 const initial = () => ({ mustChange: true, generation: 0, resetExpires: null, operation: null, password: 'initial' });
 const live = (state, now) => state.operation && state.operation.expires > now;
 function beginReset(state, id, now) {
   if (live(state, now)) throw new Error('busy');
   return { ...state, mustChange: true, generation: state.generation + 1, resetExpires: now + 10 * minute,
-    operation: { id, kind: 'reset', expires: now + minute } };
+    operation: { id, kind: 'reset', expires: now + operationLease } };
 }
 function finishReset(state, id, generation) {
   if (state.operation?.id !== id || state.operation.kind !== 'reset' || state.generation !== generation) return { state, finished: false };
@@ -16,7 +17,7 @@ function beginChange(state, expectedGeneration, id, now) {
   if (!state.mustChange || state.generation !== expectedGeneration) throw new Error('state changed');
   if (state.resetExpires !== null && state.resetExpires <= now) throw new Error('expired');
   if (live(state, now)) throw new Error('busy');
-  return { ...state, operation: { id, kind: 'change', expires: now + minute } };
+  return { ...state, operation: { id, kind: 'change', expires: now + operationLease } };
 }
 function finishChange(state, id, generation) {
   if (state.operation?.id !== id || state.operation.kind !== 'change' || state.generation !== generation) return { state, finished: false };
@@ -57,7 +58,7 @@ describe('PIN operation lease state machine', () => {
     const failedReset = beginReset(initial(), 'crashed', 0); // no Auth update or finish
     expect(canUsePortal(failedReset)).toBe(false);
     expect(() => beginReset(failedReset, 'retry-too-soon', 30_000)).toThrow('busy');
-    const retry = beginReset(failedReset, 'retry', minute + 1);
+    const retry = beginReset(failedReset, 'retry', operationLease + 1);
     expect(retry.generation).toBe(2); expect(retry.operation.id).toBe('retry');
   });
 });

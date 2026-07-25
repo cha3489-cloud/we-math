@@ -190,6 +190,10 @@ describe('student portal security boundary', () => {
       expect(sql).toMatch(new RegExp(`grant execute on function public[.]${name}[^;]+to service_role`, 'i'));
     }
     expect(sql).toContain("pin_operation_expires_at = now() + interval '1 minute'");
+    const leaseUpgrade = read('supabase/migrations/20260725010000_extend_pin_operation_lease.sql');
+    expect(leaseUpgrade.match(/pin_operation_expires_at = now[(][)] [+] interval '2 minutes'/g)).toHaveLength(2);
+    expect(leaseUpgrade).toMatch(/revoke all on function public[.]begin_student_pin_reset[^;]+from public, anon, authenticated/i);
+    expect(leaseUpgrade).toMatch(/grant execute on function public[.]begin_student_pin_change[^;]+to service_role/i);
     expect(sql).toMatch(/reset_pin_expires_at is not null and target[.]reset_pin_expires_at <= now[(][)]/i);
     expect(sql).toMatch(/finish_student_pin_reset[\s\S]*pin_operation_id = p_operation_id[\s\S]*pin_operation_kind = 'reset'/i);
     expect(sql).toMatch(/finish_student_pin_change[\s\S]*must_change_pin = false[\s\S]*pin_operation_id = p_operation_id[\s\S]*pin_operation_kind = 'change'/i);
@@ -207,8 +211,13 @@ describe('student portal security boundary', () => {
       const edge = read(path);
       expect(edge).toContain('crypto.randomUUID()');
       expect(edge).not.toMatch(/body[.](?:operation|nonce)|body\[['"](?:operation|nonce)/i);
-      expect(edge).toContain('20_000');
+      expect(edge).toContain('DB_REQUEST_TIMEOUT_MS');
+      expect(edge).toContain('AUTH_UPDATE_TIMEOUT_MS');
     }
+    const retry = read('supabase/functions/_shared/retry.ts');
+    expect(retry).toContain('DB_REQUEST_TIMEOUT_MS = 20_000');
+    expect(retry).toContain('AUTH_UPDATE_TIMEOUT_MS = 4_000');
+    expect(retry).toContain('PIN_OPERATION_LEASE_MS = 120_000');
   });
   it('fails closed when account profile mutations are partial', () => {
     const edge = read('supabase/functions/admin-users/index.ts');

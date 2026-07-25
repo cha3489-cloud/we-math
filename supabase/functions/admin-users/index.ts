@@ -1,4 +1,5 @@
 import { createClient } from 'npm:@supabase/supabase-js@2';
+import { AUTH_UPDATE_TIMEOUT_MS, DB_REQUEST_TIMEOUT_MS, fetchWithTimeout, retryTransientJwtKeyError } from '../_shared/retry.ts';
 import { isAllowedOrigin, productionOrigin } from '../_shared/origin.ts';
 const url = Deno.env.get('SUPABASE_URL')!;
 const anonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
@@ -7,10 +8,8 @@ const json = (body: unknown, status = 200, origin = productionOrigin) => new Res
 const phone = (value: unknown) => { const clean = String(value ?? '').replace(/[^0-9]/g, ''); if (!/^01[016789][0-9]{7,8}$/.test(clean)) throw new Error('invalid phone'); return clean; };
 const pin = (value: unknown) => { const clean = String(value ?? ''); if (!/^\d{6}$/.test(clean)) throw new Error('invalid PIN'); return clean; };
 const resetPin = '123456';
-const boundedFetch: typeof fetch = async (input, init = {}) => {
-  const controller = new AbortController(); const timer = setTimeout(() => controller.abort(), 20_000);
-  try { return await fetch(input, { ...init, signal: controller.signal }); } finally { clearTimeout(timer); }
-};
+const boundedFetch = fetchWithTimeout(DB_REQUEST_TIMEOUT_MS);
+const authUpdateFetch = fetchWithTimeout(AUTH_UPDATE_TIMEOUT_MS);
 Deno.serve(async (request) => {
   const origin = request.headers.get('origin') ?? productionOrigin;
   if (!isAllowedOrigin(origin)) return new Response(JSON.stringify({ error: 'origin denied' }), { status: 403, headers: { 'content-type': 'application/json', 'vary': 'Origin' } });
@@ -26,6 +25,7 @@ Deno.serve(async (request) => {
   const caller = await userResponse.json() as { id?: string };
   if (!caller.id) return json({ error: 'unauthorized' }, 401, origin);
   const service = createClient(url, serviceKey, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: boundedFetch } });
+  const authService = createClient(url, serviceKey, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: authUpdateFetch } });
   const [{ data: role, error: roleError }, { data: profile, error: profileError }] = await Promise.all([
     service.from('user_roles').select('role').eq('user_id', caller.id).single(),
     service.from('profiles').select('suspended_at,must_change_pin').eq('id', caller.id).single(),
@@ -51,7 +51,10 @@ Deno.serve(async (request) => {
       const operationId = crypto.randomUUID();
       const { data: generation, error: resetStateError } = await service.rpc('begin_student_pin_reset', { p_user_id: userId, p_operation_id: operationId });
       if (resetStateError) throw resetStateError;
-      const { error } = await service.auth.admin.updateUserById(userId, { password: 'wm' + resetPin + 'sq' }); if (error) throw error;
+      await retryTransientJwtKeyError(async () => {
+        const { error } = await authService.auth.admin.updateUserById(userId, { password: 'wm' + resetPin + 'sq' });
+        if (error) throw error;
+      });
       const { data: finished, error: finishError } = await service.rpc('finish_student_pin_reset', { p_user_id: userId, p_generation: generation, p_operation_id: operationId });
       if (finishError) throw finishError;
       if (!finished) return json({ error: 'PIN reset completion lost its operation lease; retry reset' }, 409, origin);
