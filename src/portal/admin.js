@@ -5,6 +5,7 @@ import {
   validatePin, validateLoginInput, validateAccountInput, normalizeRelation,
   waitingLabel, REVIEW_TAGS, validateProblemRef,
   validateFeedbackItems, checkItemsForStatus, composeFeedbackBody, isAutoComposedFeedback,
+  authErrorMessage,
 } from './domain.js';
 import { signIn, signOut } from '../auth.js';
 
@@ -387,11 +388,14 @@ async function showAdmin(user) {
   currentAdmin = user; await ensureAdmin(user);
   const { data: profile, error } = await supabase.from('profiles').select('name,must_change_pin').eq('id', user.id).single();
   if (error) throw error;
-  byId('login').hidden = true; byId('logout').hidden = false;
-  if (profile.must_change_pin) { byId('admin').hidden = true; byId('pinChange').hidden = false; return; }
-  byId('pinChange').hidden = true; byId('admin').hidden = false;
+  if (profile.must_change_pin) {
+    byId('login').hidden = true; byId('logout').hidden = false;
+    byId('admin').hidden = true; byId('pinChange').hidden = false; return;
+  }
   await switchTab('review');
   await loadQueue();
+  byId('login').hidden = true; byId('logout').hidden = false;
+  byId('pinChange').hidden = true; byId('admin').hidden = false;
 }
 byId('loginForm').addEventListener('submit', async (event) => {
   event.preventDefault();
@@ -400,7 +404,7 @@ byId('loginForm').addEventListener('submit', async (event) => {
     const input = validateLoginInput(byId('phone').value, byId('pin').value);
     const result = await signIn(input.phone, input.pin);
     await showAdmin(result.user);
-  } catch (error) { showError(output, error.message); }
+  } catch (error) { showError(output, authErrorMessage(error)); }
 });
 byId('pinChangeForm').addEventListener('submit', async (event) => {
   event.preventDefault(); const form = event.currentTarget; const output = byId('pinChangeError'); const button = form.querySelector('button'); showError(output, '');
@@ -409,13 +413,15 @@ byId('pinChangeForm').addEventListener('submit', async (event) => {
     if (pin !== byId('confirmPin').value) throw new Error('새 PIN이 일치하지 않습니다.');
     button.disabled = true;
     const { data: { user: currentUser }, error: userError } = await supabase.auth.getUser();
-    if (userError || !currentUser?.email) throw new Error('다시 로그인하세요.');
+    if (userError) throw userError;
+    if (!currentUser?.email) throw new Error('다시 로그인하세요.');
     await invokeAuthenticated('change-pin', { pin });
     const result = await signIn(currentUser.email.split('@')[0], pin);
     form.reset(); await showAdmin(result.user);
-  } catch (error) { showError(output, error.message); } finally { button.disabled = false; }
+  } catch (error) { showError(output, authErrorMessage(error)); } finally { button.disabled = false; }
 });
 byId('logout').addEventListener('click', async () => { await signOut(); location.reload(); });
 
-const { data: { user } } = await supabase.auth.getUser();
-if (user) showAdmin(user).catch((error) => showError(byId('loginError'), error.message));
+const { data: userData, error: userError } = await supabase.auth.getUser();
+if (userError) showError(byId('loginError'), authErrorMessage(userError));
+else if (userData?.user) showAdmin(userData.user).catch((error) => showError(byId('loginError'), authErrorMessage(error)));

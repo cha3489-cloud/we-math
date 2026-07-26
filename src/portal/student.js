@@ -5,6 +5,7 @@ import {
   validatePin, validateLoginInput, validateSubmissionInput, assignmentStatus,
   latestAttempt, canSubmitAttempt, normalizeRelation, groupAssignments,
   redoProblems, allFeedbackItems, isAutoComposedFeedback, assessImageQuality, STATUS_META,
+  authErrorMessage,
 } from './domain.js';
 import { signIn, signOut } from '../auth.js';
 
@@ -85,9 +86,10 @@ async function loadDashboard(user) {
   await requireStudent(user);
   const { data: profile, error: profileError } = await supabase.from('profiles').select('name,must_change_pin').eq('id', user.id).single();
   if (profileError) throw profileError;
-  byId('login').hidden = true; byId('logout').hidden = false;
-  if (profile.must_change_pin) { byId('dashboard').hidden = true; byId('pinChange').hidden = false; return; }
-  byId('pinChange').hidden = true;
+  if (profile.must_change_pin) {
+    byId('login').hidden = true; byId('logout').hidden = false;
+    byId('dashboard').hidden = true; byId('pinChange').hidden = false; return;
+  }
   let result = await assignmentsQuery(ASSIGNMENTS_SELECT, user.id);
   if (isMissingFeedbackSourceColumn(result.error)) {
     result = await assignmentsQuery(LEGACY_FEEDBACK_SELECT, user.id);
@@ -96,6 +98,8 @@ async function loadDashboard(user) {
   byId('studentName').textContent = profile.name;
   renderGroups(result.data || [], user.id);
   byId('dashboard').hidden = false;
+  byId('login').hidden = true; byId('logout').hidden = false;
+  byId('pinChange').hidden = true;
 }
 
 function renderGroups(assignments, userId) {
@@ -290,7 +294,7 @@ byId('loginForm').addEventListener('submit', async (event) => {
     const input = validateLoginInput(byId('phone').value, byId('pin').value);
     const result = await signIn(input.phone, input.pin);
     await loadDashboard(result.user);
-  } catch (error) { showError(byId('loginError'), error.message); }
+  } catch (error) { showError(byId('loginError'), authErrorMessage(error)); }
 });
 byId('pinChangeForm').addEventListener('submit', async (event) => {
   event.preventDefault(); const form = event.currentTarget; const output = byId('pinChangeError'); const button = form.querySelector('button'); showError(output, '');
@@ -299,13 +303,15 @@ byId('pinChangeForm').addEventListener('submit', async (event) => {
     if (pin !== byId('confirmPin').value) throw new Error('새 PIN이 일치하지 않습니다.');
     button.disabled = true;
     const { data: { user: currentUser }, error: userError } = await supabase.auth.getUser();
-    if (userError || !currentUser?.email) throw new Error('다시 로그인하세요.');
+    if (userError) throw userError;
+    if (!currentUser?.email) throw new Error('다시 로그인하세요.');
     await invokeAuthenticated('change-pin', { pin });
     const result = await signIn(currentUser.email.split('@')[0], pin);
     form.reset(); await loadDashboard(result.user);
-  } catch (error) { showError(output, error.message); } finally { button.disabled = false; }
+  } catch (error) { showError(output, authErrorMessage(error)); } finally { button.disabled = false; }
 });
 byId('logout').addEventListener('click', async () => { await signOut(); location.reload(); });
 
-const { data: { user } } = await supabase.auth.getUser();
-if (user) loadDashboard(user).catch((error) => showError(byId('loginError'), error.message));
+const { data: userData, error: userError } = await supabase.auth.getUser();
+if (userError) showError(byId('loginError'), authErrorMessage(userError));
+else if (userData?.user) loadDashboard(userData.user).catch((error) => showError(byId('loginError'), authErrorMessage(error)));

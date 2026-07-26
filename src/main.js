@@ -1,6 +1,6 @@
 import './style.css';
 import { signIn, signOut, onAuthChange, getProfile } from './auth.js';
-import { validateLoginInput } from './portal/domain.js';
+import { validateLoginInput, authErrorMessage } from './portal/domain.js';
 import { supabase } from './portal/client.js';
 
 // ── Nav 스크롤 ─────────────────────────────────
@@ -160,8 +160,11 @@ function initAuth() {
     error.textContent = '';
     try {
       const input = validateLoginInput(document.getElementById('loginPhone').value, document.getElementById('loginPin').value);
-      const result = await signIn(input.phone, input.pin); hide(); location.href = await portalPath(result.user.id);
-    } catch (cause) { error.textContent = cause.message?.includes('Invalid login') ? '전화번호 또는 PIN이 올바르지 않습니다.' : cause.message; }
+      const result = await signIn(input.phone, input.pin);
+      const path = await portalPath(result.user.id);
+      hide();
+      location.href = path;
+    } catch (cause) { error.textContent = authErrorMessage(cause); }
   });
   document.getElementById('navLogoutBtn').addEventListener('click', async () => { await signOut(); location.reload(); });
   onAuthChange(async (user) => {
