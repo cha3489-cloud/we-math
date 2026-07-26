@@ -37,5 +37,10 @@ describe('portal operational hardening', () => {
     expect(admin).toContain('p_auto_composed: autoComposed');
     expect(admin).toContain('feedback(body,auto_composed,created_at,feedback_items');
     expect(student).toContain('feedback(body,auto_composed,created_at,feedback_items');
+    expect(admin).toContain('isMissingFeedbackSourceColumn(result.error)');
+    expect(student).toContain('isMissingFeedbackSourceColumn(result.error)');
+    expect(admin).toContain('isMissingExplicitFeedbackRpc(result.error)');
+    expect(admin).toContain('LEGACY_FEEDBACK_SELECT');
+    expect(student).toContain('LEGACY_FEEDBACK_SELECT');
   });
 });

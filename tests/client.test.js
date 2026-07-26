@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { invokeAuthenticated, supabase } from '../src/portal/client.js';
+import { invokeAuthenticated, isMissingFeedbackSourceColumn, isMissingExplicitFeedbackRpc, supabase } from '../src/portal/client.js';
 
 describe('authenticated Edge Function calls', () => {
   afterEach(() => vi.restoreAllMocks());
@@ -16,6 +16,13 @@ describe('authenticated Edge Function calls', () => {
     expect(url).toMatch(/\/functions\/v1\/change-pin$/);
     expect(options.headers.Authorization).toBe('Bearer test-access-token');
     expect(options.headers.apikey).toMatch(/^sb_publishable_/);
+  });
+
+  it('recognizes only the two expected mixed-schema compatibility errors', () => {
+    expect(isMissingFeedbackSourceColumn({ code: '42703', message: 'column feedback.auto_composed does not exist' })).toBe(true);
+    expect(isMissingFeedbackSourceColumn({ code: '42501', message: 'permission denied for auto_composed' })).toBe(false);
+    expect(isMissingExplicitFeedbackRpc({ code: 'PGRST202', message: 'review_submission_v2 with p_auto_composed was not found' })).toBe(true);
+    expect(isMissingExplicitFeedbackRpc({ code: 'PGRST202', message: 'some_other_rpc was not found' })).toBe(false);
   });
 
   it('surfaces the server error message', async () => {

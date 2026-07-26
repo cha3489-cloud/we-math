@@ -1,6 +1,6 @@
 // 적용 경로: src/portal/student.js (전체 교체)
 import './portal.css';
-import { invokeAuthenticated, supabase } from './client.js';
+import { invokeAuthenticated, isMissingFeedbackSourceColumn, supabase } from './client.js';
 import {
   validatePin, validateLoginInput, validateSubmissionInput, assignmentStatus,
   latestAttempt, canSubmitAttempt, normalizeRelation, groupAssignments,
@@ -76,6 +76,11 @@ async function analyzeImage(file) {
 }
 
 // ── 대시보드 ────────────────────────────────────────────────────────────
+const ASSIGNMENTS_SELECT = 'id,title,description,due_at,attachment_paths,submissions(id,attempt_no,status,body,file_paths,submitted_at,reviewed_at,feedback(body,auto_composed,created_at,feedback_items(problem_ref,review_tag,comment,redo_required)))';
+const LEGACY_FEEDBACK_SELECT = 'id,title,description,due_at,attachment_paths,submissions(id,attempt_no,status,body,file_paths,submitted_at,reviewed_at,feedback(body,created_at,feedback_items(problem_ref,review_tag,comment,redo_required)))';
+function assignmentsQuery(select, userId) {
+  return supabase.from('assignments').select(select).eq('student_id', userId).order('due_at');
+}
 async function loadDashboard(user) {
   await requireStudent(user);
   const { data: profile, error: profileError } = await supabase.from('profiles').select('name,must_change_pin').eq('id', user.id).single();
@@ -83,12 +88,13 @@ async function loadDashboard(user) {
   byId('login').hidden = true; byId('logout').hidden = false;
   if (profile.must_change_pin) { byId('dashboard').hidden = true; byId('pinChange').hidden = false; return; }
   byId('pinChange').hidden = true;
-  const { data: assignments, error } = await supabase.from('assignments')
-    .select('id,title,description,due_at,attachment_paths,submissions(id,attempt_no,status,body,file_paths,submitted_at,reviewed_at,feedback(body,auto_composed,created_at,feedback_items(problem_ref,review_tag,comment,redo_required)))')
-    .eq('student_id', user.id).order('due_at');
-  if (error) throw error;
+  let result = await assignmentsQuery(ASSIGNMENTS_SELECT, user.id);
+  if (isMissingFeedbackSourceColumn(result.error)) {
+    result = await assignmentsQuery(LEGACY_FEEDBACK_SELECT, user.id);
+  }
+  if (result.error) throw result.error;
   byId('studentName').textContent = profile.name;
-  renderGroups(assignments || [], user.id);
+  renderGroups(result.data || [], user.id);
   byId('dashboard').hidden = false;
 }
 
