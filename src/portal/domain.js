@@ -146,6 +146,12 @@ export function allFeedbackItems(feedbackValue) {
   return normalizeRelation(feedbackValue)
     .flatMap((entry) => normalizeRelation(entry?.feedback_items));
 }
+export function isAutoComposedFeedback(note, structuredItems = []) {
+  if (note?.auto_composed === true) return true;
+  if (note?.auto_composed === false) return false;
+  return structuredItems.length > 0
+    && String(note?.body || '').startsWith('이번 제출에서 다시 확인할 부분입니다.');
+}
 
 // ── 업로드 품질 검사(순수 판정부): 경고만, 제출 차단 금지 ────────────────
 export function assessImageQuality(metrics, { minDimension = 900, blurThreshold = 60 } = {}) {

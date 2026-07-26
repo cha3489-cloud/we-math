@@ -109,5 +109,24 @@ begin
   raise notice 'PASS(7): feedback_items 직접 쓰기 권한 없음';
 end $$;
 
+-- 8) assignment 소유 관계는 브라우저 역할에서 바꿀 수 없고 안전한 컬럼만 UPDATE 가능해야 함
+do $$
+declare updated integer;
+begin
+  if has_column_privilege(current_user, 'public.assignments', 'student_id', 'UPDATE')
+     or has_column_privilege(current_user, 'public.assignments', 'created_by', 'UPDATE') then
+    raise exception 'FAIL(8a): assignment 소유 관계 컬럼에 UPDATE 권한이 있음';
+  end if;
+  if not has_column_privilege(current_user, 'public.assignments', 'title', 'UPDATE') then
+    raise exception 'FAIL(8b): 안전한 assignment 수정 컬럼 권한까지 제거됨';
+  end if;
+  update public.assignments set title = title where student_id = auth.uid();
+  get diagnostics updated = row_count;
+  if updated > 0 then
+    raise exception 'FAIL(8c): 학생이 assignment를 수정함';
+  end if;
+  raise notice 'PASS(8): 소유 관계 권한 차단·안전 컬럼 권한 유지·학생 UPDATE RLS 차단';
+end $$;
+
 rollback;
 -- 전부 PASS notice가 출력되고 rollback으로 종료되면 통과.

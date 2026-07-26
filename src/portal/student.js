@@ -4,7 +4,7 @@ import { invokeAuthenticated, supabase } from './client.js';
 import {
   validatePin, validateLoginInput, validateSubmissionInput, assignmentStatus,
   latestAttempt, canSubmitAttempt, normalizeRelation, groupAssignments,
-  redoProblems, allFeedbackItems, assessImageQuality, STATUS_META,
+  redoProblems, allFeedbackItems, isAutoComposedFeedback, assessImageQuality, STATUS_META,
 } from './domain.js';
 import { signIn, signOut } from '../auth.js';
 
@@ -84,7 +84,7 @@ async function loadDashboard(user) {
   if (profile.must_change_pin) { byId('dashboard').hidden = true; byId('pinChange').hidden = false; return; }
   byId('pinChange').hidden = true;
   const { data: assignments, error } = await supabase.from('assignments')
-    .select('id,title,description,due_at,attachment_paths,submissions(id,attempt_no,status,body,file_paths,submitted_at,reviewed_at,feedback(body,created_at,feedback_items(problem_ref,review_tag,comment,redo_required)))')
+    .select('id,title,description,due_at,attachment_paths,submissions(id,attempt_no,status,body,file_paths,submitted_at,reviewed_at,feedback(body,auto_composed,created_at,feedback_items(problem_ref,review_tag,comment,redo_required)))')
     .eq('student_id', user.id).order('due_at');
   if (error) throw error;
   byId('studentName').textContent = profile.name;
@@ -180,7 +180,7 @@ function feedbackBlock(attempt) {
   }
   for (const note of normalizeRelation(attempt.feedback)) {
     const bodyText = String(note?.body || '');
-    const autoComposed = items.length > 0 && bodyText.startsWith('이번 제출에서 다시 확인할 부분입니다.');
+    const autoComposed = isAutoComposedFeedback(note, items);
     if (bodyText && !autoComposed) {
       const body = document.createElement('p'); body.className = 'meta'; body.textContent = bodyText; box.append(body);
     }

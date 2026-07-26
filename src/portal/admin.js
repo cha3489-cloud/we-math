@@ -4,7 +4,7 @@ import { invokeAuthenticated, supabase } from './client.js';
 import {
   validatePin, validateLoginInput, validateAccountInput, normalizeRelation,
   waitingLabel, REVIEW_TAGS, validateProblemRef,
-  validateFeedbackItems, checkItemsForStatus, composeFeedbackBody,
+  validateFeedbackItems, checkItemsForStatus, composeFeedbackBody, isAutoComposedFeedback,
 } from './domain.js';
 import { signIn, signOut } from '../auth.js';
 
@@ -187,10 +187,13 @@ async function decide(status) {
   try {
     const validItems = validateFeedbackItems(items);
     checkItemsForStatus(status, validItems);
-    const body = composeFeedbackBody(validItems, byId('overallComment').value);
+    const overallComment = byId('overallComment').value;
+    const autoComposed = !String(overallComment).trim();
+    const body = composeFeedbackBody(validItems, overallComment);
     processing = true; buttons.forEach((b) => { b.disabled = true; });
     const { error } = await supabase.rpc('review_submission_v2', {
-      p_submission_id: current.attempt.id, p_body: body, p_status: status, p_items: validItems,
+      p_submission_id: current.attempt.id, p_body: body, p_status: status,
+      p_items: validItems, p_auto_composed: autoComposed,
     });
     if (error) throw error;
     const decidedId = current.attempt.id;
@@ -286,7 +289,7 @@ function workflowCard(item) {
         text.textContent = item.problem_ref + ' · ' + item.review_tag + (item.redo_required ? ' · 다시 풀기' : '') + (item.comment ? ' — ' + item.comment : '');
         section.append(text);
       }
-      const autoComposed = structured.length > 0 && String(note.body || '').startsWith('이번 제출에서 다시 확인할 부분입니다.');
+      const autoComposed = isAutoComposedFeedback(note, structured);
       if (note.body && !autoComposed) { const text = document.createElement('p'); text.className = 'feedback'; text.textContent = '총평: ' + note.body; section.append(text); }
     }
     if (attempt.status === 'submitted') { const pending = document.createElement('p'); pending.className = 'meta'; pending.textContent = '과제 검토 탭에서 처리할 수 있습니다.'; section.append(pending); }
@@ -304,7 +307,7 @@ async function loadWorkflows() {
   const from = workflowPage * WORKFLOW_PAGE_SIZE;
   const to = from + WORKFLOW_PAGE_SIZE - 1;
   const { data, error, count } = await supabase.from('assignments')
-    .select('id,title,description,due_at,profiles!assignments_student_id_fkey(name),submissions(id,attempt_no,status,body,file_paths,submitted_at,feedback(body,created_at,feedback_items(problem_ref,review_tag,comment,redo_required)))', { count: 'exact' })
+    .select('id,title,description,due_at,profiles!assignments_student_id_fkey(name),submissions(id,attempt_no,status,body,file_paths,submitted_at,feedback(body,auto_composed,created_at,feedback_items(problem_ref,review_tag,comment,redo_required)))', { count: 'exact' })
     .order('created_at', { ascending: false })
     .range(from, to);
   if (error) throw error;
