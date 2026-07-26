@@ -1,114 +1,24 @@
-<!doctype html><html lang=ko><head><meta charset=UTF-8><meta name=viewport content='width=device-width, initial-scale=1'><title>관리자 | 시퀀스 수학</title></head><body><main class="portal portal-wide">
-<header><a href=../>시퀀스 수학 관리자</a><button id=logout hidden>로그아웃</button></header>
+<!doctype html><html lang=ko><head><meta charset=UTF-8><meta name=viewport content='width=device-width, initial-scale=1'><meta name=theme-color content=#102d2a><title>관리자 | 시퀀스 수학</title></head><body class=admin-portal><main class="portal portal-wide">
+<header class=portal-header><a href=../ class=brand><span class=brand-mark aria-hidden=true>S</span><span>시퀀스 수학<small>ADMIN WORKSPACE</small></span></a><button id=logout class="secondary header-action" hidden>로그아웃</button></header>
 
-<section id=login class=panel>
-  <h1>관리자 로그인</h1>
-  <form id=loginForm>
-    <label>전화번호<input id=phone type=tel required></label>
-    <label>PIN<input id=pin type=password inputmode=numeric minlength=4 maxlength=6 required></label>
-    <button>로그인</button>
-    <p id=loginError class=error role=alert></p>
-  </form>
+<section id=login class="panel auth-card admin-auth">
+  <div class=auth-intro><p class="portal-kicker">SEQUENCE WORKSPACE</p><h1>수업보다 먼저,<br>학생의 흐름을 봅니다.</h1><p>검토가 필요한 제출을 순서대로 확인하고, 다음 행동이 분명한 피드백을 남기세요.</p><img class=auth-illustration src=/portal/login-progress.svg alt="" aria-hidden=true><div class=auth-principle><span aria-hidden=true>✓</span><strong>5분 진단 · 1조치 · 30초 기록</strong></div></div>
+  <div class=auth-form><p class=eyebrow>관리자 전용</p><h2>워크스페이스 로그인</h2><form id=loginForm><label>전화번호<input id=phone type=tel inputmode=numeric autocomplete=username required></label><label>PIN<input id=pin type=password inputmode=numeric minlength=4 maxlength=6 autocomplete=current-password required></label><button>로그인</button><p id=loginError class=error role=alert></p></form></div>
 </section>
 
-<section id=pinChange hidden class=panel>
-  <h1>새 PIN 설정</h1>
-  <p>관리 기능을 사용하려면 숫자 6자리 PIN으로 변경하세요.</p>
-  <form id=pinChangeForm>
-    <label>새 PIN<input id=newPin type=password inputmode=numeric minlength=6 maxlength=6 required autocomplete=new-password></label>
-    <label>새 PIN 확인<input id=confirmPin type=password inputmode=numeric minlength=6 maxlength=6 required autocomplete=new-password></label>
-    <button>PIN 변경</button>
-    <p id=pinChangeError class=error role=alert></p>
-  </form>
-</section>
+<section id=pinChange hidden class="panel auth-card auth-card-compact"><div class=auth-intro><p class="portal-kicker">SECURE ACCESS</p><h1>관리자 PIN을<br>안전하게 변경합니다.</h1></div><div class=auth-form><p class=eyebrow>PIN 변경</p><h2>새 PIN 설정</h2><p>관리 기능을 사용하려면 숫자 6자리 PIN으로 변경하세요.</p><form id=pinChangeForm><label>새 PIN<input id=newPin type=password inputmode=numeric minlength=6 maxlength=6 required autocomplete=new-password></label><label>새 PIN 확인<input id=confirmPin type=password inputmode=numeric minlength=6 maxlength=6 required autocomplete=new-password></label><button>PIN 변경</button><p id=pinChangeError class=error role=alert></p></form></div></section>
 
 <section id=admin hidden>
-  <nav class=tabs>
-    <button id=tabReview type=button class=tab aria-pressed=true>📋 과제 검토</button>
-    <button id=tabManage type=button class=tab aria-pressed=false>👥 계정·과제 관리</button>
-  </nav>
+  <section class="workspace-header"><div><p class="portal-kicker">TODAY'S WORKSPACE</p><h1>오늘 검토할 제출</h1><p>오래 기다린 학생부터 확인하고, 한 번의 판단으로 다음 과제까지 연결합니다.</p></div><div class="admin-stats"><article><span id=queueCount>0</span><small>검토 대기</small></article><article><span>순서</span><small>오래된 제출 우선</small></article><article><span>자동</span><small>확정 후 다음 이동</small></article></div></section>
+  <nav class=tabs aria-label="관리자 업무 선택"><button id=tabReview type=button class=tab aria-pressed=true><span aria-hidden=true>01</span>과제 검토</button><button id=tabManage type=button class=tab aria-pressed=false><span aria-hidden=true>02</span>계정·과제 관리</button></nav>
   <p id=adminError class=error role=alert></p>
 
-  <!-- 과제 검토 -->
   <section id=reviewSection class=review-layout>
-    <aside class=queue-pane>
-      <h2>검토 대기 <span id=queueCount class=badge-count>0</span></h2>
-      <p class=meta>오래된 제출부터 표시됩니다.</p>
-      <div id=queue class=queue></div>
-      <p id=queueEmpty hidden>검토 대기 중인 제출이 없습니다. ✅</p>
-    </aside>
-
-    <section id=reviewDetail class=detail-pane hidden>
-      <div id=reviewHead class=review-head></div>
-      <div class=viewer-pane>
-        <img id=adminImage alt="제출 사진" hidden>
-        <iframe id=adminFrame title="제출 PDF" hidden></iframe><!-- private-bucket PDF signed URL; sandbox blocks built-in PDF viewers -->
-        <p id=noImage hidden>이 제출에는 첨부 파일이 없습니다. 제출 내용 텍스트를 확인하세요.</p>
-        <div class=viewer-controls>
-          <button type=button id=imgPrev>◀ 이전</button>
-          <span id=imgIndex class=meta></span>
-          <button type=button id=imgNext>다음 ▶</button>
-          <button type=button id=zoomOut>−</button>
-          <button type=button id=zoomIn>＋</button>
-          <button type=button id=rotate>↻ 회전</button>
-        </div>
-        <p id=viewerError class=error role=alert></p>
-      </div>
-      <p id=attemptBody class=attempt-body></p>
-
-      <div class=feedback-pane>
-        <h3>확인 항목</h3>
-        <div class=item-builder>
-          <label>문제 번호<input id=problemRef maxlength=40 placeholder="예: 3번"></label>
-          <div id=tagChips class=chips role=radiogroup aria-label="확인 태그"></div>
-          <label>항목 코멘트 (선택)<input id=itemComment maxlength=1000></label>
-          <label class=check><input type=checkbox id=redoRequired checked> 이 문제 다시 풀기</label>
-          <button type=button id=addItem class=secondary>＋ 항목 추가</button>
-        </div>
-        <ul id=itemList class=item-list></ul>
-        <label>총평 (선택 — 비우면 항목으로 자동 구성)<textarea id=overallComment maxlength=4000></textarea></label>
-        <p id=reviewError class=error role=alert></p>
-        <div class=decide>
-          <button type=button id=decideRevision>✏️ 수정 필요</button>
-          <button type=button id=decideComplete>✅ 완료</button>
-        </div>
-      </div>
-    </section>
-    <p id=noSelection class=meta>왼쪽 대기열에서 제출을 선택하세요.</p>
+    <aside class=queue-pane><div class="queue-toolbar"><div><p class=eyebrow>REVIEW QUEUE</p><h2>대기열</h2></div><span class=queue-order>오래된 순</span></div><p class=meta>학생을 선택하면 답안과 피드백 입력창이 함께 열립니다.</p><div id=queue class=queue></div><div id=queueEmpty class=empty-state hidden><img class=empty-illustration src=/portal/empty-state.svg alt=""><h3>검토가 모두 끝났습니다.</h3><p>새 제출이 들어오면 여기에 표시됩니다.</p></div></aside>
+    <section class="review-workbench"><section id=reviewDetail class=detail-pane hidden><div id=reviewHead class=review-head></div><div class=viewer-pane><img id=adminImage alt="제출 사진" hidden><iframe id=adminFrame title="제출 PDF" hidden></iframe><!-- private-bucket PDF signed URL; sandbox blocks built-in PDF viewers --><p id=noImage hidden>이 제출에는 첨부 파일이 없습니다. 제출 내용 텍스트를 확인하세요.</p><div class=viewer-controls><button type=button id=imgPrev class=secondary>← 이전</button><span id=imgIndex class=meta></span><button type=button id=imgNext class=secondary>다음 →</button><button type=button id=zoomOut class=secondary>축소</button><button type=button id=zoomIn class=secondary>확대</button><button type=button id=rotate class=secondary>회전</button></div><p id=viewerError class=error role=alert></p></div><p id=attemptBody class=attempt-body></p>
+      <div class=feedback-pane><div class=feedback-heading><p class=eyebrow>STRUCTURED FEEDBACK</p><h3>확인 항목</h3><p>문제별 원인과 다음 행동을 짧게 남깁니다.</p></div><div class=item-builder><label>문제 번호<input id=problemRef maxlength=40 placeholder="예: 3번"></label><div id=tagChips class=chips role=radiogroup aria-label="확인 태그"></div><label>항목 코멘트 <span class=optional>(선택)</span><input id=itemComment maxlength=1000 placeholder="학생이 바로 이해할 수 있게 적어주세요"></label><label class=check><input type=checkbox id=redoRequired checked> 이 문제 다시 풀기</label><button type=button id=addItem class=secondary>＋ 확인 항목 추가</button></div><ul id=itemList class=item-list></ul><label>총평 <span class=optional>(선택 — 비우면 항목으로 자동 구성)</span><textarea id=overallComment maxlength=4000 placeholder="전체 풀이에서 잘한 점이나 다음 수업 참고사항"></textarea></label><p id=reviewError class=error role=alert></p><p class=decision-guide>확정 후 다음 제출로 이동합니다.</p><div class=decide><button type=button id=decideRevision class=revision-action>수정 필요</button><button type=button id=decideComplete>완료 확정</button></div></div></section><div id=noSelection class=no-selection><span aria-hidden=true>←</span><h2>검토할 제출을 선택하세요.</h2><p>왼쪽 대기열에서 가장 오래된 제출부터 시작하면 됩니다.</p></div></section>
   </section>
 
-  <!-- 계정·과제 관리 (기존 기능 유지) -->
-  <section id=manageSection hidden>
-    <h2>계정 관리</h2>
-    <form id=accountForm class=panel>
-      <label>이름<input name=name maxlength=40 required></label>
-      <label>전화번호<input name=phone required></label>
-      <label>초기 PIN (숫자 6자리)<input name=pin inputmode=numeric minlength=6 maxlength=6 required></label>
-      <label>역할<select name=role><option value=student>학생</option><option value=admin>관리자</option></select></label>
-      <button>계정 발급</button>
-      <p id=accountResult role=status></p>
-    </form>
-    <h2>사용자 목록</h2>
-    <div id=users class=cards></div>
-    <h2>과제 만들기</h2>
-    <form id=assignmentForm class=panel>
-      <label>학생<select id=assignmentStudent name=student_id required></select></label>
-      <label>제목<input name=title maxlength=120 required></label>
-      <label>설명<textarea name=description></textarea></label>
-      <label>마감 (선택)<input name=due_at type=datetime-local></label>
-      <label>비공개 첨부 (선택)<input name=attachment type=file accept=".pdf,image/jpeg,image/png,image/webp"></label>
-      <button>과제 등록</button>
-      <p id=assignmentResult role=status></p>
-    </form>
-    <h2>전체 과제·제출 현황</h2>
-    <p class=meta>미제출·수정 요청·완료를 포함한 전체 이력입니다. 검토 확정은 과제 검토 탭에서 처리하세요.</p>
-    <div id=workflows class=cards></div>
-    <div class=pager>
-      <button id=workflowPrev type=button class=secondary>이전</button>
-      <span id=workflowPageStatus class=meta aria-live=polite></span>
-      <button id=workflowNext type=button class=secondary>다음</button>
-    </div>
-  </section>
+  <section id=manageSection hidden><div class=section-heading><p class="portal-kicker">ACADEMY OPERATIONS</p><h2>계정과 과제 관리</h2><p>반복 업무는 짧게 처리하고, 전체 이력은 아래에서 확인합니다.</p></div><div class=manage-grid><section><h3>새 계정 발급</h3><form id=accountForm class=panel><label>이름<input name=name maxlength=40 required></label><label>전화번호<input name=phone required></label><label>초기 PIN (숫자 6자리)<input name=pin inputmode=numeric minlength=6 maxlength=6 required></label><label>역할<select name=role><option value=student>학생</option><option value=admin>관리자</option></select></label><button>계정 발급</button><p id=accountResult role=status></p></form></section><section><h3>과제 만들기</h3><form id=assignmentForm class=panel><label>학생<select id=assignmentStudent name=student_id required></select></label><label>제목<input name=title maxlength=120 required></label><label>설명<textarea name=description></textarea></label><label>마감 (선택)<input name=due_at type=datetime-local></label><label>비공개 첨부 (선택)<input name=attachment type=file accept=".pdf,image/jpeg,image/png,image/webp"></label><button>과제 등록</button><p id=assignmentResult role=status></p></form></section></div><div class=section-heading><p class=eyebrow>MEMBERS</p><h3>사용자 목록</h3></div><div id=users class=cards></div><div class=section-heading><p class=eyebrow>HISTORY</p><h3>전체 과제·제출 현황</h3><p class=meta>미제출·수정 요청·완료를 포함한 전체 이력입니다. 검토 확정은 과제 검토 탭에서 처리하세요.</p></div><div id=workflows class=cards></div><div class=pager><button id=workflowPrev type=button class=secondary>이전</button><span id=workflowPageStatus class=meta aria-live=polite></span><button id=workflowNext type=button class=secondary>다음</button></div></section>
 </section>
-
 </main><script type=module src=/src/portal/admin.js></script></body></html>
