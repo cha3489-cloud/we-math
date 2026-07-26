@@ -342,8 +342,11 @@ async function download(bucket, path) {
   location.assign(data.signedUrl);
 }
 
+function assignmentProfile(item) {
+  return normalizeRelation(item.profiles)[0];
+}
 function assignmentStudent(item) {
-  return normalizeRelation(item.profiles)[0]?.name || '학생';
+  return assignmentProfile(item)?.name || '학생';
 }
 function dueText(item) {
   return item.due_at ? '마감 ' + new Date(item.due_at).toLocaleString('ko-KR') : '마감 없음';
@@ -356,7 +359,14 @@ function workflowCard(item) {
   const status = document.createElement('span'); status.className = 'workflow-status status-' + meta.status; status.textContent = meta.label;
   const title = document.createElement('p'); title.className = 'workflow-title'; title.textContent = item.title;
   const metaLine = document.createElement('p'); metaLine.className = 'meta'; metaLine.textContent = dueText(item);
-  card.append(heading, status, title, metaLine);
+  card.append(heading, status);
+  if (assignmentProfile(item)?.suspended_at) {
+    const accountStatus = document.createElement('span');
+    accountStatus.className = 'account-status status-suspended';
+    accountStatus.textContent = '정지 계정';
+    card.append(accountStatus);
+  }
+  card.append(title, metaLine);
   if (item.description) { const description = document.createElement('p'); description.textContent = item.description; card.append(description); }
 
   const attempts = normalizeRelation(item.submissions).sort((a, b) => a.attempt_no - b.attempt_no);
@@ -437,8 +447,8 @@ function renderActionItems() {
 }
 
 const WORKFLOW_PAGE_SIZE = 50;
-const WORKFLOW_SELECT = 'id,title,description,due_at,profiles!assignments_student_id_fkey(name),submissions(id,attempt_no,status,body,file_paths,submitted_at,feedback(body,auto_composed,created_at,feedback_items(problem_ref,review_tag,comment,redo_required)))';
-const LEGACY_FEEDBACK_SELECT = 'id,title,description,due_at,profiles!assignments_student_id_fkey(name),submissions(id,attempt_no,status,body,file_paths,submitted_at,feedback(body,created_at,feedback_items(problem_ref,review_tag,comment,redo_required)))';
+const WORKFLOW_SELECT = 'id,title,description,due_at,profiles!assignments_student_id_fkey(name,suspended_at),submissions(id,attempt_no,status,body,file_paths,submitted_at,feedback(body,auto_composed,created_at,feedback_items(problem_ref,review_tag,comment,redo_required)))';
+const LEGACY_FEEDBACK_SELECT = 'id,title,description,due_at,profiles!assignments_student_id_fkey(name,suspended_at),submissions(id,attempt_no,status,body,file_paths,submitted_at,feedback(body,created_at,feedback_items(problem_ref,review_tag,comment,redo_required)))';
 let workflowPage = 0;
 const workflowsRequestGate = createLatestRequestGate();
 

@@ -67,14 +67,20 @@ export function isActiveStudentAssignment(assignment) {
 export async function collectKeysetPages(fetchPage, pageSize = 1000) {
   if (!Number.isInteger(pageSize) || pageSize < 1) throw new Error('pageSize must be a positive integer');
   const rows = [];
+  const seenCursors = new Set();
   let cursor = null;
   for (;;) {
     const page = normalizeRelation(await fetchPage(cursor, pageSize));
+    if (!page.length) return rows;
     rows.push(...page);
-    if (page.length < pageSize) return rows;
     const nextCursor = page.at(-1)?.id;
-    if (!nextCursor || nextCursor === cursor) throw new Error('Keyset pagination did not advance');
-    cursor = nextCursor;
+    const nextCursorKey = String(nextCursor || '');
+    if (!nextCursorKey || seenCursors.has(nextCursorKey)
+      || (cursor !== null && nextCursorKey <= String(cursor))) {
+      throw new Error('Keyset pagination did not advance');
+    }
+    seenCursors.add(nextCursorKey);
+    cursor = nextCursorKey;
   }
 }
 export function createLatestRequestGate() {

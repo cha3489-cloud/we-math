@@ -207,6 +207,8 @@ a.file{display:block;margin:8px 0;color:var(--navy);font-weight:800}
 .workflow-card h3{padding-right:120px;font-size:1.2rem}
 .workflow-title{margin:6px 0 3px;color:var(--ink);font-weight:850}
 .workflow-status{position:absolute;top:18px;right:18px;display:inline-flex;padding:5px 9px;border:1px solid;border-radius:999px;font-size:.75rem;font-weight:900}
+.account-status{display:inline-flex;width:max-content;margin:0 0 6px;padding:4px 8px;border:1px solid;border-radius:999px;font-size:.72rem;font-weight:900}
+.status-suspended{border-color:#9ba7a2;background:#eef1f0;color:#34443e}
 .workflow-overdue{border-color:#dc8f7d;border-left-color:var(--coral);background:#fff9f6}
 .status-overdue{border-color:#dc8f7d;background:var(--coral-soft);color:#8f392b}
 .workflow-needs_revision{border-left-color:#d5a13c}.status-needs_revision{border-color:#d5a13c;background:var(--gold-soft);color:#74520d}

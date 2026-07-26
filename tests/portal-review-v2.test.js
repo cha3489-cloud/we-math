@@ -66,6 +66,9 @@ describe('portal review v2 security and workflow', () => {
     expect(html).toContain('workflows');
     expect(admin).toContain('loadWorkflows');
     expect(admin).toContain('.range(from, to)');
+    expect(admin).toContain("profiles!assignments_student_id_fkey(name,suspended_at)");
+    expect(admin).toContain("accountStatus.textContent = '정지 계정'");
+    expect(read('src/portal/portal.css')).toContain('.status-suspended');
     expect(admin).toContain("byId('workflowNext').disabled = true");
     expect(admin).not.toContain("rpc('review_submission'");
   });

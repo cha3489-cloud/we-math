@@ -66,6 +66,59 @@ describe('portal domain rules', () => {
     expect(result).toEqual(rows);
     expect(cursors).toEqual([null, '2', '4']);
   });
+  it('accepts canonical UUID cursors in database order', async () => {
+    const rows = [
+      { id: '0fffffff-ffff-4fff-8fff-ffffffffffff' },
+      { id: '10000000-0000-4000-8000-000000000000' },
+      { id: 'a0000000-0000-4000-8000-000000000000' },
+    ];
+    const result = await collectKeysetPages(async (cursor) => {
+      const start = cursor === null ? 0 : rows.findIndex((row) => row.id === cursor) + 1;
+      return rows.slice(start, start + 1);
+    }, 1000);
+    expect(result).toEqual(rows);
+  });
+  it('continues keyset pagination when the server caps pages below the requested size', async () => {
+    const rows = [{ id: '1' }, { id: '2' }, { id: '3' }, { id: '4' }, { id: '5' }];
+    const cursors = [];
+    const result = await collectKeysetPages(async (cursor) => {
+      cursors.push(cursor);
+      const start = cursor === null ? 0 : rows.findIndex((row) => row.id === cursor) + 1;
+      return rows.slice(start, start + 2); // 서버 max_rows가 요청 pageSize보다 작은 상황
+    }, 1000);
+    expect(result).toEqual(rows);
+    expect(cursors).toEqual([null, '2', '4', '5']);
+  });
+  it('returns immediately for an empty first keyset page', async () => {
+    let calls = 0;
+    const result = await collectKeysetPages(async () => { calls += 1; return []; }, 1000);
+    expect(result).toEqual([]);
+    expect(calls).toBe(1);
+  });
+  it('fails closed when a keyset page has no terminal id', async () => {
+    await expect(collectKeysetPages(async () => [{ title: 'missing id' }], 1000))
+      .rejects.toThrow('did not advance');
+  });
+  it('fails closed when a keyset cursor repeats immediately', async () => {
+    await expect(collectKeysetPages(async () => [{ id: 'a' }], 1000))
+      .rejects.toThrow('did not advance');
+  });
+  it('fails closed when a keyset cursor decreases', async () => {
+    const pages = [[{ id: 'b' }], [{ id: 'a' }]];
+    await expect(collectKeysetPages(async () => pages.shift() || [], 1000))
+      .rejects.toThrow('did not advance');
+  });
+  it('fails closed on a multi-cursor cycle instead of looping', async () => {
+    let calls = 0;
+    await expect(collectKeysetPages(async (cursor) => {
+      calls += 1;
+      if (calls > 5) throw new Error('cycle escaped pagination guard');
+      if (cursor === null) return [{ id: 'a' }];
+      if (cursor === 'a') return [{ id: 'b' }];
+      return [{ id: 'a' }];
+    }, 1000)).rejects.toThrow('did not advance');
+    expect(calls).toBe(3);
+  });
   it('allows only the latest overlapping request to publish state', () => {
     const gate = createLatestRequestGate();
     const oldRequest = gate.begin();
