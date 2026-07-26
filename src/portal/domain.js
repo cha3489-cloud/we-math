@@ -46,6 +46,68 @@ export function assignmentStatus(assignment, now = new Date()) {
   return 'open';
 }
 
+const ADMIN_WORKFLOW_META = {
+  overdue: { label: '마감 지남 · 미제출', actionRequired: true, priority: 0 },
+  needs_revision: { label: '수정 필요', actionRequired: true, priority: 1 },
+  submitted: { label: '검토 대기', actionRequired: false, priority: 2 },
+  open: { label: '미제출', actionRequired: false, priority: 3 },
+  completed: { label: '완료', actionRequired: false, priority: 4 },
+};
+export function adminWorkflowMeta(assignment, now = new Date()) {
+  const status = assignmentStatus(assignment, now);
+  return { status, ...ADMIN_WORKFLOW_META[status] };
+}
+export function isActiveProfile(profile) {
+  return Boolean(profile) && !profile.suspended_at;
+}
+export function isActiveStudentAssignment(assignment) {
+  const profile = normalizeRelation(assignment?.profiles)[0];
+  return isActiveProfile(profile);
+}
+export async function collectKeysetPages(fetchPage, pageSize = 1000) {
+  if (!Number.isInteger(pageSize) || pageSize < 1) throw new Error('pageSize must be a positive integer');
+  const rows = [];
+  let cursor = null;
+  for (;;) {
+    const page = normalizeRelation(await fetchPage(cursor, pageSize));
+    rows.push(...page);
+    if (page.length < pageSize) return rows;
+    const nextCursor = page.at(-1)?.id;
+    if (!nextCursor || nextCursor === cursor) throw new Error('Keyset pagination did not advance');
+    cursor = nextCursor;
+  }
+}
+export function createLatestRequestGate() {
+  let current = 0;
+  return {
+    begin() { current += 1; return current; },
+    isLatest(request) { return request === current; },
+  };
+}
+export function reconcileQueueSelection(selected, queue = []) {
+  const selectedId = selected?.attempt?.id;
+  if (!selectedId) return null;
+  return queue.find((entry) => entry?.attempt?.id === selectedId) ?? null;
+}
+export function summarizeAdminWorkflows(assignments = [], now = new Date()) {
+  const counts = { submitted: 0, needs_revision: 0, overdue: 0 };
+  const actionItems = [];
+  for (const assignment of assignments) {
+    const meta = adminWorkflowMeta(assignment, now);
+    if (Object.hasOwn(counts, meta.status)) counts[meta.status] += 1;
+    if (meta.actionRequired) actionItems.push({ assignment, ...meta });
+  }
+  actionItems.sort((a, b) => {
+    if (a.priority !== b.priority) return a.priority - b.priority;
+    const aLatest = latestAttempt(normalizeRelation(a.assignment.submissions));
+    const bLatest = latestAttempt(normalizeRelation(b.assignment.submissions));
+    const aTime = new Date(a.assignment.due_at || aLatest?.reviewed_at || aLatest?.submitted_at || 0).getTime();
+    const bTime = new Date(b.assignment.due_at || bLatest?.reviewed_at || bLatest?.submitted_at || 0).getTime();
+    return aTime - bTime;
+  });
+  return { counts, actionItems };
+}
+
 // ── 관계 데이터 정규화: null / object / array 어떤 형태든 배열로 ──────────
 export function normalizeRelation(value) {
   if (Array.isArray(value)) return value;

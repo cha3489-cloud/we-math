@@ -5,7 +5,9 @@ import {
   validatePin, validateLoginInput, validateAccountInput, normalizeRelation,
   waitingLabel, REVIEW_TAGS, validateProblemRef,
   validateFeedbackItems, checkItemsForStatus, composeFeedbackBody, isAutoComposedFeedback,
-  authErrorMessage,
+  authErrorMessage, adminWorkflowMeta, summarizeAdminWorkflows,
+  isActiveStudentAssignment, isActiveProfile, collectKeysetPages, createLatestRequestGate,
+  reviewQueue, reconcileQueueSelection,
 } from './domain.js';
 import { signIn, signOut } from '../auth.js';
 
@@ -22,6 +24,8 @@ function safeName(name) { return name.replace(/[^a-zA-Z0-9._-]/g, '_'); }
 async function cleanup(bucket, paths) { if (paths.length) await supabase.storage.from(bucket).remove(paths); }
 
 // ── 탭 ──────────────────────────────────────────────────────────────────
+let actionFilter = 'all';
+let operationsSummary = { counts: { submitted: 0, needs_revision: 0, overdue: 0 }, actionItems: [] };
 async function switchTab(tab) {
   const review = tab === 'review';
   byId('reviewSection').hidden = !review;
@@ -29,10 +33,21 @@ async function switchTab(tab) {
   byId('manageSection').hidden = review;
   byId('tabReview').setAttribute('aria-pressed', String(review));
   byId('tabManage').setAttribute('aria-pressed', String(!review));
-  if (!review) await Promise.all([loadUsers(), loadWorkflows()]);
+  if (!review) await Promise.all([loadUsers(), loadWorkflows(), loadOperationsSummary()]);
+}
+async function openActionFilter(filter) {
+  actionFilter = filter;
+  await switchTab('manage');
+  renderActionItems();
+  byId('actionSection').focus({ preventScroll: true });
+  byId('actionSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 byId('tabReview').addEventListener('click', () => switchTab('review').catch((error) => showError(byId('adminError'), error.message)));
-byId('tabManage').addEventListener('click', () => switchTab('manage').catch((error) => showError(byId('adminError'), error.message)));
+byId('tabManage').addEventListener('click', () => { actionFilter = 'all'; switchTab('manage').catch((error) => showError(byId('adminError'), error.message)); });
+byId('statSubmitted').addEventListener('click', () => switchTab('review').then(() => byId('queue').scrollIntoView({ behavior: 'smooth', block: 'start' })).catch((error) => showError(byId('adminError'), error.message)));
+byId('statRevision').addEventListener('click', () => openActionFilter('needs_revision').catch((error) => showError(byId('adminError'), error.message)));
+byId('statOverdue').addEventListener('click', () => openActionFilter('overdue').catch((error) => showError(byId('adminError'), error.message)));
+byId('actionShowAll').addEventListener('click', () => { actionFilter = 'all'; renderActionItems(); });
 
 // ── 검토 대기열 상태 ─────────────────────────────────────────────────────
 let queue = [];          // [{ assignment, attempt }]
@@ -45,19 +60,45 @@ let zoom = 1;
 let rotation = 0;
 let imageRequest = 0;
 let processing = false;
+const REMOTE_PAGE_SIZE = 1000;
+const queueRequestGate = createLatestRequestGate();
+const QUEUE_SELECT = 'id,title,due_at,profiles!assignments_student_id_fkey(name,suspended_at),submissions(id,attempt_no,status,body,file_paths,submitted_at)';
 
-async function loadQueue() {
-  const { data, error } = await supabase.from('submissions')
-    .select('id,attempt_no,status,body,file_paths,submitted_at,assignments!inner(id,title,due_at,profiles!assignments_student_id_fkey(name))')
-    .eq('status', 'submitted')
-    .order('submitted_at', { ascending: true })
-    .limit(100);
+async function fetchQueuePage(cursor, pageSize) {
+  let query = supabase.from('assignments').select(QUEUE_SELECT)
+    .order('id').limit(pageSize);
+  if (cursor !== null) query = query.gt('id', cursor);
+  const { data, error } = await query;
   if (error) throw error;
-  queue = normalizeRelation(data).map((attempt) => ({
-    assignment: normalizeRelation(attempt.assignments)[0],
-    attempt,
-  })).filter((entry) => entry.assignment);
-  byId('queueCount').textContent = String(queue.length);
+  return data;
+}
+async function loadQueue() {
+  const request = queueRequestGate.begin();
+  let assignments;
+  try {
+    assignments = await collectKeysetPages(fetchQueuePage, REMOTE_PAGE_SIZE);
+  } catch (error) {
+    if (queueRequestGate.isLatest(request)) throw error;
+    return;
+  }
+  if (!queueRequestGate.isLatest(request)) return;
+  const activeAssignments = assignments.filter(isActiveStudentAssignment);
+  const nextQueue = reviewQueue(activeAssignments);
+  const selected = reconcileQueueSelection(current, nextQueue);
+  if (current && !selected) {
+    current = null;
+    items = [];
+    selectedTag = null;
+    images = [];
+    imageRequest += 1;
+    byId('adminImage').src = '';
+    byId('adminFrame').src = '';
+    byId('reviewDetail').hidden = true;
+  } else {
+    current = selected;
+  }
+  queue = nextQueue;
+  byId('noSelection').hidden = byId('reviewSection').hidden || Boolean(current);
   byId('queueEmpty').hidden = Boolean(queue.length);
   byId('queue').replaceChildren(...queue.map((entry, index) => queueRow(entry, index)));
 }
@@ -191,25 +232,34 @@ async function decide(status) {
     const overallComment = byId('overallComment').value;
     const autoComposed = !String(overallComment).trim();
     const body = composeFeedbackBody(validItems, overallComment);
+    const decidedId = current.attempt.id;
     processing = true; buttons.forEach((b) => { b.disabled = true; });
     let result = await supabase.rpc('review_submission_v2', {
-      p_submission_id: current.attempt.id, p_body: body, p_status: status,
+      p_submission_id: decidedId, p_body: body, p_status: status,
       p_items: validItems, p_auto_composed: autoComposed,
     });
     if (isMissingExplicitFeedbackRpc(result.error)) {
       result = await supabase.rpc('review_submission_v2', {
-        p_submission_id: current.attempt.id, p_body: body, p_status: status,
+        p_submission_id: decidedId, p_body: body, p_status: status,
         p_items: validItems,
       });
     }
     if (result.error) throw result.error;
-    const decidedId = current.attempt.id;
-    current = null;
-    byId('reviewDetail').hidden = true;
-    await loadQueue();
-    const next = queue.findIndex((entry) => entry.attempt.id !== decidedId);
-    if (next >= 0) await openReview(next);
-    else byId('noSelection').hidden = false;
+    if (current?.attempt.id === decidedId) {
+      current = null;
+      byId('reviewDetail').hidden = true;
+    }
+    try {
+      await Promise.all([loadQueue(), loadOperationsSummary()]);
+      if (!current) {
+        const next = queue.findIndex((entry) => entry.attempt.id !== decidedId);
+        if (next >= 0) await openReview(next);
+        else byId('noSelection').hidden = false;
+      }
+    } catch (error) {
+      console.warn('검토 처리 후 새로고침 실패:', error.message);
+      showError(byId('adminError'), '처리는 완료됐지만 화면 새로고침에 실패했습니다. 페이지를 새로고침해 주세요.');
+    }
   } catch (error) {
     // 이미 다른 곳에서 검토됐다면 대기열을 새로고침해 중복 검토를 방지
     if (String(error.message || '').includes('not reviewable')) {
@@ -226,15 +276,33 @@ byId('decideRevision').addEventListener('click', () => decide('needs_revision'))
 byId('decideComplete').addEventListener('click', () => decide('completed'));
 
 // ── 계정·과제 관리 (기존 동작 유지, 관계 정규화 적용) ─────────────────────
+async function refreshAfterUserAction(action) {
+  if (action === 'suspend' || action === 'reactivate') {
+    await Promise.all([loadUsers(), loadQueue(), loadWorkflows(), loadOperationsSummary()]);
+    return;
+  }
+  await loadUsers();
+}
+const usersRequestGate = createLatestRequestGate();
 async function loadUsers() {
-  const [profilesResult, rolesResult] = await Promise.all([
-    supabase.from('profiles').select('id,name,phone,suspended_at').order('name'),
-    supabase.from('user_roles').select('user_id,role'),
-  ]);
+  const request = usersRequestGate.begin();
+  let profilesResult;
+  let rolesResult;
+  try {
+    [profilesResult, rolesResult] = await Promise.all([
+      supabase.from('profiles').select('id,name,phone,suspended_at').order('name'),
+      supabase.from('user_roles').select('user_id,role'),
+    ]);
+  } catch (error) {
+    if (usersRequestGate.isLatest(request)) throw error;
+    return;
+  }
+  if (!usersRequestGate.isLatest(request)) return;
   if (profilesResult.error) throw profilesResult.error;
   if (rolesResult.error) throw rolesResult.error;
   const roles = new Map(normalizeRelation(rolesResult.data).map((row) => [row.user_id, row.role]));
-  const students = normalizeRelation(profilesResult.data).filter((user) => roles.get(user.id) === 'student');
+  const students = normalizeRelation(profilesResult.data)
+    .filter((user) => roles.get(user.id) === 'student' && isActiveProfile(user));
   byId('assignmentStudent').replaceChildren(...students.map((student) => {
     const option = document.createElement('option'); option.value = student.id; option.textContent = student.name; return option;
   }));
@@ -250,8 +318,15 @@ async function loadUsers() {
       button.addEventListener('click', async () => {
         if (action === 'reset' && !confirm(user.name + ' 학생 PIN을 123456으로 초기화할까요? 학생은 로그인 후 새 PIN을 설정해야 합니다.')) return;
         button.disabled = true;
-        try { await callAdmin({ action, userId: user.id }); await loadUsers(); }
-        catch (error) { showError(byId('adminError'), error.message); }
+        try {
+          await callAdmin({ action, userId: user.id });
+          try {
+            await refreshAfterUserAction(action);
+          } catch (error) {
+            console.warn('계정 작업 후 새로고침 실패:', error.message);
+            showError(byId('adminError'), '계정 작업은 완료됐지만 화면 새로고침에 실패했습니다. 페이지를 새로고침해 주세요.');
+          }
+        } catch (error) { showError(byId('adminError'), error.message); }
         finally { button.disabled = false; }
       });
       card.append(button);
@@ -267,13 +342,21 @@ async function download(bucket, path) {
   location.assign(data.signedUrl);
 }
 
+function assignmentStudent(item) {
+  return normalizeRelation(item.profiles)[0]?.name || '학생';
+}
+function dueText(item) {
+  return item.due_at ? '마감 ' + new Date(item.due_at).toLocaleString('ko-KR') : '마감 없음';
+}
 function workflowCard(item) {
-  const card = document.createElement('article'); card.className = 'card';
-  const title = document.createElement('h3'); title.textContent = item.title;
-  const student = normalizeRelation(item.profiles)[0]?.name || '학생';
-  const meta = document.createElement('p'); meta.className = 'meta';
-  meta.textContent = student + (item.due_at ? ' · 마감 ' + new Date(item.due_at).toLocaleString('ko-KR') : '');
-  card.append(title, meta);
+  const meta = adminWorkflowMeta(item);
+  const card = document.createElement('article');
+  card.className = 'card workflow-card workflow-' + meta.status;
+  const heading = document.createElement('h3'); heading.textContent = assignmentStudent(item);
+  const status = document.createElement('span'); status.className = 'workflow-status status-' + meta.status; status.textContent = meta.label;
+  const title = document.createElement('p'); title.className = 'workflow-title'; title.textContent = item.title;
+  const metaLine = document.createElement('p'); metaLine.className = 'meta'; metaLine.textContent = dueText(item);
+  card.append(heading, status, title, metaLine);
   if (item.description) { const description = document.createElement('p'); description.textContent = item.description; card.append(description); }
 
   const attempts = normalizeRelation(item.submissions).sort((a, b) => a.attempt_no - b.attempt_no);
@@ -305,24 +388,83 @@ function workflowCard(item) {
   return card;
 }
 
+const OPERATIONS_SUMMARY_SELECT = 'id,title,due_at,profiles!assignments_student_id_fkey(name,suspended_at),submissions(attempt_no,status,submitted_at,reviewed_at)';
+const operationsSummaryRequestGate = createLatestRequestGate();
+async function fetchOperationsSummaryPage(cursor, pageSize) {
+  let query = supabase.from('assignments').select(OPERATIONS_SUMMARY_SELECT)
+    .order('id').limit(pageSize);
+  if (cursor !== null) query = query.gt('id', cursor);
+  const { data, error } = await query;
+  if (error) throw error;
+  return data;
+}
+async function loadOperationsSummary() {
+  const request = operationsSummaryRequestGate.begin();
+  let assignments;
+  try {
+    assignments = await collectKeysetPages(fetchOperationsSummaryPage, REMOTE_PAGE_SIZE);
+  } catch (error) {
+    if (operationsSummaryRequestGate.isLatest(request)) throw error;
+    return;
+  }
+  const activeAssignments = assignments.filter(isActiveStudentAssignment);
+  const nextSummary = summarizeAdminWorkflows(activeAssignments);
+  if (!operationsSummaryRequestGate.isLatest(request)) return;
+  operationsSummary = nextSummary;
+  byId('queueCount').textContent = String(operationsSummary.counts.submitted);
+  byId('revisionCount').textContent = String(operationsSummary.counts.needs_revision);
+  byId('overdueCount').textContent = String(operationsSummary.counts.overdue);
+  renderActionItems();
+}
+function actionCard(entry) {
+  const { assignment, status: state, label } = entry;
+  const card = document.createElement('article');
+  card.className = 'card workflow-card workflow-' + state;
+  const heading = document.createElement('h3'); heading.textContent = assignmentStudent(assignment);
+  const status = document.createElement('span'); status.className = 'workflow-status status-' + state; status.textContent = label;
+  const title = document.createElement('p'); title.className = 'workflow-title'; title.textContent = assignment.title;
+  const metaLine = document.createElement('p'); metaLine.className = 'meta'; metaLine.textContent = dueText(assignment);
+  card.append(heading, status, title, metaLine);
+  return card;
+}
+function renderActionItems() {
+  const rows = operationsSummary.actionItems.filter((entry) => actionFilter === 'all' || entry.status === actionFilter);
+  const labels = { all: '수정 대기와 미제출 지연을 조치 순서대로 표시합니다.', needs_revision: '수정 대기 학생만 표시합니다.', overdue: '마감이 지난 미제출 학생만 표시합니다.' };
+  byId('actionFilterStatus').textContent = labels[actionFilter];
+  byId('actionEmpty').querySelector('h3').textContent = actionFilter === 'all' ? '후속 확인이 필요한 과제가 없습니다.' : '선택한 상태의 과제가 없습니다.';
+  byId('actionEmpty').hidden = Boolean(rows.length);
+  byId('actionItems').replaceChildren(...rows.map(actionCard));
+}
+
 const WORKFLOW_PAGE_SIZE = 50;
 const WORKFLOW_SELECT = 'id,title,description,due_at,profiles!assignments_student_id_fkey(name),submissions(id,attempt_no,status,body,file_paths,submitted_at,feedback(body,auto_composed,created_at,feedback_items(problem_ref,review_tag,comment,redo_required)))';
 const LEGACY_FEEDBACK_SELECT = 'id,title,description,due_at,profiles!assignments_student_id_fkey(name),submissions(id,attempt_no,status,body,file_paths,submitted_at,feedback(body,created_at,feedback_items(problem_ref,review_tag,comment,redo_required)))';
 let workflowPage = 0;
+const workflowsRequestGate = createLatestRequestGate();
 
 function workflowQuery(select, from, to) {
   return supabase.from('assignments').select(select, { count: 'exact' })
     .order('created_at', { ascending: false }).range(from, to);
 }
 async function loadWorkflows() {
+  const request = workflowsRequestGate.begin();
+  const page = workflowPage;
   byId('workflowPrev').disabled = true;
   byId('workflowNext').disabled = true;
-  const from = workflowPage * WORKFLOW_PAGE_SIZE;
+  const from = page * WORKFLOW_PAGE_SIZE;
   const to = from + WORKFLOW_PAGE_SIZE - 1;
-  let result = await workflowQuery(WORKFLOW_SELECT, from, to);
-  if (isMissingFeedbackSourceColumn(result.error)) {
-    result = await workflowQuery(LEGACY_FEEDBACK_SELECT, from, to);
+  let result;
+  try {
+    result = await workflowQuery(WORKFLOW_SELECT, from, to);
+    if (!workflowsRequestGate.isLatest(request)) return;
+    if (isMissingFeedbackSourceColumn(result.error)) {
+      result = await workflowQuery(LEGACY_FEEDBACK_SELECT, from, to);
+    }
+  } catch (error) {
+    if (workflowsRequestGate.isLatest(request)) throw error;
+    return;
   }
+  if (!workflowsRequestGate.isLatest(request) || page !== workflowPage) return;
   if (result.error) throw result.error;
   const { data, count } = result;
   const rows = normalizeRelation(data);
@@ -330,7 +472,7 @@ async function loadWorkflows() {
   const total = count || 0;
   const last = Math.min(from + rows.length, total);
   byId('workflowPageStatus').textContent = total ? (from + 1) + '–' + last + ' / ' + total : '과제 없음';
-  byId('workflowPrev').disabled = workflowPage === 0;
+  byId('workflowPrev').disabled = page === 0;
   byId('workflowNext').disabled = to + 1 >= total;
 }
 async function changeWorkflowPage(delta) {
@@ -356,7 +498,14 @@ byId('accountForm').addEventListener('submit', async (event) => {
   try {
     const input = validateAccountInput(Object.fromEntries(new FormData(form)));
     await callAdmin({ action: 'create', ...input });
-    output.textContent = '계정을 발급했습니다.'; form.reset(); await loadUsers();
+    output.textContent = '계정을 발급했습니다.';
+    form.reset();
+    try {
+      await loadUsers();
+    } catch (error) {
+      console.warn('계정 발급 후 새로고침 실패:', error.message);
+      output.textContent = '계정 발급은 완료됐지만 화면 새로고침에 실패했습니다. 페이지를 새로고침해 주세요.';
+    }
   } catch (error) { output.textContent = error.message; } finally { button.disabled = false; }
 });
 
@@ -377,8 +526,17 @@ byId('assignmentForm').addEventListener('submit', async (event) => {
       description: String(data.get('description') || '').trim(),
       due_at: due ? new Date(due).toISOString() : null, attachment_paths: paths,
     });
-    if (error) throw error; inserted = true;
-    workflowPage = 0; output.textContent = '과제를 등록했습니다.'; form.reset(); await Promise.all([loadQueue(), loadWorkflows()]);
+    if (error) throw error;
+    inserted = true;
+    workflowPage = 0;
+    output.textContent = '과제를 등록했습니다.';
+    form.reset();
+    try {
+      await Promise.all([loadQueue(), loadWorkflows(), loadOperationsSummary()]);
+    } catch (refreshError) {
+      console.warn('과제 등록 후 새로고침 실패:', refreshError.message);
+      output.textContent = '과제 등록은 완료됐지만 화면 새로고침에 실패했습니다. 페이지를 새로고침해 주세요.';
+    }
   } catch (error) { if (!inserted) await cleanup('assignment-files', paths); output.textContent = error.message; }
   finally { button.disabled = false; }
 });
@@ -394,6 +552,7 @@ async function showAdmin(user) {
   }
   await switchTab('review');
   await loadQueue();
+  await loadOperationsSummary();
   byId('login').hidden = true; byId('logout').hidden = false;
   byId('pinChange').hidden = true; byId('admin').hidden = false;
 }
