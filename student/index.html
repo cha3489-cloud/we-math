@@ -2,7 +2,7 @@
 <header class=portal-header><a href=../ class=brand><span class=brand-mark aria-hidden=true>S</span><span>시퀀스 수학<small>STUDENT PORTAL</small></span></a><button id=logout class="secondary header-action" hidden>로그아웃</button></header>
 
 <section id=login class="panel auth-card">
-  <div class=auth-intro><p class="portal-kicker">MY STUDY ROUTINE</p><h1>오늘도 한 걸음,<br>차근차근 시작해요.</h1><p>오늘 할 일을 확인하고, 푼 과제를 사진으로 제출하세요. 선생님의 확인 내용도 여기에서 볼 수 있어요.</p><div class=auth-principle><span aria-hidden=true>✓</span><strong>재능이 아니라 반복이 만든 실력</strong></div></div>
+  <div class=auth-intro><p class="portal-kicker">MY STUDY ROUTINE</p><h1>오늘도 한 걸음,<br>차근차근 시작해요.</h1><p>오늘 할 일을 확인하고, 푼 과제를 사진으로 제출하세요. 선생님의 확인 내용도 여기에서 볼 수 있어요.</p><img class=auth-illustration src=/portal/login-progress.svg alt="" aria-hidden=true><div class=auth-principle><span aria-hidden=true>✓</span><strong>재능이 아니라 반복이 만든 실력</strong></div></div>
   <div class=auth-form><p class=eyebrow>학생 로그인</p><h2>내 학습 공간으로 들어가기</h2><p class=meta>원장님이 발급한 전화번호와 숫자 6자리 PIN을 입력하세요.</p>
     <form id=loginForm>
       <label>학생 전화번호<input id=phone type=tel inputmode=numeric autocomplete=username placeholder="01012345678" required></label>
@@ -23,7 +23,7 @@
   <section class="student-hero" aria-labelledby=studentGreeting><div><p class="portal-kicker">TODAY'S SEQUENCE</p><h1 id=studentGreeting><span id=studentName>학생</span>님,<br>오늘 할 일을 확인해요.</h1><p>한 번에 하나씩 끝내면 충분해요. 제출한 과제는 선생님이 차례로 확인합니다.</p></div><div id=summary class=summary role=status></div></section>
   <nav class="student-status-nav" aria-label="과제 상태 바로가기"><a href=#groupRedo><span class="status-dot dot-redo"></span>다시 풀기</a><a href=#groupOpen><span class="status-dot dot-open"></span>제출할 과제</a><a href=#groupReview><span class="status-dot dot-review"></span>확인 중</a><a href=#groupDone><span class="status-dot dot-done"></span>완료</a></nav>
   <p id=globalError class=error role=alert></p>
-  <div id=empty class=empty-state hidden><span class=empty-symbol aria-hidden=true>✓</span><h2>오늘 등록된 과제가 없어요.</h2><p>새 과제가 생기면 이 화면에 바로 표시됩니다.</p></div>
+  <div id=empty class=empty-state hidden><img class=empty-illustration src=/portal/empty-state.svg alt=""><h2>오늘 등록된 과제가 없어요.</h2><p>새 과제가 생기면 이 화면에 바로 표시됩니다.</p></div>
   <section id=groupRedo class="group group-priority" hidden><div class=group-heading><span class="group-icon icon-redo" aria-hidden=true>↻</span><div><p class=eyebrow>먼저 확인해요</p><h2>다시 풀 과제</h2></div></div><div class=cards></div></section>
   <section id=groupOpen class=group hidden><div class=group-heading><span class="group-icon icon-open" aria-hidden=true>→</span><div><p class=eyebrow>오늘 할 일</p><h2>제출할 과제</h2></div></div><div class=cards></div></section>
   <section id=groupReview class=group hidden><div class=group-heading><span class="group-icon icon-review" aria-hidden=true>…</span><div><p class=eyebrow>조금만 기다려요</p><h2>선생님 확인 중</h2></div></div><div class=cards></div></section>

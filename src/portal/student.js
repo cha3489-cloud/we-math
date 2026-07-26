@@ -101,6 +101,7 @@ function renderGroups(assignments, userId) {
   if (!summary.length && !groups.review.length) summary.push('오늘 할 일을 모두 마쳤어요 ✅');
   byId('summary').textContent = '오늘 할 일: ' + summary.join(' · ');
   byId('empty').hidden = Boolean(assignments.length);
+  document.querySelector('.mobile-action-bar').hidden = !assignments.length;
   const sections = [['groupRedo', groups.redo], ['groupOpen', groups.open], ['groupReview', groups.review], ['groupDone', groups.done]];
   for (const [sectionId, list] of sections) {
     const section = byId(sectionId);
