@@ -154,7 +154,8 @@ describe('student portal security boundary', () => {
       const source = read(path);
       expect(source).toContain('authErrorMessage');
       expect(source).toMatch(/if \(userError\) throw userError;\s*if \(!currentUser[?][.]email\) throw new Error\('다시 로그인하세요[.]'\)/);
-      expect(source).toMatch(/const \{ data: userData, error: userError \} = await supabase[.]auth[.]getUser\(\);\s*if \(userError\) showError\(byId\('loginError'\), authErrorMessage\(userError\)\);\s*else if \(userData[?][.]user\)/);
+      expect(source).toContain('await currentUserOrNull()');
+      expect(source).toMatch(/catch \(error\) \{\s*showError\(byId\('loginError'\), authErrorMessage\(error\)\);\s*\}/);
     }
 
     const studentInit = read('src/portal/student.js').match(/async function loadDashboard[\s\S]*?\n}\n\nfunction renderGroups/)?.[0] || '';

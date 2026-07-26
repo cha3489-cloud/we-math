@@ -3,4 +3,12 @@ export async function signIn(phone, pin) { const { data, error } = await supabas
 export async function signOut() { const { error } = await supabase.auth.signOut(); if (error) throw error; }
 export function onAuthChange(callback) { return supabase.auth.onAuthStateChange((_event, session) => callback(session?.user ?? null)); }
 export async function getUser() { const { data, error } = await supabase.auth.getUser(); if (error) throw error; return data.user; }
+export async function currentUserOrNull(auth = supabase.auth) {
+  const { data: sessionData, error: sessionError } = await auth.getSession();
+  if (sessionError) throw sessionError;
+  if (!sessionData?.session) return null;
+  const { data: userData, error: userError } = await auth.getUser();
+  if (userError) throw userError;
+  return userData?.user ?? null;
+}
 export async function getProfile(userId) { const { data, error } = await supabase.from('profiles').select('name, phone').eq('id', userId).single(); if (error) throw error; return data; }
