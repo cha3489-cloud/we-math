@@ -145,6 +145,24 @@ describe('student portal security boundary', () => {
     expect(main).toMatch(/role === 'admin'[^\n]*['"`]\.\/admin\//);
     expect(read('index.html')).toContain('id="navPortalLink"');
   });
+  it('keeps authentication errors visible through sign-in and session bootstrap', () => {
+    const main = read('src/main.js');
+    expect(main).toContain('authErrorMessage');
+    expect(main).toMatch(/const path = await portalPath\(result[.]user[.]id\);\s*hide\(\);\s*location[.]href = path/);
+
+    for (const path of ['src/portal/student.js', 'src/portal/admin.js']) {
+      const source = read(path);
+      expect(source).toContain('authErrorMessage');
+      expect(source).toMatch(/if \(userError\) throw userError;\s*if \(!currentUser[?][.]email\) throw new Error\('다시 로그인하세요[.]'\)/);
+      expect(source).toMatch(/const \{ data: userData, error: userError \} = await supabase[.]auth[.]getUser\(\);\s*if \(userError\) showError\(byId\('loginError'\), authErrorMessage\(userError\)\);\s*else if \(userData[?][.]user\)/);
+    }
+
+    const studentInit = read('src/portal/student.js').match(/async function loadDashboard[\s\S]*?\n}\n\nfunction renderGroups/)?.[0] || '';
+    expect(studentInit).toMatch(/if \(profile[.]must_change_pin\) \{\s*byId\('login'\)[.]hidden = true;[\s\S]*?return;\s*\}[\s\S]*?if \(result[.]error\) throw result[.]error;[\s\S]*?byId\('studentName'\)[.]textContent = profile[.]name;\s*renderGroups\(result[.]data \|\| \[\], user[.]id\);\s*byId\('dashboard'\)[.]hidden = false;[\s\S]*?byId\('login'\)[.]hidden = true/);
+
+    const adminInit = read('src/portal/admin.js').match(/async function showAdmin[\s\S]*?\n}\nbyId\('loginForm'\)/)?.[0] || '';
+    expect(adminInit).toMatch(/if \(profile[.]must_change_pin\) \{\s*byId\('login'\)[.]hidden = true;[\s\S]*?return;\s*\}[\s\S]*?await switchTab\('review'\);\s*await loadQueue\(\);[\s\S]*?byId\('login'\)[.]hidden = true/);
+  });
   it('lets CORS preflight reach functions that authenticate callers internally', () => {
     const config = read('supabase/config.toml');
     for (const name of ['admin-users', 'change-pin']) {

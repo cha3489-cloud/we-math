@@ -9,6 +9,17 @@ export function normalizePhone(value) {
 export function validatePin(pin) { if (!/^\d{6}$/.test(String(pin ?? ''))) throw new Error('PIN은 숫자 6자리여야 합니다.'); return String(pin); }
 export function validateLoginPin(pin) { const value = String(pin ?? ''); if (!/^(?:[0-9]{4}|[0-9]{6})$/.test(value)) throw new Error('PIN은 숫자 4자리 또는 6자리여야 합니다.'); return value; }
 export function validateLoginInput(phone, pin) { return { phone: normalizePhone(phone), pin: validateLoginPin(pin) }; }
+export function authErrorMessage(error) {
+  const code = error?.code;
+  const message = typeof error?.message === 'string' ? error.message : '';
+  if (code === 'user_banned' || message === 'User is banned') {
+    return '현재 이용이 중지된 계정입니다. 원장님께 문의해 주세요.';
+  }
+  if (code === 'invalid_credentials' || message === 'Invalid login credentials') {
+    return '전화번호 또는 PIN이 올바르지 않습니다.';
+  }
+  return message || '로그인에 실패했습니다. 다시 시도해 주세요.';
+}
 export function validateAccountInput(input) {
   const name = String(input.name ?? '').trim();
   if (!name || name.length > 40) throw new Error('이름은 1~40자로 입력하세요.');
