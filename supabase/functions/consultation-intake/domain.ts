@@ -123,6 +123,7 @@ export function buildNotionPage(databaseId: string, input: ValidatedConsultation
       '연락 가능 시간': { multi_select: input.contactTimes.map((name) => ({ name })) },
       '상담 유형': { select: { name: '신규 문의' } },
       '상담 상태': { select: { name: '예정' } },
+      '처리 단계': { select: { name: '신규 접수' } },
       '접수 경로': { select: { name: '홈페이지' } },
       '개인정보 동의': { checkbox: true },
     },
