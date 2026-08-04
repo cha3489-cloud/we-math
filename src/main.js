@@ -95,21 +95,61 @@ function showToast(msg, duration = 4000) {
 
 // ── 상담 신청 폼 ────────────────────────────────
 function initForm() {
-  const btn = document.getElementById('formSubmit');
-  if (!btn) return;
-  btn.addEventListener('click', () => {
-    const name  = document.getElementById('f-name')?.value.trim();
-    const phone = document.getElementById('f-phone')?.value.trim();
-    const grade = document.getElementById('f-grade')?.value;
-    if (!name || !phone || !grade) {
-      showToast('⚠️ 이름, 연락처, 학년을 입력해주세요.', 3000);
+  const form = document.getElementById('consultationForm');
+  const submitButton = document.getElementById('formSubmit');
+  if (!form || !submitButton) return;
+  const submissionStorageKey = 'sequence-consultation-submission-id';
+  let submissionId = sessionStorage.getItem(submissionStorageKey) || crypto.randomUUID();
+  sessionStorage.setItem(submissionStorageKey, submissionId);
+
+  form.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const difficulties = [...form.querySelectorAll('input[name="difficulty"]:checked')]
+      .map((input) => input.value);
+    if (difficulties.length === 0) {
+      showToast('⚠️ 현재 어려움을 한 가지 이상 선택해주세요.', 3000);
       return;
     }
-    showToast('✅ 상담 신청이 접수되었습니다! 빠르게 연락드리겠습니다.');
-    ['f-name', 'f-phone', 'f-grade', 'f-type', 'f-worry', 'f-msg'].forEach(id => {
-      const el = document.getElementById(id);
-      if (el) el.value = '';
-    });
+    if (difficulties.length > 3) {
+      showToast('⚠️ 현재 어려움은 최대 3개까지 선택할 수 있습니다.', 3000);
+      return;
+    }
+
+    const contactTime = document.getElementById('f-contact-time').value;
+    const body = {
+      studentName: document.getElementById('f-name').value,
+      parentPhone: document.getElementById('f-phone').value,
+      grade: document.getElementById('f-grade').value,
+      learningType: document.getElementById('f-type').value,
+      difficulties,
+      studyHabit: document.getElementById('f-habit').value,
+      learningGoal: document.getElementById('f-goal').value,
+      message: document.getElementById('f-msg').value,
+      contactTimes: contactTime ? [contactTime] : [],
+      privacyConsent: document.getElementById('f-privacy').checked,
+      website: document.getElementById('f-website').value,
+      submissionId,
+    };
+
+    submitButton.disabled = true;
+    submitButton.setAttribute('aria-busy', 'true');
+    try {
+      const { data, error } = await supabase.functions.invoke('consultation-intake', {
+        body,
+        signal: AbortSignal.timeout(15_000),
+      });
+      if (error) throw error;
+      if (!data?.ok) throw new Error('consultation intake failed');
+      form.reset();
+      submissionId = crypto.randomUUID();
+      sessionStorage.setItem(submissionStorageKey, submissionId);
+      showToast('✅ 상담 신청이 접수되었습니다. 확인 후 연락드리겠습니다.');
+    } catch (error) {
+      showToast('❌ 상담 신청이 접수되지 않았습니다. 잠시 후 다시 시도해주세요.', 5000);
+    } finally {
+      submitButton.disabled = false;
+      submitButton.removeAttribute('aria-busy');
+    }
   });
 }
 
