@@ -896,11 +896,93 @@ ul, ol { list-style: none; }
   transition: opacity .2s;
 }
 .form-submit:hover { opacity: .82; }
+.form-submit:disabled { cursor: wait; opacity: .55; }
 .form-note {
   text-align: center; margin-top: 12px;
   font-family: var(--font-mono);
   font-size: 10px; letter-spacing: 0.08em;
   color: var(--ink-400);
+}
+.form-group .optional,
+.choice-fieldset legend span {
+  color: var(--ink-400);
+  font-size: 9px;
+  font-weight: 500;
+}
+.choice-fieldset {
+  border: 0;
+  padding: 0;
+  min-width: 0;
+}
+.choice-fieldset legend {
+  display: block;
+  width: 100%;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-500);
+  margin-bottom: 8px;
+}
+.choice-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+.choice-grid label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 42px;
+  margin: 0;
+  padding: 9px 12px;
+  border: 1px solid var(--ink-100);
+  border-radius: var(--radius-sm);
+  background: var(--paper);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  letter-spacing: -0.01em;
+  text-transform: none;
+  color: var(--ink-700);
+  cursor: pointer;
+}
+.choice-grid input {
+  width: auto;
+  margin: 0;
+  accent-color: var(--ink-900);
+}
+.privacy-notice {
+  margin-top: 4px;
+  padding: 14px 16px;
+  border: 1px solid var(--ink-100);
+  background: var(--paper);
+  color: var(--ink-500);
+  font-size: 12px;
+  line-height: 1.65;
+}
+.privacy-notice strong { color: var(--ink-900); }
+.privacy-notice ul { margin: 6px 0; padding-left: 18px; }
+.privacy-notice p { margin: 0; }
+.privacy-check {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  margin: 4px 0 12px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--ink-500);
+  cursor: pointer;
+}
+.privacy-check input {
+  margin-top: 2px;
+  accent-color: var(--ink-900);
+}
+.honeypot {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  left: -10000px;
 }
 
 /* ══ FOOTER ═══════════════════════════════════ */

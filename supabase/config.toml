@@ -418,3 +418,6 @@ verify_jwt = false
 
 [functions.change-pin]
 verify_jwt = false
+
+[functions.consultation-intake]
+verify_jwt = false
