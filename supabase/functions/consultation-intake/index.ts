@@ -26,7 +26,7 @@ function response(origin: string, body: unknown, status: number) {
 
 function supabaseConfiguration() {
   const url = Deno.env.get('SUPABASE_URL');
-  const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+  const serviceRoleKey = Deno.env.get('CONSULTATION_SERVICE_ROLE_KEY');
   if (!url || !serviceRoleKey) throw new Error('server configuration missing');
   return { url, serviceRoleKey };
 }
@@ -37,7 +37,7 @@ async function callRpc(name: string, body: Record<string, unknown>) {
     method: 'POST',
     headers: {
       'apikey': serviceRoleKey,
-      'authorization': 'Be' + 'arer ' + serviceRoleKey,
+      'authorization': `Bearer ${serviceRoleKey}`,
       'content-type': 'application/json',
     },
     body: JSON.stringify(body),
@@ -68,10 +68,15 @@ async function failSubmission(submissionId: string) {
 
 async function checkConsultationRateLimit(request: Request, parentPhone: string) {
   const salt = Deno.env.get('CONSULTATION_RATE_LIMIT_SALT');
-  // Supabase's proxy supplies this header. Reject lists instead of trusting client-selected alternatives.
-  const clientIp = request.headers.get('x-forwarded-for')?.trim();
+  // Cloudflare overwrites cf-connecting-ip with the connecting client address before Supabase Edge Runtime.
+  // Do not trust x-forwarded-for: callers can supply values that the proxy appends to.
+  const clientIp = request.headers.get('cf-connecting-ip')?.trim();
   if (!salt || salt.length < 16 || !clientIp || clientIp.includes(',') || clientIp.length > 64) {
-    throw new Error('rate limit configuration missing');
+    throw new Error(
+      `rate limit configuration missing: ip=${Boolean(clientIp)} ` +
+      `ipSingle=${Boolean(clientIp && !clientIp.includes(',') && clientIp.length <= 64)} ` +
+      `salt=${Boolean(salt)} saltLengthOk=${Boolean(salt && salt.length >= 16)}`,
+    );
   }
 
   const hash = async (scope: string, value: string) => {
@@ -157,8 +162,11 @@ Deno.serve(async (request) => {
     if (!await checkConsultationRateLimit(request, input.parentPhone)) {
       return response(origin, { error: '요청이 너무 많습니다. 한 시간 후 다시 시도해주세요.' }, 429);
     }
-  } catch {
-    console.error('Consultation intake rate limit check failed');
+  } catch (error) {
+    console.error(
+      'Consultation intake rate limit check failed',
+      error instanceof Error ? error.message : 'unknown error',
+    );
     return response(origin, { error: '현재 접수가 원활하지 않습니다. 잠시 후 다시 시도해주세요.' }, 503);
   }
 
