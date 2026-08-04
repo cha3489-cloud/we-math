@@ -83,6 +83,7 @@ describe('public consultation intake', () => {
     expect(page.properties['연락 가능 시간'].multi_select).toEqual([{ name: '저녁 6시 이후' }]);
     expect(page.properties['상담 유형'].select.name).toBe('신규 문의');
     expect(page.properties['상담 상태'].select.name).toBe('예정');
+    expect(page.properties['처리 단계'].select.name).toBe('신규 접수');
     expect(page.properties['접수 경로'].select.name).toBe('홈페이지');
     expect(page.properties['개인정보 동의'].checkbox).toBe(true);
   });
