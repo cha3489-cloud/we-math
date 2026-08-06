@@ -76,4 +76,8 @@ describe('방문 유입 분석', () => {
       expect(read(page), page).toContain('<script type="module" src="/src/analytics.js"></script>');
     }
   });
+
+  it('운영 기본값으로 GA4 측정 ID를 제공한다', () => {
+    expect(read('src/analytics.js')).toContain("const DEFAULT_MEASUREMENT_ID = 'G-BXMYNFJFZ8'");
+  });
 });

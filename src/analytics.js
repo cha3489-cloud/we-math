@@ -1,4 +1,5 @@
 const ATTRIBUTION_KEY = 'sequence_initial_attribution';
+const DEFAULT_MEASUREMENT_ID = 'G-BXMYNFJFZ8';
 const UTM_KEYS = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content'];
 const GA_ID_PATTERN = /^G-[A-Z0-9]+$/;
 
@@ -46,7 +47,7 @@ export function initAnalytics({ measurementId, windowObj, documentObj }) {
 
 if (typeof window !== 'undefined' && typeof document !== 'undefined') {
   initAnalytics({
-    measurementId: import.meta.env.VITE_GA_MEASUREMENT_ID,
+    measurementId: import.meta.env.VITE_GA_MEASUREMENT_ID || DEFAULT_MEASUREMENT_ID,
     windowObj: window,
     documentObj: document,
   });
