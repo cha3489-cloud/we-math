@@ -1718,6 +1718,18 @@ footer {
 .article-summary { margin-top: 64px; padding: 34px; color: var(--paper); background: var(--ink-900); }
 .article-summary strong { display: block; margin-bottom: 10px; font-size: 20px; }
 .article-summary p { margin: 0; color: var(--ink-200); font-size: 16px; }
+.related-reading { margin-top: 64px; }
+.related-reading .article-kicker { margin-bottom: 8px; }
+.article-body .related-reading h2 { margin: 0 0 20px; font-size: 25px; }
+.related-card {
+  display: grid; grid-template-columns: 120px 1fr 28px; align-items: center; gap: 20px;
+  padding: 24px 26px; border: 1px solid var(--ink-200); background: var(--pure);
+  transition: border-color .2s, transform .2s, box-shadow .2s;
+}
+.related-card:hover { border-color: var(--ink-900); transform: translateY(-2px); box-shadow: var(--shadow-sm); }
+.related-card span { font-size: 12px; color: var(--accent); font-weight: 700; }
+.related-card strong { font-size: 17px; line-height: 1.55; }
+.related-card i { color: var(--accent); font-size: 22px; font-style: normal; }
 .article-tags { margin-top: 28px; font-size: 13px; color: var(--ink-500); word-spacing: 8px; }
 .article-back { display: inline-flex; margin-top: 52px; font-size: 14px; font-weight: 700; border-bottom: 1px solid var(--ink-900); }
 
@@ -1730,6 +1742,8 @@ footer {
   .article-body { padding: 52px 24px 88px; }
   .article-body p { font-size: 16px; }
   .article-quote { padding: 24px 22px; font-size: 19px; }
+  .related-card { grid-template-columns: 1fr 24px; gap: 10px; padding: 22px; }
+  .related-card span { grid-column: 1 / -1; }
 }
 
 /* ══ CONSULTATION PAGE ═════════════════════════ */

@@ -5,6 +5,10 @@ import config from '../vite.config.js';
 
 const root = resolve(import.meta.dirname, '..');
 const read = (path) => readFileSync(resolve(root, path), 'utf8');
+const pngSize = (path) => {
+  const image = readFileSync(resolve(root, path));
+  return { width: image.readUInt32BE(16), height: image.readUInt32BE(20) };
+};
 
 describe('시퀀스 수학 블로그', () => {
   it('블로그 목록과 첫 글을 Vite 진입점으로 빌드한다', () => {
@@ -65,5 +69,18 @@ describe('시퀀스 수학 블로그', () => {
     expect(article).toContain('회복 과제');
     expect(article).toContain('2주');
     expect(article).toContain('"@type": "BlogPosting"');
+  });
+
+  it('두 글에 1200×630 공유 이미지와 관련 글 이동 경로를 제공한다', () => {
+    const academy = read('blog/choosing-math-academy/index.html');
+    const homework = read('blog/homework-routine-recovery/index.html');
+    expect(academy).toContain('<meta property="og:image" content="https://sequencemath.co.kr/img/blog/choosing-math-academy-og.png"');
+    expect(homework).toContain('<meta property="og:image" content="https://sequencemath.co.kr/img/blog/homework-routine-recovery-og.png"');
+    expect(academy).toContain('name="twitter:card" content="summary_large_image"');
+    expect(homework).toContain('name="twitter:card" content="summary_large_image"');
+    expect(academy).toContain('/blog/homework-routine-recovery/');
+    expect(homework).toContain('/blog/choosing-math-academy/');
+    expect(pngSize('public/img/blog/choosing-math-academy-og.png')).toEqual({ width: 1200, height: 630 });
+    expect(pngSize('public/img/blog/homework-routine-recovery-og.png')).toEqual({ width: 1200, height: 630 });
   });
 });
