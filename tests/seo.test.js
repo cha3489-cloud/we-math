@@ -14,6 +14,14 @@ describe('검색엔진 소유권과 크롤링', () => {
     expect(homepage).not.toContain('GOOGLE_VERIFICATION_CODE');
   });
 
+  it('네이버 서치어드바이저 소유권 인증 코드를 제공한다', () => {
+    const homepage = read('index.html');
+    expect(homepage).toContain(
+      '<meta name="naver-site-verification" content="d3f09923b03eeb3233217f02106f88820dda882c" />',
+    );
+    expect(homepage).not.toContain('NAVER_VERIFICATION_CODE');
+  });
+
   it('robots.txt가 공개 사이트맵을 안내한다', () => {
     expect(read('public/robots.txt')).toContain('Sitemap: https://sequencemath.co.kr/sitemap.xml');
   });
