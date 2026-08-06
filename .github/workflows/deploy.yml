@@ -35,4 +35,6 @@ jobs:
         with:
           path: dist
       - uses: actions/deploy-pages@v4
+        with:
+          timeout: 1200000
         id: deployment
