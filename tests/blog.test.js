@@ -53,6 +53,15 @@ describe('시퀀스 수학 블로그', () => {
     expect(sitemap).toContain('https://sequencemath.co.kr/blog/choosing-math-academy/');
   });
 
+  it('네이버 검색 수집용 RSS에 공개 글 두 개를 제공한다', () => {
+    const rss = read('public/rss.xml');
+    expect(rss).toContain('<rss version="2.0"');
+    expect(rss).toContain('https://sequencemath.co.kr/rss.xml');
+    expect(rss).toContain('https://sequencemath.co.kr/blog/choosing-math-academy/');
+    expect(rss).toContain('https://sequencemath.co.kr/blog/homework-routine-recovery/');
+    expect(rss.match(/<item>/g)).toHaveLength(2);
+  });
+
   it('두 번째 글 숙제 루틴 회복 칼럼을 목록·빌드·사이트맵에 자동 등록한다', () => {
     const inputs = config.build.rollupOptions.input;
     const blog = read('blog/index.html');
