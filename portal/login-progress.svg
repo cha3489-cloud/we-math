@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" fill="none" role="img" aria-label="">
+  <!-- 시퀀스 수학 · 로그인 가로형 장면 · 글자 없음 · 배경 투명
+       cream #F7F4ED · navy #173F3A · mint #BFE7D7 · coral #D9674F -->
+
+  <!-- 은은한 배경 장식 (투명 배경 위 크림/민트 도형) -->
+  <circle cx="1310" cy="180" r="150" fill="#F7F4ED"/>
+  <circle cx="240" cy="700" r="110" fill="#F7F4ED"/>
+  <circle cx="1445" cy="620" r="10" fill="#BFE7D7"/>
+  <circle cx="150" cy="240" r="8" fill="#BFE7D7"/>
+  <circle cx="1240" cy="775" r="7" fill="#BFE7D7" opacity=".7"/>
+
+  <!-- 앞으로 나아가는 점선 궤적 (좌하 → 우상) -->
+  <path d="M170 760 C 450 740, 520 600, 700 560 S 1050 420, 1180 330 S 1380 220, 1450 180"
+        stroke="#BFE7D7" stroke-width="7" stroke-linecap="round" stroke-dasharray="1 26"/>
+
+  <!-- 학습지 1 (시작: 빈 줄만) -->
+  <g transform="translate(180,555) rotate(-7)">
+    <rect x="0" y="0" width="260" height="330" rx="16" fill="#F7F4ED" stroke="#173F3A" stroke-width="6"/>
+    <line x1="36" y1="66"  x2="224" y2="66"  stroke="#173F3A" stroke-width="6" stroke-linecap="round" opacity=".5"/>
+    <line x1="36" y1="126" x2="200" y2="126" stroke="#173F3A" stroke-width="6" stroke-linecap="round" opacity=".5"/>
+    <line x1="36" y1="186" x2="214" y2="186" stroke="#173F3A" stroke-width="6" stroke-linecap="round" opacity=".5"/>
+    <line x1="36" y1="246" x2="180" y2="246" stroke="#173F3A" stroke-width="6" stroke-linecap="round" opacity=".5"/>
+  </g>
+
+  <!-- 학습지 2 (체크 1개 시작) -->
+  <g transform="translate(560,420) rotate(-3)">
+    <rect x="0" y="0" width="280" height="350" rx="16" fill="#F7F4ED" stroke="#173F3A" stroke-width="6"/>
+    <line x1="86" y1="70"  x2="242" y2="70"  stroke="#173F3A" stroke-width="6" stroke-linecap="round" opacity=".5"/>
+    <line x1="86" y1="136" x2="220" y2="136" stroke="#173F3A" stroke-width="6" stroke-linecap="round" opacity=".5"/>
+    <line x1="86" y1="202" x2="234" y2="202" stroke="#173F3A" stroke-width="6" stroke-linecap="round" opacity=".5"/>
+    <line x1="86" y1="268" x2="196" y2="268" stroke="#173F3A" stroke-width="6" stroke-linecap="round" opacity=".5"/>
+    <circle cx="48" cy="70" r="22" fill="#BFE7D7"/>
+    <path d="M38 70 l7 8 l14 -16" stroke="#173F3A" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+
+  <!-- 학습지 3 (체크가 쌓임) -->
+  <g transform="translate(950,270) rotate(2)">
+    <rect x="0" y="0" width="300" height="370" rx="16" fill="#F7F4ED" stroke="#173F3A" stroke-width="6"/>
+    <line x1="92" y1="74"  x2="258" y2="74"  stroke="#173F3A" stroke-width="6" stroke-linecap="round" opacity=".5"/>
+    <line x1="92" y1="144" x2="236" y2="144" stroke="#173F3A" stroke-width="6" stroke-linecap="round" opacity=".5"/>
+    <line x1="92" y1="214" x2="250" y2="214" stroke="#173F3A" stroke-width="6" stroke-linecap="round" opacity=".5"/>
+    <line x1="92" y1="284" x2="212" y2="284" stroke="#173F3A" stroke-width="6" stroke-linecap="round" opacity=".5"/>
+    <circle cx="50" cy="74"  r="22" fill="#BFE7D7"/>
+    <path d="M40 74 l7 8 l14 -16" stroke="#173F3A" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="50" cy="144" r="22" fill="#BFE7D7"/>
+    <path d="M40 144 l7 8 l14 -16" stroke="#173F3A" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="50" cy="214" r="22" fill="#BFE7D7"/>
+    <path d="M40 214 l7 8 l14 -16" stroke="#173F3A" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+
+  <!-- 도착점: 작은 코랄 포인트 (절제된 사용) -->
+  <circle cx="1452" cy="178" r="16" fill="#D9674F"/>
+  <circle cx="1452" cy="178" r="30" stroke="#D9674F" stroke-width="4" opacity=".35"/>
+
+  <!-- 정리되어 겹쳐 쌓인 완료 낱장 (좌측 하단, 반복의 흔적) -->
+  <g transform="translate(120,790) rotate(-4)">
+    <rect x="0" y="0" width="150" height="18" rx="9" fill="#F7F4ED" stroke="#173F3A" stroke-width="4"/>
+    <rect x="14" y="-26" width="150" height="18" rx="9" fill="#F7F4ED" stroke="#173F3A" stroke-width="4"/>
+    <rect x="28" y="-52" width="150" height="18" rx="9" fill="#F7F4ED" stroke="#173F3A" stroke-width="4"/>
+  </g>
+</svg>
