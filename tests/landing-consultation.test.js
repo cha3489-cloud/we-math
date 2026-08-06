@@ -20,4 +20,10 @@ describe('landing consultation overview', () => {
     expect(css).toContain('.consult-outcome-items');
     expect(css).not.toContain('.consult-card:nth-child(6)');
   });
+
+  it('prevents intermediate-width overflow and keeps small labels readable', () => {
+    expect(css).toMatch(/@media \(max-width: 960px\)[\s\S]*?\.consult-head \{ grid-template-columns: 1fr; gap: 24px; \}/);
+    expect(css).toMatch(/\.consult-check \{[\s\S]*?color: var\(--ink-600\);[\s\S]*?\}/);
+    expect(css).toMatch(/\.consult-outcome-item span \{[\s\S]*?color: var\(--ink-300\);[\s\S]*?\}/);
+  });
 });
