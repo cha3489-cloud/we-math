@@ -33,7 +33,11 @@ describe('시퀀스 수학 블로그', () => {
   });
 
   it('개원 준비 단계에서 모집성 표현을 쓰지 않는다', () => {
-    const pages = [read('blog/index.html'), read('blog/choosing-math-academy/index.html')].join('\n');
+    const pages = [
+      read('blog/index.html'),
+      read('blog/choosing-math-academy/index.html'),
+      read('blog/homework-routine-recovery/index.html'),
+    ].join('\n');
     for (const phrase of ['수강생 모집', '상담 예약', '등록 문의', '선착순', '수강료 안내', '지금 신청하세요']) {
       expect(pages).not.toContain(phrase);
     }
@@ -43,5 +47,23 @@ describe('시퀀스 수학 블로그', () => {
     const sitemap = read('public/sitemap.xml');
     expect(sitemap).toContain('https://sequencemath.co.kr/blog/');
     expect(sitemap).toContain('https://sequencemath.co.kr/blog/choosing-math-academy/');
+  });
+
+  it('두 번째 글 숙제 루틴 회복 칼럼을 목록·빌드·사이트맵에 자동 등록한다', () => {
+    const inputs = config.build.rollupOptions.input;
+    const blog = read('blog/index.html');
+    const sitemap = read('public/sitemap.xml');
+    const articleUrl = 'https://sequencemath.co.kr/blog/homework-routine-recovery/';
+    expect(inputs).toHaveProperty('blogHomeworkRoutine');
+    expect(blog).toContain('/blog/homework-routine-recovery/');
+    expect(blog).toContain('수학 숙제를 안 하는 아이');
+    expect(sitemap).toContain(articleUrl);
+    const article = read('blog/homework-routine-recovery/index.html');
+    expect(article).toContain(articleUrl);
+    expect(article).toContain('필수 과제');
+    expect(article).toContain('도전 과제');
+    expect(article).toContain('회복 과제');
+    expect(article).toContain('2주');
+    expect(article).toContain('"@type": "BlogPosting"');
   });
 });

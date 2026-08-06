@@ -16,6 +16,7 @@ describe('Vite multi-page build', () => {
       'admin',
       'blog',
       'blogChoosingAcademy',
+      'blogHomeworkRoutine',
       'consultation',
       'main',
       'student',
