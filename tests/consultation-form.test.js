@@ -6,8 +6,23 @@ const root = resolve(import.meta.dirname, '..');
 const read = (path) => readFileSync(resolve(root, path), 'utf8');
 
 describe('consultation form UI', () => {
+  it('keeps the landing page concise and moves consultation intake to a dedicated page', () => {
+    const landing = read('index.html');
+    const consultation = read('consultation/index.html');
+    const consultationHrefs = [...landing.matchAll(/<a\b[^>]*href="([^"]+)"[^>]*>([\s\S]*?)<\/a>/g)]
+      .filter((match) => /상담 신청|첫 학습 진단 상담/.test(match[2]))
+      .map((match) => match[1]);
+
+    expect(landing).not.toContain('<form class="contact-form-card');
+    expect(landing).not.toContain('href="#contact"');
+    expect(consultationHrefs.length).toBeGreaterThanOrEqual(6);
+    expect(new Set(consultationHrefs)).toEqual(new Set(['/consultation/']));
+    expect(consultation).toContain('<form class="contact-form-card');
+    expect(consultation).toContain('href="/"');
+  });
+
   it('collects the five diagnostic fields and explicit privacy consent in a real form', () => {
-    const html = read('index.html');
+    const html = read('consultation/index.html');
     expect(html).toContain('<form class="contact-form-card');
     for (const id of [
       'f-name', 'f-phone', 'f-grade', 'f-type', 'f-difficulties',
@@ -40,7 +55,7 @@ describe('consultation form UI', () => {
   });
 
   it('uses only Notion-compatible option labels', () => {
-    const html = read('index.html');
+    const html = read('consultation/index.html');
     for (const option of [
       '개념 이해', '문제 해석', '계산', '풀이 습관',
       '학습 습관', '학습 자신감', '진도 부적응', '기타',
