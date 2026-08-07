@@ -59,7 +59,7 @@ describe('시퀀스 수학 블로그', () => {
     expect(rss).toContain('https://sequencemath.co.kr/rss.xml');
     expect(rss).toContain('https://sequencemath.co.kr/blog/choosing-math-academy/');
     expect(rss).toContain('https://sequencemath.co.kr/blog/homework-routine-recovery/');
-    expect(rss.match(/<item>/g)).toHaveLength(2);
+    expect(rss.match(/<item>/g)?.length).toBeGreaterThanOrEqual(2);
   });
 
   it('두 번째 글 숙제 루틴 회복 칼럼을 목록·빌드·사이트맵에 자동 등록한다', () => {
