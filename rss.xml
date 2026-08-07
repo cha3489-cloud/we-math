@@ -7,6 +7,16 @@
     <language>ko-KR</language>
     <lastBuildDate>Thu, 06 Aug 2026 09:00:00 +0900</lastBuildDate>
     <atom:link href="https://sequencemath.co.kr/rss.xml" rel="self" type="application/rss+xml" />
+<!-- generated-rss-item:daily-math-learning-records:start -->
+    <item>
+      <title>수학 학습관리, 푼 문제 수보다 매일 남겨야 할 네 가지 기록</title>
+      <link>https://sequencemath.co.kr/blog/daily-math-learning-records/</link>
+      <guid isPermaLink="true">https://sequencemath.co.kr/blog/daily-math-learning-records/</guid>
+      <description>문제 수만 세지 않고 핵심 개념, 오답 지점, 도움의 정도, 재풀이 결과를 다음 학습에 연결하는 기록 기준을 정리합니다.</description>
+      <pubDate>Fri, 07 Aug 2026 09:00:00 +0900</pubDate>
+    </item>
+<!-- generated-rss-item:daily-math-learning-records:end -->
+
     <item>
       <title>수학 숙제를 안 하는 아이, 어떻게 해야 할까요?</title>
       <link>https://sequencemath.co.kr/blog/homework-routine-recovery/</link>
