@@ -220,7 +220,7 @@ def replace_generated(text: str, kind: str, slug: str, block: str, fallback_patt
     match = re.search(insertion_pattern, text)
     if not match:
         raise ValueError(f"could not find insertion point for {kind}")
-    return text[:match.end()] + "\n" + wrapped + text[match.end():]
+    return text[:match.end()] + "\n" + wrapped + "\n" + text[match.end():]
 
 
 def update_blog_index(text: str, record: dict[str, Any]) -> str:
