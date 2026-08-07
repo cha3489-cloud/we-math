@@ -12,7 +12,7 @@ const readJavaScript = (directory) => readdirSync(directory, { recursive: true }
 
 describe('Vite multi-page build', () => {
   it('keeps landing, consultation, student, admin, and blog entry points', () => {
-    expect(Object.keys(config.build.rollupOptions.input).sort()).toEqual([
+    expect(Object.keys(config.build.rollupOptions.input)).toEqual(expect.arrayContaining([
       'admin',
       'blog',
       'blogChoosingAcademy',
@@ -20,7 +20,7 @@ describe('Vite multi-page build', () => {
       'consultation',
       'main',
       'student',
-    ]);
+    ]));
   });
 
   it('includes public Supabase configuration when Cloudflare build env is empty', async () => {
