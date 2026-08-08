@@ -7,6 +7,16 @@
     <language>ko-KR</language>
     <lastBuildDate>Thu, 06 Aug 2026 09:00:00 +0900</lastBuildDate>
     <atom:link href="https://sequencemath.co.kr/rss.xml" rel="self" type="application/rss+xml" />
+<!-- generated-rss-item:2026-08-08-algebraic-expression-parentheses:start -->
+    <item>
+      <title>문자식 괄호 풀기, 부호 실수가 반복될 때 먼저 볼 세 가지</title>
+      <link>https://sequencemath.co.kr/blog/2026-08-08-algebraic-expression-parentheses/</link>
+      <guid isPermaLink="true">https://sequencemath.co.kr/blog/2026-08-08-algebraic-expression-parentheses/</guid>
+      <description>문자식 괄호 풀기에서 반복되는 부호 실수를 정답률만으로 보지 않고 첫 줄, 풀이 시간, 오답 원인, 재풀이 성공으로 점검하는 방법을 정리합니다.</description>
+      <pubDate>Sat, 08 Aug 2026 09:00:00 +0900</pubDate>
+    </item>
+<!-- generated-rss-item:2026-08-08-algebraic-expression-parentheses:end -->
+
 <!-- generated-rss-item:daily-math-learning-records:start -->
     <item>
       <title>수학 학습관리, 푼 문제 수보다 매일 남겨야 할 네 가지 기록</title>

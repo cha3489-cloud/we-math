@@ -1,6 +1,10 @@
 import { defineConfig } from 'vite';
 import { resolve } from 'node:path';
 export default defineConfig({ root: '.', base: './', build: { outDir: 'dist', emptyOutDir: true, rollupOptions: { input: {
+// generated-vite-input:2026-08-08-algebraic-expression-parentheses:start
+blog20260808AlgebraicExpressionParentheses: resolve(__dirname, 'blog/2026-08-08-algebraic-expression-parentheses/index.html'),
+// generated-vite-input:2026-08-08-algebraic-expression-parentheses:end
+
 // generated-vite-input:daily-math-learning-records:start
 blogDailyMathLearningRecords: resolve(__dirname, 'blog/daily-math-learning-records/index.html'),
 // generated-vite-input:daily-math-learning-records:end
