@@ -1750,6 +1750,9 @@ footer {
 .article-body h2:first-child { margin-top: 0; }
 .article-body p { margin: 0 0 22px; font-size: 17px; color: var(--ink-800); line-height: 1.95; }
 .article-quote { margin: 40px 0; padding: 28px 30px; border-left: 3px solid var(--accent); background: var(--ink-050); font-size: 21px; font-weight: 700; line-height: 1.65; letter-spacing: -.02em; }
+.article-image { margin: 44px 0; }
+.article-image img { display: block; width: 100%; height: auto; border: 1px solid var(--ink-200); border-radius: 22px; background: var(--ink-050); box-shadow: var(--shadow-soft); }
+.article-image figcaption { margin-top: 12px; color: var(--ink-500); font-size: 13px; line-height: 1.7; text-align: center; }
 .article-checklist { margin: 28px 0 36px; border-top: 1px solid var(--ink-200); }
 .article-checklist li { position: relative; padding: 18px 12px 18px 34px; border-bottom: 1px solid var(--ink-100); color: var(--ink-700); line-height: 1.7; }
 .article-checklist li::before { content: '✓'; position: absolute; left: 8px; color: var(--accent); font-weight: 800; }

@@ -33,6 +33,7 @@ BANNED_PHRASES = (
 )
 TEXT_FIELDS = ("date", "title", "description", "category", "slug", "article_markdown")
 SLUG_PATTERN = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
+IMAGE_MARKER_PATTERN = re.compile(r"^\[(?:이미지(?P<number>\s*\d+)?(?:\s*삽입)?):\s*(?P<description>.+)\]$")
 
 
 def validate_record(record: Any) -> dict[str, Any]:
@@ -79,12 +80,43 @@ def inline_markdown(value: str) -> str:
     return safe
 
 
-def markdown_to_html(markdown: str) -> str:
+def inline_image_svg(slug: str, index: int) -> str:
+    """Return a text-free educational illustration SVG for an inline article image."""
+    hue = (index * 41) % 360
+    return f'''<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-label="교육 칼럼 보조 이미지">
+  <rect width="1200" height="630" fill="#f7f1e7"/>
+  <rect x="92" y="76" width="1016" height="478" rx="34" fill="#fffaf1" stroke="#d8c8ad" stroke-width="3"/>
+  <path d="M170 172h860M170 252h860M170 332h860M170 412h860" stroke="#e7dcc9" stroke-width="4" stroke-linecap="round"/>
+  <path d="M220 202c92-72 174 74 260 0s174-72 258 0 169 72 246 0" fill="none" stroke="hsl({hue} 42% 32%)" stroke-width="12" stroke-linecap="round"/>
+  <circle cx="248" cy="438" r="34" fill="#163d38" opacity=".92"/>
+  <circle cx="420" cy="438" r="34" fill="#c5864a" opacity=".92"/>
+  <circle cx="592" cy="438" r="34" fill="#163d38" opacity=".92"/>
+  <circle cx="764" cy="438" r="34" fill="#c5864a" opacity=".92"/>
+  <circle cx="936" cy="438" r="34" fill="#163d38" opacity=".92"/>
+  <path d="M282 438h104M454 438h104M626 438h104M798 438h104" stroke="#b9aa91" stroke-width="7" stroke-linecap="round"/>
+  <path d="M220 132l34 34 62-70M876 134h118M876 174h84" fill="none" stroke="#163d38" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M250 512c164-34 332-34 504 0 80 16 148 16 206 0" fill="none" stroke="#d8a15f" stroke-width="8" stroke-linecap="round" opacity=".7"/>
+</svg>
+'''
+
+
+def collect_inline_image_assets(markdown: str, slug: str) -> dict[str, str]:
+    assets: dict[str, str] = {}
+    count = 0
+    for line in markdown.replace("\r\n", "\n").replace("\r", "\n").split("\n"):
+        if IMAGE_MARKER_PATTERN.fullmatch(line.strip()):
+            count += 1
+            assets[f"public/img/blog/{slug}-inline-{count:02d}.svg"] = inline_image_svg(slug, count)
+    return assets
+
+
+def markdown_to_html(markdown: str, slug: str | None = None) -> str:
     """Render a deliberately small, raw-HTML-free Markdown subset."""
     lines = markdown.replace("\r\n", "\n").replace("\r", "\n").split("\n")
     output: list[str] = []
     paragraph: list[str] = []
     list_items: list[str] = []
+    image_index = 0
 
     def flush_paragraph() -> None:
         if paragraph:
@@ -102,11 +134,22 @@ def markdown_to_html(markdown: str) -> str:
         stripped = line.strip()
         heading = re.fullmatch(r"(#{2,3})\s+(.+)", stripped)
         item = re.fullmatch(r"[-*]\s+(.+)", stripped)
+        image = IMAGE_MARKER_PATTERN.fullmatch(stripped)
         if heading:
             flush_paragraph()
             flush_list()
             level = len(heading.group(1))
             output.append(f"      <h{level}>{inline_markdown(heading.group(2))}</h{level}>")
+        elif image and slug:
+            flush_paragraph()
+            flush_list()
+            image_index += 1
+            description = image.group("description").strip()
+            source = f"/img/blog/{slug}-inline-{image_index:02d}.svg"
+            output.append('      <figure class="article-image">')
+            output.append(f'        <img src="{source}" alt="{html.escape(description, quote=True)}" loading="lazy" width="1200" height="630" />')
+            output.append(f"        <figcaption>{inline_markdown(description)}</figcaption>")
+            output.append("      </figure>")
         elif item:
             flush_paragraph()
             list_items.append(item.group(1))
@@ -152,7 +195,7 @@ def render_article(record: dict[str, Any]) -> str:
         "publisher": {"@type": "Organization", "name": "시퀀스 수학", "url": f"{BASE_URL}/"},
         "keywords": record["hashtags"],
     })
-    body = markdown_to_html(record["article_markdown"])
+    body = markdown_to_html(record["article_markdown"], record["slug"])
     return f'''<!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -298,12 +341,13 @@ def generate(root: Path | str, raw_record: Any) -> list[str]:
     record = validate_record(raw_record)
     relative_paths = [
         f"blog/{record['slug']}/index.html",
+        *collect_inline_image_assets(record["article_markdown"], record["slug"]).keys(),
         "blog/index.html",
         "vite.config.js",
         "public/sitemap.xml",
         "public/rss.xml",
     ]
-    source_paths = relative_paths[1:]
+    source_paths = ["blog/index.html", "vite.config.js", "public/sitemap.xml", "public/rss.xml"]
     sources: dict[str, str] = {}
     for relative in source_paths:
         path = root / relative
@@ -311,8 +355,10 @@ def generate(root: Path | str, raw_record: Any) -> list[str]:
             raise ValueError(f"required project file not found: {relative}")
         sources[relative] = path.read_text(encoding="utf-8")
 
+    image_outputs = collect_inline_image_assets(record["article_markdown"], record["slug"])
     outputs = {
         relative_paths[0]: render_article(record),
+        **image_outputs,
         "blog/index.html": update_blog_index(sources["blog/index.html"], record),
         "vite.config.js": update_vite(sources["vite.config.js"], record),
         "public/sitemap.xml": update_sitemap(sources["public/sitemap.xml"], record),
