@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import config from '../vite.config.js';
 
@@ -91,5 +91,22 @@ describe('시퀀스 수학 블로그', () => {
     expect(homework).toContain('/blog/choosing-math-academy/');
     expect(pngSize('public/img/blog/choosing-math-academy-og.png')).toEqual({ width: 1200, height: 630 });
     expect(pngSize('public/img/blog/homework-routine-recovery-og.png')).toEqual({ width: 1200, height: 630 });
+  });
+
+  it('생성 글의 이미지 삽입 마커를 실제 figure 이미지로 렌더링한다', () => {
+    const generatedSlugs = [
+      '2026-08-08-algebraic-expression-parentheses',
+      '2026-08-11-middle-school-geometry-study-check',
+    ];
+    for (const slug of generatedSlugs) {
+      const article = read(`blog/${slug}/index.html`);
+      expect(article).not.toContain('[이미지');
+      expect(article.match(/<figure class="article-image">/g)).toHaveLength(3);
+      for (const index of [1, 2, 3]) {
+        const image = `public/img/blog/${slug}-inline-0${index}.svg`;
+        expect(article).toContain(`/img/blog/${slug}-inline-0${index}.svg`);
+        expect(existsSync(resolve(root, image))).toBe(true);
+      }
+    }
   });
 });
