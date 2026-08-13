@@ -1,6 +1,10 @@
 import { defineConfig } from 'vite';
 import { resolve } from 'node:path';
 export default defineConfig({ root: '.', base: './', build: { outDir: 'dist', emptyOutDir: true, rollupOptions: { input: {
+// generated-vite-input:2026-08-13-math-error-note:start
+blog20260813MathErrorNote: resolve(__dirname, 'blog/2026-08-13-math-error-note/index.html'),
+// generated-vite-input:2026-08-13-math-error-note:end
+
 // generated-vite-input:2026-08-11-middle-school-geometry-study-check:start
 blog20260811MiddleSchoolGeometryStudyCheck: resolve(__dirname, 'blog/2026-08-11-middle-school-geometry-study-check/index.html'),
 // generated-vite-input:2026-08-11-middle-school-geometry-study-check:end
