@@ -80,34 +80,20 @@ def inline_markdown(value: str) -> str:
     return safe
 
 
-def inline_image_svg(slug: str, index: int) -> str:
-    """Return a text-free educational illustration SVG for an inline article image."""
-    hue = (index * 41) % 360
-    return f'''<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-label="교육 칼럼 보조 이미지">
-  <rect width="1200" height="630" fill="#f7f1e7"/>
-  <rect x="92" y="76" width="1016" height="478" rx="34" fill="#fffaf1" stroke="#d8c8ad" stroke-width="3"/>
-  <path d="M170 172h860M170 252h860M170 332h860M170 412h860" stroke="#e7dcc9" stroke-width="4" stroke-linecap="round"/>
-  <path d="M220 202c92-72 174 74 260 0s174-72 258 0 169 72 246 0" fill="none" stroke="hsl({hue} 42% 32%)" stroke-width="12" stroke-linecap="round"/>
-  <circle cx="248" cy="438" r="34" fill="#163d38" opacity=".92"/>
-  <circle cx="420" cy="438" r="34" fill="#c5864a" opacity=".92"/>
-  <circle cx="592" cy="438" r="34" fill="#163d38" opacity=".92"/>
-  <circle cx="764" cy="438" r="34" fill="#c5864a" opacity=".92"/>
-  <circle cx="936" cy="438" r="34" fill="#163d38" opacity=".92"/>
-  <path d="M282 438h104M454 438h104M626 438h104M798 438h104" stroke="#b9aa91" stroke-width="7" stroke-linecap="round"/>
-  <path d="M220 132l34 34 62-70M876 134h118M876 174h84" fill="none" stroke="#163d38" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
-  <path d="M250 512c164-34 332-34 504 0 80 16 148 16 206 0" fill="none" stroke="#d8a15f" stroke-width="8" stroke-linecap="round" opacity=".7"/>
-</svg>
-'''
+def collect_inline_image_paths(markdown: str, slug: str) -> list[str]:
+    """Return required pre-approved inline PNG paths for image markers.
 
-
-def collect_inline_image_assets(markdown: str, slug: str) -> dict[str, str]:
-    assets: dict[str, str] = {}
+    The generator intentionally does not create placeholder art. Each marker must
+    already have a reviewed, text-free PNG asset so low-quality SVG diagrams are
+    never published as a fallback.
+    """
+    paths: list[str] = []
     count = 0
     for line in markdown.replace("\r\n", "\n").replace("\r", "\n").split("\n"):
         if IMAGE_MARKER_PATTERN.fullmatch(line.strip()):
             count += 1
-            assets[f"public/img/blog/{slug}-inline-{count:02d}.svg"] = inline_image_svg(slug, count)
-    return assets
+            paths.append(f"public/img/blog/{slug}-inline-{count:02d}.png")
+    return paths
 
 
 def markdown_to_html(markdown: str, slug: str | None = None) -> str:
@@ -145,7 +131,7 @@ def markdown_to_html(markdown: str, slug: str | None = None) -> str:
             flush_list()
             image_index += 1
             description = image.group("description").strip()
-            source = f"/img/blog/{slug}-inline-{image_index:02d}.svg"
+            source = f"/img/blog/{slug}-inline-{image_index:02d}.png"
             output.append('      <figure class="article-image">')
             output.append(f'        <img src="{source}" alt="{html.escape(description, quote=True)}" loading="lazy" width="1200" height="630" />')
             output.append(f"        <figcaption>{inline_markdown(description)}</figcaption>")
@@ -339,9 +325,13 @@ def atomic_write(path: Path, content: str) -> None:
 def generate(root: Path | str, raw_record: Any) -> list[str]:
     root = Path(root).resolve()
     record = validate_record(raw_record)
+    required_inline_images = collect_inline_image_paths(record["article_markdown"], record["slug"])
+    missing_inline_images = [relative for relative in required_inline_images if not (root / relative).exists()]
+    if missing_inline_images:
+        raise ValueError("missing approved inline blog image asset(s): " + ", ".join(missing_inline_images))
+
     relative_paths = [
         f"blog/{record['slug']}/index.html",
-        *collect_inline_image_assets(record["article_markdown"], record["slug"]).keys(),
         "blog/index.html",
         "vite.config.js",
         "public/sitemap.xml",
@@ -355,10 +345,8 @@ def generate(root: Path | str, raw_record: Any) -> list[str]:
             raise ValueError(f"required project file not found: {relative}")
         sources[relative] = path.read_text(encoding="utf-8")
 
-    image_outputs = collect_inline_image_assets(record["article_markdown"], record["slug"])
     outputs = {
         relative_paths[0]: render_article(record),
-        **image_outputs,
         "blog/index.html": update_blog_index(sources["blog/index.html"], record),
         "vite.config.js": update_vite(sources["vite.config.js"], record),
         "public/sitemap.xml": update_sitemap(sources["public/sitemap.xml"], record),

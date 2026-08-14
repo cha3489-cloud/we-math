@@ -132,18 +132,30 @@ class GenerateBlogTests(unittest.TestCase):
         record["title"] = "수학 기록을 이미지와 함께 남기는 법"
         record["article_markdown"] = "## 기록 흐름\n\n[이미지: 오늘 학습에서 다음 날 문제 선택으로 이어지는 흐름도]\n\n설명을 이어갑니다."
 
+        image_dir = self.root / "public/img/blog"
+        image_dir.mkdir(parents=True, exist_ok=True)
+        (image_dir / "math-records-inline-01.png").write_bytes(b"approved png placeholder for test")
+
         changed = self.generator.generate(self.root, record)
 
-        self.assertIn("public/img/blog/math-records-inline-01.svg", changed)
+        self.assertNotIn("public/img/blog/math-records-inline-01.png", changed)
         article = (self.root / "blog/math-records/index.html").read_text(encoding="utf-8")
         self.assertIn('<figure class="article-image">', article)
-        self.assertIn('<img src="/img/blog/math-records-inline-01.svg"', article)
+        self.assertIn('<img src="/img/blog/math-records-inline-01.png"', article)
         self.assertIn('alt="오늘 학습에서 다음 날 문제 선택으로 이어지는 흐름도"', article)
         self.assertIn('<figcaption>오늘 학습에서 다음 날 문제 선택으로 이어지는 흐름도</figcaption>', article)
         self.assertNotIn('[이미지:', article)
-        svg = (self.root / "public/img/blog/math-records-inline-01.svg").read_text(encoding="utf-8")
-        self.assertIn('<svg', svg)
-        self.assertNotIn('오늘 학습에서 다음 날 문제 선택으로 이어지는 흐름도', svg)
+        self.assertFalse((self.root / "public/img/blog/math-records-inline-01.svg").exists())
+
+    def test_image_markers_require_preapproved_png_assets(self):
+        record = copy.deepcopy(RECORD)
+        record["slug"] = "math-records"
+        record["title"] = "수학 기록을 이미지와 함께 남기는 법"
+        record["article_markdown"] = "## 기록 흐름\n\n[이미지: 오늘 학습에서 다음 날 문제 선택으로 이어지는 흐름도]\n\n설명을 이어갑니다."
+
+        with self.assertRaisesRegex(ValueError, "missing approved inline blog image asset"):
+            self.generator.generate(self.root, record)
+        self.assertFalse((self.root / "blog/math-records/index.html").exists())
 
     def test_rejects_invalid_or_dangerous_records_without_writes(self):
         cases = []

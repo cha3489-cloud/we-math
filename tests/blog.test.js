@@ -93,19 +93,22 @@ describe('시퀀스 수학 블로그', () => {
     expect(pngSize('public/img/blog/homework-routine-recovery-og.png')).toEqual({ width: 1200, height: 630 });
   });
 
-  it('생성 글의 이미지 삽입 마커를 실제 figure 이미지로 렌더링한다', () => {
+  it('생성 글의 이미지 삽입 마커를 승인된 PNG figure 이미지로 렌더링한다', () => {
     const generatedSlugs = [
       '2026-08-08-algebraic-expression-parentheses',
       '2026-08-11-middle-school-geometry-study-check',
+      '2026-08-13-math-error-note',
     ];
     for (const slug of generatedSlugs) {
       const article = read(`blog/${slug}/index.html`);
       expect(article).not.toContain('[이미지');
+      expect(article).not.toContain('.svg"');
       expect(article.match(/<figure class="article-image">/g)).toHaveLength(3);
       for (const index of [1, 2, 3]) {
-        const image = `public/img/blog/${slug}-inline-0${index}.svg`;
-        expect(article).toContain(`/img/blog/${slug}-inline-0${index}.svg`);
+        const image = `public/img/blog/${slug}-inline-0${index}.png`;
+        expect(article).toContain(`/img/blog/${slug}-inline-0${index}.png`);
         expect(existsSync(resolve(root, image))).toBe(true);
+        expect(pngSize(image)).toEqual({ width: 1200, height: 630 });
       }
     }
   });
