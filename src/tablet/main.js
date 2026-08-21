@@ -1,18 +1,27 @@
 // 적용 경로: src/tablet/main.js (태블릿 학생 화면 — 로그인 / PIN 변경 / 오늘의 수학)
 // 사진 제출과 과제 상세는 다음 단계에서 추가한다.
 import './tablet.css';
-import { invokeAuthenticated, supabase } from '../portal/client.js';
+import { invokeAuthenticated, isMissingFeedbackSourceColumn, supabase } from '../portal/client.js';
 import { validateLoginInput, validatePin, authErrorMessage, createLatestRequestGate, STATUS_META, assignmentStatus } from '../portal/domain.js';
 import { currentUserOrNull, signIn, signOut } from '../auth.js';
-import { todaySections, todaySummary, totalAssignmentCount, dueLabel, applyKeypadInput, maskPin, greeting } from './view-model.js';
+import {
+  todaySections, todaySummary, totalAssignmentCount, dueLabel, applyKeypadInput, maskPin, greeting,
+  assignmentDetail, submissionSummaryLabel, findAssignment,
+} from './view-model.js';
 
 const byId = (id) => document.getElementById(id);
 const showError = (el, message) => { el.textContent = message || ''; };
 const PIN_MAX = 6;
 
-// 오늘 화면은 과제 목록만 읽는다. 제출 본문과 피드백은 다음 단계에서 붙인다.
-const TODAY_SELECT = 'id,title,due_at,submissions(id,attempt_no,status,submitted_at)';
+// 첨부 파일과 제출 사진 경로는 아직 다루지 않는다.
+// Storage 를 건드리지 않기 위해 select 에서 파일 경로 컬럼을 모두 제외한다.
+const FEEDBACK_SELECT = 'feedback(body,auto_composed,created_at,feedback_items(problem_ref,review_tag,comment,redo_required))';
+const LEGACY_FEEDBACK_SELECT = 'feedback(body,created_at,feedback_items(problem_ref,review_tag,comment,redo_required))';
+const assignmentsSelect = (feedbackSelect) =>
+  'id,title,description,due_at,submissions(id,attempt_no,status,submitted_at,' + feedbackSelect + ')';
 const todayGate = createLatestRequestGate();
+
+let currentAssignments = [];
 
 async function requireStudent(user) {
   const { data, error } = await supabase.from('user_roles').select('role').eq('user_id', user.id).single();
@@ -20,9 +29,18 @@ async function requireStudent(user) {
 }
 
 function showPanel(name) {
-  for (const id of ['login', 'pinChange', 'today']) byId(id).hidden = id !== name;
+  for (const id of ['login', 'pinChange', 'today', 'detail']) byId(id).hidden = id !== name;
   byId('logout').hidden = name === 'login';
 }
+
+// 화면 전환은 hash 로만 한다. History API 를 쓰면 GitHub Pages 에서
+// 새로고침 시 404 가 나므로 사용하지 않는다.
+const routeOf = () => {
+  const match = String(location.hash || '').match(/^#\/assignment\/(.+)$/);
+  return match ? { name: 'detail', id: decodeURIComponent(match[1]) } : { name: 'today' };
+};
+const goToday = () => { location.hash = '#/today'; };
+const goDetail = (id) => { location.hash = '#/assignment/' + encodeURIComponent(id); };
 
 // ── 대형 숫자 키패드 ─────────────────────────────────────────────────────
 function buildKeypad(container, onKey) {
@@ -58,8 +76,11 @@ function focusPinField(field) {
 function assignmentCard(assignment, now) {
   const status = assignmentStatus(assignment, now);
   const meta = STATUS_META[status] ?? { icon: '•', label: status };
-  const card = document.createElement('article');
+  const card = document.createElement('button');
+  card.type = 'button';
   card.className = 'assignment-card';
+  card.dataset.assignmentId = assignment.id;
+  card.addEventListener('click', () => goDetail(assignment.id));
 
   const heading = document.createElement('h3');
   heading.textContent = assignment.title;
@@ -79,8 +100,53 @@ function assignmentCard(assignment, now) {
     line.append(dueEl);
   }
 
-  card.append(heading, line);
+  const chevron = document.createElement('span');
+  chevron.className = 'assignment-go';
+  chevron.setAttribute('aria-hidden', 'true');
+  chevron.textContent = '›';
+
+  card.append(heading, line, chevron);
   return card;
+}
+
+// ── 과제 상세 ────────────────────────────────────────────────────────────
+function renderMathflat(mathflat) {
+  const card = byId('detailMathflat');
+  if (!mathflat) { card.hidden = true; return; }
+  const fields = byId('detailMathflatFields');
+  fields.replaceChildren(...mathflat.fields.flatMap((field) => {
+    const term = document.createElement('dt');
+    term.textContent = field.label;
+    const value = document.createElement('dd');
+    value.textContent = field.value;
+    return [term, value];
+  }));
+  const notes = byId('detailMathflatNotes');
+  const noteText = mathflat.notes.join('\n');
+  notes.textContent = noteText;
+  notes.hidden = !noteText;
+  // 라벨도 자유 문장도 하나도 없으면 빈 카드를 띄우지 않는다.
+  card.hidden = !mathflat.fields.length && !noteText;
+}
+
+function renderDetail(detail) {
+  byId('detailTitle').textContent = detail.title;
+  byId('detailStatus').textContent = detail.statusIcon + ' ' + detail.statusLabel;
+  const dueEl = byId('detailDue');
+  dueEl.textContent = detail.due;
+  dueEl.hidden = !detail.due;
+
+  renderMathflat(detail.mathflat);
+
+  byId('detailDescription').textContent = detail.description;
+  byId('detailDescriptionBlock').hidden = !detail.description;
+
+  byId('detailSubmission').textContent = submissionSummaryLabel(detail);
+
+  byId('detailFeedback').textContent = detail.feedbackText;
+  byId('detailFeedbackBlock').hidden = !detail.feedbackText && !detail.redoProblems.length;
+  byId('detailRedo').textContent = detail.redoProblems.join(', ');
+  byId('detailRedoBlock').hidden = !detail.redoProblems.length;
 }
 
 function groupBlock(section, now) {
@@ -134,12 +200,38 @@ async function loadToday(user) {
 
   // 빠르게 여러 번 조작해도 오래된 응답이 최신 화면을 덮어쓰지 않게 한다.
   const request = todayGate.begin();
-  const result = await supabase.from('assignments').select(TODAY_SELECT).eq('student_id', user.id).order('due_at');
+  const query = (feedbackSelect) => supabase
+    .from('assignments').select(assignmentsSelect(feedbackSelect))
+    .eq('student_id', user.id).order('due_at');
+  let result = await query(FEEDBACK_SELECT);
+  // auto_composed 컬럼이 없는 배포본을 만나면 기존 포털과 같은 방식으로 물러선다.
+  if (isMissingFeedbackSourceColumn(result.error)) result = await query(LEGACY_FEEDBACK_SELECT);
   if (!todayGate.isLatest(request)) return;
   if (result.error) throw result.error;
-  renderToday(profile, result.data || []);
-  showPanel('today');
+  currentAssignments = result.data || [];
+  renderToday(profile, currentAssignments);
+  applyRoute();
 }
+
+// 로그인된 상태에서만 hash 경로를 해석한다. 없는 과제를 가리키면 오늘 화면으로 되돌린다.
+function applyRoute() {
+  if (!currentAssignments.length && routeOf().name === 'detail') { showPanel('today'); goToday(); return; }
+  const route = routeOf();
+  if (route.name !== 'detail') { showPanel('today'); return; }
+  const assignment = findAssignment(currentAssignments, route.id);
+  if (!assignment) { showPanel('today'); goToday(); return; }
+  renderDetail(assignmentDetail(assignment));
+  showPanel('detail');
+  window.scrollTo(0, 0);
+}
+
+window.addEventListener('hashchange', () => {
+  // 로그인 전에는 hash 를 무시한다.
+  if (byId('login').hidden === false || byId('pinChange').hidden === false) return;
+  applyRoute();
+});
+
+byId('detailBack').addEventListener('click', goToday);
 
 // ── 로그인 ───────────────────────────────────────────────────────────────
 buildKeypad(byId('loginKeypad'), (key) => {
@@ -207,7 +299,12 @@ byId('pinChangeForm').addEventListener('submit', async (event) => {
 });
 
 // ── 로그아웃 / 세션 복구 ─────────────────────────────────────────────────
-byId('logout').addEventListener('click', async () => { await signOut(); location.reload(); });
+byId('logout').addEventListener('click', async () => {
+  currentAssignments = [];
+  await signOut();
+  // 다음 사람이 이전 학생의 과제 경로를 열지 않도록 hash 도 비운다.
+  location.replace(location.pathname);
+});
 
 try {
   const currentUser = await currentUserOrNull();

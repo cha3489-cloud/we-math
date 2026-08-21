@@ -64,6 +64,37 @@ describe('tablet page boundaries', () => {
     // 사진 제출은 다음 PR 범위다. 여기서 storage 를 건드리면 안 된다.
     expect(main).not.toContain('storage');
     expect(html).not.toContain('type=file');
+    expect(main).not.toContain('createSignedUrl');
+    expect(main).not.toContain('attachment_paths');
+    expect(main).not.toContain('file_paths');
+  });
+
+  it('routes with the hash only, never the History API', () => {
+    // GitHub Pages 에는 SPA fallback 이 없어 pushState 로 만든 경로는 새로고침 시 404 가 난다.
+    expect(main).not.toContain('history.pushState');
+    expect(main).not.toContain('history.replaceState');
+    expect(main).toContain("location.hash = '#/assignment/'");
+    expect(main).toMatch(/addEventListener\('hashchange'/);
+  });
+
+  it('opens a detail screen only for an assignment the student actually has', () => {
+    expect(main).toContain('findAssignment(currentAssignments, route.id)');
+    expect(main).toMatch(/if \(!assignment\) \{ showPanel\('today'\); goToday\(\); return; \}/);
+  });
+
+  it('clears the assignment route on logout so the next student starts clean', () => {
+    expect(main).toMatch(/currentAssignments = \[\];[\s\S]*?signOut\(\)[\s\S]*?location\.replace\(location\.pathname\)/);
+  });
+
+  it('has a way back from the detail screen', () => {
+    expect(html).toContain('id=detailBack');
+    expect(main).toContain("byId('detailBack').addEventListener('click', goToday)");
+  });
+
+  it('renders the mathflat card as its own block', () => {
+    expect(html).toContain('id=detailMathflat');
+    expect(html).toContain('id=detailMathflatFields');
+    expect(main).toContain('renderMathflat');
   });
 
   it('keeps the pin out of the DOM value and the network log', () => {

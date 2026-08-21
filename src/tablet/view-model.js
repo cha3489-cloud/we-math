@@ -1,7 +1,10 @@
 // 적용 경로: src/tablet/view-model.js
 // 태블릿 화면 전용 순수 함수. DOM·네트워크 의존이 없어 단위 테스트로 검증한다.
 // 과제 분류 자체는 domain.js의 groupAssignments를 그대로 쓰고, 여기서는 표시 순서와 문구만 정한다.
-import { groupAssignments } from '../portal/domain.js';
+import {
+  groupAssignments, assignmentStatus, latestAttempt, canSubmitAttempt,
+  normalizeRelation, redoProblems, allFeedbackItems, STATUS_META,
+} from '../portal/domain.js';
 
 // 표시 순서는 급한 순이다. 재풀이가 가장 먼저 눈에 들어와야 한다.
 export const TODAY_SECTIONS = [
@@ -70,4 +73,99 @@ export function maskPin(value, maxLength = 6) {
 export function greeting(name) {
   const clean = String(name ?? '').trim();
   return clean ? clean + '님, 오늘도 한 걸음' : '오늘도 한 걸음';
+}
+
+// ── 매쓰플랫 안내 블록 ───────────────────────────────────────────────────
+// 과제 설명(assignments.description) 안에 아래 형태로 적어두면 별도 카드로 강조한다.
+//   [매쓰플랫]
+//   단원: 일차방정식 활용
+//   범위: 프린트 3번 ~ 18번
+//   [/매쓰플랫]
+// 규약을 쓰지 않은 기존 과제도 그대로 보여야 하므로, 블록이 없거나 형식이
+// 깨져도 설명 전체를 잃지 않는 것을 우선한다.
+const MATHFLAT_OPEN = '[매쓰플랫]';
+const MATHFLAT_CLOSE = '[/매쓰플랫]';
+
+const stripMathflatMarkers = (value) => String(value ?? '')
+  .split(MATHFLAT_OPEN).join('')
+  .split(MATHFLAT_CLOSE).join('');
+
+const collapseBlankLines = (value) => String(value ?? '')
+  .replace(/\n{3,}/g, '\n\n')
+  .trim();
+
+function parseMathflatBody(raw, closed) {
+  const lines = String(raw ?? '').split('\n').map((line) => line.trim()).filter(Boolean);
+  if (!lines.length) return null;
+  const fields = [];
+  const notes = [];
+  for (const line of lines) {
+    // "단원: 값" / "범위： 값" 처럼 라벨이 붙은 줄만 표 형태로 세운다.
+    const match = line.match(/^([^:：]{1,20})[:：]\s*(.+)$/);
+    if (match) fields.push({ label: match[1].trim(), value: match[2].trim() });
+    else notes.push(line);
+  }
+  return { fields, notes, closed };
+}
+
+export function parseAssignmentDescription(description) {
+  const source = String(description ?? '');
+  const openIndex = source.indexOf(MATHFLAT_OPEN);
+  if (openIndex === -1) {
+    return { mathflat: null, description: collapseBlankLines(stripMathflatMarkers(source)) };
+  }
+  const bodyStart = openIndex + MATHFLAT_OPEN.length;
+  const closeIndex = source.indexOf(MATHFLAT_CLOSE, bodyStart);
+  const closed = closeIndex !== -1;
+  // 닫는 태그가 없으면 남은 내용을 블록으로 본다. 그래야 설명에 여는 태그가 남지 않는다.
+  const body = closed ? source.slice(bodyStart, closeIndex) : source.slice(bodyStart);
+  const rest = source.slice(0, openIndex) + (closed ? source.slice(closeIndex + MATHFLAT_CLOSE.length) : '');
+  return {
+    mathflat: parseMathflatBody(body, closed),
+    description: collapseBlankLines(stripMathflatMarkers(rest)),
+  };
+}
+
+// ── 과제 상세 ────────────────────────────────────────────────────────────
+export function assignmentDetail(assignment, now = new Date()) {
+  if (!assignment) return null;
+  const status = assignmentStatus(assignment, now);
+  const meta = STATUS_META[status] ?? { icon: '•', label: status };
+  const attempts = normalizeRelation(assignment.submissions);
+  const latest = latestAttempt(attempts);
+  const parsed = parseAssignmentDescription(assignment.description);
+  const feedbackEntries = latest ? normalizeRelation(latest.feedback) : [];
+  const feedbackText = feedbackEntries.map((entry) => String(entry?.body ?? '').trim()).filter(Boolean).at(-1) ?? '';
+
+  return {
+    id: assignment.id,
+    title: assignment.title,
+    status,
+    statusIcon: meta.icon,
+    statusLabel: meta.label,
+    due: dueLabel(assignment.due_at, now),
+    mathflat: parsed.mathflat,
+    description: parsed.description,
+    attemptCount: attempts.length,
+    latestAttemptNo: latest?.attempt_no ?? 0,
+    submittedAt: latest?.submitted_at ?? null,
+    canResubmit: canSubmitAttempt(attempts),
+    feedbackText,
+    redoProblems: latest ? redoProblems(latest.feedback) : [],
+    feedbackItems: latest ? allFeedbackItems(latest.feedback) : [],
+  };
+}
+
+export function submissionSummaryLabel(detail) {
+  if (!detail) return '';
+  if (!detail.attemptCount) return '아직 제출하지 않았어요.';
+  const round = detail.latestAttemptNo > 1 ? detail.latestAttemptNo + '번째 제출' : '제출 완료';
+  if (detail.status === 'needs_revision') return round + ' · 다시 풀어서 제출해요.';
+  if (detail.status === 'completed') return round + ' · 확인이 끝났어요.';
+  return round + ' · 선생님이 확인하고 있어요.';
+}
+
+export function findAssignment(assignments = [], id) {
+  if (!id) return null;
+  return assignments.find((item) => String(item?.id) === String(id)) ?? null;
 }
