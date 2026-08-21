@@ -55,4 +55,37 @@
   </div>
   <div id=sections></div>
 </section>
+
+<section id=detail hidden>
+  <button id=detailBack class=tablet-back type=button>← 오늘의 과제로</button>
+  <article class=detail-card>
+    <p class=detail-statusline><span id=detailStatus></span><span id=detailDue class=detail-due></span></p>
+    <h1 id=detailTitle></h1>
+
+    <div id=detailMathflat class=mathflat-card hidden>
+      <p class=mathflat-head><span aria-hidden=true>📱</span> 매쓰플랫에서 풀 과제</p>
+      <dl id=detailMathflatFields class=mathflat-fields></dl>
+      <p id=detailMathflatNotes class=mathflat-notes hidden></p>
+    </div>
+
+    <div id=detailDescriptionBlock class=detail-block hidden>
+      <h2>과제 안내</h2>
+      <p id=detailDescription class=detail-description></p>
+    </div>
+
+    <div class=detail-block>
+      <h2>제출 상태</h2>
+      <p id=detailSubmission class=detail-submission></p>
+    </div>
+
+    <div id=detailFeedbackBlock class=detail-block hidden>
+      <h2>선생님 피드백</h2>
+      <p id=detailFeedback class=detail-feedback></p>
+      <div id=detailRedoBlock class=detail-redo hidden>
+        <p class=detail-redo-head>다시 풀 문제</p>
+        <p id=detailRedo class=detail-redo-list></p>
+      </div>
+    </div>
+  </article>
+</section>
 </main><script type=module src=/src/tablet/main.js></script></body></html>
