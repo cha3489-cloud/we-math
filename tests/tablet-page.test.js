@@ -60,13 +60,59 @@ describe('tablet page boundaries', () => {
     expect(main).not.toContain('review_submission');
   });
 
-  it('does not ship photo submission yet', () => {
-    // 사진 제출은 다음 PR 범위다. 여기서 storage 를 건드리면 안 된다.
-    expect(main).not.toContain('storage');
-    expect(html).not.toContain('type=file');
+  // 이전 PR 까지는 "storage 를 쓰지 않는다"를 검사했다. 이번 PR 에서 사진 제출이
+  // 들어오면서, 같은 자리를 "storage 를 올바르게만 쓴다"는 검사로 교체한다.
+  it('uses only the submission bucket and never a public url', () => {
+    expect(main).toContain("supabase.storage.from('submission-files')");
+    expect(main).not.toContain('getPublicUrl');
+    expect(main).not.toContain("from('assignment-files')");
+  });
+
+  it('uploads only to a path built from the signed-in student and the open assignment', () => {
+    expect(main).toContain('buildSubmissionPath(currentUserId, currentDetailId');
+    // 업로드 직전에 서버 정규식과 같은 조건을 한 번 더 확인한다.
+    expect(main).toContain('isSubmissionPathValid(path, currentUserId, currentDetailId)');
+    expect(main).toMatch(/if \(!isSubmissionPathValid[^)]*\)\) throw/);
+  });
+
+  it('lets the server decide attempt number, status and ownership', () => {
+    // 클라이언트가 보내는 것은 과제 id, 본인 id, 파일 경로뿐이어야 한다.
+    const insert = main.match(/from\('submissions'\)\.insert\(\{[\s\S]*?\}\)/)?.[0] ?? '';
+    expect(insert).toContain('assignment_id');
+    expect(insert).toContain('student_id');
+    expect(insert).toContain('file_paths');
+    expect(insert).not.toContain('attempt_no');
+    expect(insert).not.toContain('status');
+    expect(insert).not.toContain('reviewed_at');
+  });
+
+  it('removes uploaded files when the submission row fails', () => {
+    // 고아 파일을 남기지 않는다. 정리까지 실패하면 경로를 콘솔에 남겨 복구할 수 있게 한다.
+    expect(main).toMatch(/if \(uploaded\.length\)[\s\S]*?\.remove\(uploaded\)/);
+    expect(main).toContain('정리하지 못한 업로드 파일');
+  });
+
+  it('accepts only images and keeps the camera reachable', () => {
+    expect(html).toContain('accept="image/jpeg,image/png,image/webp"');
+    expect(html).toContain('capture=environment');
+    expect(html).toContain('multiple');
+    expect(main).toContain('acceptFiles(selectedPhotos.length, chosen)');
+  });
+
+  it('shrinks a photo before uploading it', () => {
+    expect(main).toContain('shrinkForUpload');
+    expect(main).toContain('resizePlan');
+    expect(main).toContain("canvas.toBlob(resolve, 'image/jpeg', JPEG_QUALITY)");
+  });
+
+  it('shows quality warnings without blocking the submission', () => {
+    expect(main).toContain('assessImageQuality');
+    expect(main).toContain('그래도 제출은 할 수 있어요');
+  });
+
+  it('still keeps assignment attachments out of scope', () => {
     expect(main).not.toContain('createSignedUrl');
     expect(main).not.toContain('attachment_paths');
-    expect(main).not.toContain('file_paths');
   });
 
   it('routes with the hash only, never the History API', () => {
