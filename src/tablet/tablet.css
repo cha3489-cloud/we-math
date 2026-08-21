@@ -1,4 +1,4 @@
-/* 적용 경로: src/tablet/tablet.css (태블릿 전용 기본 토큰)
+/* 적용 경로: src/tablet/tablet.css (태블릿 전용 스타일)
    portal.css를 재사용하지 않는다. 태블릿은 터치 타깃과 글자 크기 기준이 달라
    공유하면 데스크톱 포털과 서로를 제약하게 된다. */
 @import url('https://fonts.googleapis.com/earlyaccess/nanumsquare.css');
@@ -10,6 +10,10 @@
   --paper:#fffdf8;
   --line:#ddd9cf;
   --muted:#67716e;
+  --green:#2f7659;
+  --coral:#d9674f;
+  --gold:#bd8b36;
+  --mint-soft:#eaf6f1;
   /* 태블릿 기준: 터치 타깃 64px, 본문 18px */
   --touch-min:64px;
   --text-base:18px;
@@ -29,7 +33,7 @@ body.tablet-app{
 
 .tablet{max-width:1024px;margin:0 auto;padding:24px;}
 
-.tablet-header{display:flex;align-items:center;margin-bottom:24px;}
+.tablet-header{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:24px;}
 .tablet-header .brand{display:flex;align-items:center;gap:12px;color:var(--navy);text-decoration:none;font-weight:700;}
 .tablet-header .brand-mark{
   display:grid;place-items:center;
@@ -38,12 +42,99 @@ body.tablet-app{
 }
 .tablet-header small{display:block;font-size:12px;letter-spacing:.08em;color:var(--muted);}
 
+.tablet-logout{
+  min-height:var(--touch-min);padding:0 24px;
+  border:1px solid var(--line);border-radius:14px;
+  background:var(--paper);color:var(--ink);
+  font:inherit;font-weight:700;cursor:pointer;
+}
+
 .tablet-panel{
   background:var(--paper);
   border:1px solid var(--line);
   border-radius:20px;
   padding:32px;
+  max-width:560px;margin:0 auto;
 }
 .tablet-kicker{margin:0 0 8px;font-size:13px;letter-spacing:.08em;color:var(--muted);}
 .tablet-panel h1{margin:0 0 12px;font-size:var(--text-title);}
-.tablet-panel p{margin:0;color:var(--muted);}
+.tablet-lead{margin:0 0 24px;color:var(--muted);}
+.tablet-error{margin:16px 0 0;color:var(--coral);font-weight:700;min-height:1.6em;}
+
+.tablet-form{display:grid;gap:20px;}
+.tablet-field{display:grid;gap:8px;font-weight:700;}
+.tablet-field input{
+  min-height:var(--touch-min);padding:0 20px;
+  border:1px solid var(--line);border-radius:14px;
+  background:var(--cream);color:var(--ink);
+  font:inherit;font-size:22px;letter-spacing:.04em;
+}
+.tablet-field input:focus-visible,
+.keypad-key:focus-visible,
+.tablet-primary:focus-visible,
+.tablet-logout:focus-visible{outline:3px solid var(--green);outline-offset:2px;}
+
+.pin-display{
+  display:flex;align-items:center;
+  min-height:var(--touch-min);padding:0 20px;
+  border:1px solid var(--line);border-radius:14px;
+  background:var(--cream);
+  font-size:28px;letter-spacing:.32em;color:var(--navy);
+  cursor:pointer;
+}
+.pin-display-active{border-color:var(--green);box-shadow:0 0 0 3px rgba(47,118,89,.16);}
+
+.keypad{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;}
+.keypad-key{
+  min-height:var(--touch-min);
+  border:1px solid var(--line);border-radius:16px;
+  background:var(--paper);color:var(--ink);
+  font:inherit;font-size:26px;font-weight:700;cursor:pointer;
+}
+.keypad-key:active{background:var(--mint-soft);}
+.keypad-key-action{font-size:18px;color:var(--muted);}
+
+.tablet-primary{
+  min-height:var(--touch-min);
+  border:0;border-radius:16px;
+  background:var(--navy);color:var(--paper);
+  font:inherit;font-size:20px;font-weight:700;cursor:pointer;
+}
+.tablet-primary:disabled{opacity:.55;cursor:progress;}
+
+/* ── 오늘의 수학 ─────────────────────────────────────────────────────── */
+.today-hero{margin-bottom:24px;}
+.today-hero h1{margin:0 0 8px;font-size:28px;}
+
+.empty-state{
+  background:var(--paper);border:1px solid var(--line);border-radius:20px;
+  padding:48px 32px;text-align:center;
+}
+.empty-mark{margin:0 0 12px;font-size:48px;}
+.empty-state h2{margin:0 0 8px;font-size:var(--text-title);}
+.empty-state p{margin:0;color:var(--muted);}
+
+.today-group{
+  background:var(--paper);border:1px solid var(--line);border-radius:20px;
+  padding:24px;margin-bottom:20px;
+}
+.today-group-redo{border-color:var(--coral);}
+.today-group-head{display:flex;align-items:center;gap:16px;margin-bottom:16px;}
+.today-group-icon{font-size:28px;}
+.today-group-head h2{margin:0;font-size:var(--text-title);}
+.today-group-head p{margin:0;color:var(--muted);font-size:16px;}
+.today-group-count{margin-left:auto;font-weight:700;color:var(--muted);white-space:nowrap;}
+
+.today-cards{display:grid;gap:12px;}
+.assignment-card{
+  border:1px solid var(--line);border-radius:16px;
+  padding:20px;background:var(--cream);
+}
+.assignment-card h3{margin:0 0 8px;font-size:20px;}
+.assignment-meta{display:flex;flex-wrap:wrap;gap:8px 16px;margin:0;color:var(--muted);font-size:16px;}
+.assignment-due{font-weight:700;}
+
+@media (max-width:600px){
+  .tablet{padding:16px;}
+  .tablet-panel{padding:24px;}
+}

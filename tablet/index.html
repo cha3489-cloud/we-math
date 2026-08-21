@@ -1,9 +1,58 @@
 <!doctype html><html lang=ko><head><meta charset=UTF-8><meta name=viewport content='width=device-width, initial-scale=1, viewport-fit=cover'><meta name=theme-color content=#173f3a><title>태블릿 학습 | 시퀀스 수학</title></head><body class=tablet-app><main class=tablet>
-<header class=tablet-header><a href=../ class=brand><span class=brand-mark aria-hidden=true>S</span><span>시퀀스 수학<small>TABLET</small></span></a></header>
+<header class=tablet-header>
+  <a href=../ class=brand><span class=brand-mark aria-hidden=true>S</span><span>시퀀스 수학<small>TABLET</small></span></a>
+  <button id=logout class=tablet-logout hidden>로그아웃</button>
+</header>
 
-<section id=shell class=tablet-panel>
-  <p class=tablet-kicker>준비 중</p>
-  <h1>태블릿 학습 화면</h1>
-  <p>로그인과 오늘의 과제 화면은 다음 단계에서 추가됩니다.</p>
+<section id=login class=tablet-panel>
+  <p class=tablet-kicker>학생 로그인</p>
+  <h1>내 학습 공간</h1>
+  <p class=tablet-lead>원장님이 알려준 전화번호와 PIN을 입력하세요.</p>
+  <form id=loginForm class=tablet-form novalidate>
+    <label class=tablet-field>전화번호
+      <input id=phone type=tel inputmode=numeric autocomplete=username placeholder="01012345678" required>
+    </label>
+    <div class=tablet-field>
+      <span id=pinLabel>PIN</span>
+      <output id=pinDisplay class=pin-display aria-labelledby=pinLabel aria-live=polite></output>
+    </div>
+    <div id=loginKeypad class=keypad role=group aria-label="PIN 숫자 키패드"></div>
+    <button id=loginSubmit class=tablet-primary type=submit>로그인</button>
+    <p id=loginError class=tablet-error role=alert></p>
+  </form>
+</section>
+
+<section id=pinChange class=tablet-panel hidden>
+  <p class=tablet-kicker>첫 로그인</p>
+  <h1>나만의 PIN으로 바꿔요</h1>
+  <p class=tablet-lead>처음 한 번만 바꾸면 다음부터 새 PIN으로 들어올 수 있어요. 숫자 6자리로 정해주세요.</p>
+  <form id=pinChangeForm class=tablet-form novalidate>
+    <div class=tablet-field>
+      <span id=newPinLabel>새 PIN</span>
+      <output id=newPinDisplay class=pin-display aria-labelledby=newPinLabel aria-live=polite></output>
+    </div>
+    <div class=tablet-field>
+      <span id=confirmPinLabel>새 PIN 다시 입력</span>
+      <output id=confirmPinDisplay class=pin-display aria-labelledby=confirmPinLabel aria-live=polite></output>
+    </div>
+    <div id=pinKeypad class=keypad role=group aria-label="새 PIN 숫자 키패드"></div>
+    <button id=pinChangeSubmit class=tablet-primary type=submit>PIN 바꾸기</button>
+    <p id=pinChangeError class=tablet-error role=alert></p>
+  </form>
+</section>
+
+<section id=today hidden>
+  <div class=today-hero>
+    <p class=tablet-kicker>TODAY'S SEQUENCE</p>
+    <h1 id=greeting>오늘도 한 걸음</h1>
+    <p id=todaySummary class=tablet-lead role=status></p>
+  </div>
+  <p id=todayError class=tablet-error role=alert></p>
+  <div id=emptyState class=empty-state hidden>
+    <p class=empty-mark aria-hidden=true>🗓️</p>
+    <h2>오늘 등록된 과제가 없어요.</h2>
+    <p>새 과제가 생기면 이 화면에 바로 보여요.</p>
+  </div>
+  <div id=sections></div>
 </section>
 </main><script type=module src=/src/tablet/main.js></script></body></html>
