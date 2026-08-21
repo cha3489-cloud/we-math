@@ -31,5 +31,5 @@
   <nav class="mobile-action-bar" aria-label="모바일 과제 바로가기"><a href=#groupOpen>오늘 과제</a><a href=#groupRedo>다시 풀기</a><a href=#groupDone>완료 기록</a></nav>
 </section>
 
-<div id=viewerOverlay class=viewer-overlay role=dialog aria-modal=true aria-labelledby=viewerTitle tabindex=-1 hidden><div class=viewer-box><div class=modal-heading><h2 id=viewerTitle>제출 파일 보기</h2><button type=button id=viewerClose class=secondary>닫기</button></div><img id=viewerImage alt="제출 이미지"><iframe id=viewerFrame title="제출 PDF" hidden></iframe><!-- private-bucket PDF signed URL; sandbox blocks built-in PDF viewers --><p id=viewerError class=error role=alert></p></div></div>
+<div id=viewerOverlay class=viewer-overlay role=dialog aria-modal=true aria-labelledby=viewerTitle tabindex=-1 hidden><div class=viewer-box><div class=modal-heading><h2 id=viewerTitle>제출 파일 보기</h2><button type=button id=viewerClose class=secondary>닫기</button></div><img id=viewerImage alt="제출 이미지"><iframe id=viewerFrame title="제출 PDF" hidden></iframe><!-- private-bucket short-lived signed URL; sandbox intentionally omitted so built-in PDF viewers work --><p id=viewerError class=error role=alert></p></div></div>
 </main><script type=module src=/src/portal/student.js></script></body></html>

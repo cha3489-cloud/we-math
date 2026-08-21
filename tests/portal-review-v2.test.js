@@ -37,13 +37,16 @@ describe('portal review v2 security and workflow', () => {
     }
   });
 
-  it('queries only submitted reviews and supports both images and PDFs', () => {
+  it('queries every submitted review with stable keyset pagination and supports both images and PDFs', () => {
     const admin = read('src/portal/admin.js');
     const student = read('src/portal/student.js');
-    expect(admin).toContain("from('submissions')");
-    expect(admin).toContain("eq('status', 'submitted')");
-    expect(admin).toContain("order('submitted_at', { ascending: true })");
-    expect(admin).toContain('.limit(100)');
+    expect(admin).toContain("supabase.from('assignments').select(QUEUE_SELECT)");
+    expect(admin).toContain('submissions(id,attempt_no,status,body,file_paths,submitted_at)');
+    expect(admin).toContain('const nextQueue = reviewQueue(activeAssignments)');
+    expect(admin).toContain("order('id').limit(pageSize)");
+    expect(admin).toContain('collectKeysetPages(fetchQueuePage, REMOTE_PAGE_SIZE)');
+    expect(read('src/portal/domain.js')).toContain('return rows.sort');
+    expect(admin).not.toContain('.limit(100);');
     const adminHtml = read('admin/index.html');
     const studentHtml = read('student/index.html');
     expect(adminHtml).toContain('adminFrame');
@@ -63,6 +66,9 @@ describe('portal review v2 security and workflow', () => {
     expect(html).toContain('workflows');
     expect(admin).toContain('loadWorkflows');
     expect(admin).toContain('.range(from, to)');
+    expect(admin).toContain("profiles!assignments_student_id_fkey(name,suspended_at)");
+    expect(admin).toContain("accountStatus.textContent = '정지 계정'");
+    expect(read('src/portal/portal.css')).toContain('.status-suspended');
     expect(admin).toContain("byId('workflowNext').disabled = true");
     expect(admin).not.toContain("rpc('review_submission'");
   });

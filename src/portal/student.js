@@ -7,7 +7,7 @@ import {
   redoProblems, allFeedbackItems, isAutoComposedFeedback, assessImageQuality, STATUS_META,
   authErrorMessage,
 } from './domain.js';
-import { signIn, signOut } from '../auth.js';
+import { currentUserOrNull, signIn, signOut } from '../auth.js';
 
 const byId = (id) => document.getElementById(id);
 const showError = (el, message) => { el.textContent = message || ''; };
@@ -312,6 +312,9 @@ byId('pinChangeForm').addEventListener('submit', async (event) => {
 });
 byId('logout').addEventListener('click', async () => { await signOut(); location.reload(); });
 
-const { data: userData, error: userError } = await supabase.auth.getUser();
-if (userError) showError(byId('loginError'), authErrorMessage(userError));
-else if (userData?.user) loadDashboard(userData.user).catch((error) => showError(byId('loginError'), authErrorMessage(error)));
+try {
+  const currentUser = await currentUserOrNull();
+  if (currentUser) await loadDashboard(currentUser);
+} catch (error) {
+  showError(byId('loginError'), authErrorMessage(error));
+}
