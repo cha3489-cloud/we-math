@@ -78,6 +78,17 @@
       <p id=detailSubmission class=detail-submission></p>
     </div>
 
+    <div id=submitBlock class=detail-block hidden>
+      <h2 id=submitHeading>사진으로 제출하기</h2>
+      <p class=submit-guide>풀이가 잘 보이게 찍어주세요. 최대 3장까지 올릴 수 있어요.</p>
+      <input id=photoInput type=file accept="image/jpeg,image/png,image/webp" capture=environment multiple hidden>
+      <button id=photoPick class=tablet-secondary type=button>사진 찍기 · 고르기</button>
+      <div id=photoPreview class=photo-preview></div>
+      <button id=photoSubmit class=tablet-primary type=button disabled>제출하기</button>
+      <p id=photoStatus class=submit-status role=status></p>
+      <p id=photoError class=tablet-error role=alert></p>
+    </div>
+
     <div id=detailFeedbackBlock class=detail-block hidden>
       <h2>선생님 피드백</h2>
       <p id=detailFeedback class=detail-feedback></p>

@@ -2,12 +2,16 @@
 // 사진 제출과 과제 상세는 다음 단계에서 추가한다.
 import './tablet.css';
 import { invokeAuthenticated, isMissingFeedbackSourceColumn, supabase } from '../portal/client.js';
-import { validateLoginInput, validatePin, authErrorMessage, createLatestRequestGate, STATUS_META, assignmentStatus } from '../portal/domain.js';
+import { validateLoginInput, validatePin, authErrorMessage, createLatestRequestGate, STATUS_META, assignmentStatus, assessImageQuality } from '../portal/domain.js';
 import { currentUserOrNull, signIn, signOut } from '../auth.js';
 import {
   todaySections, todaySummary, totalAssignmentCount, dueLabel, applyKeypadInput, maskPin, greeting,
   assignmentDetail, submissionSummaryLabel, findAssignment,
 } from './view-model.js';
+import {
+  MAX_FILES, ALLOWED_TYPES, JPEG_QUALITY, acceptFiles, buildSubmissionPath,
+  isSubmissionPathValid, resizePlan, submissionErrorMessage, previewModel,
+} from './submission.js';
 
 const byId = (id) => document.getElementById(id);
 const showError = (el, message) => { el.textContent = message || ''; };
@@ -22,6 +26,10 @@ const assignmentsSelect = (feedbackSelect) =>
 const todayGate = createLatestRequestGate();
 
 let currentAssignments = [];
+let currentUserId = null;
+let currentDetailId = null;
+let selectedPhotos = [];   // { file, url, warnings }
+let submitting = false;
 
 async function requireStudent(user) {
   const { data, error } = await supabase.from('user_roles').select('role').eq('user_id', user.id).single();
@@ -129,6 +137,112 @@ function renderMathflat(mathflat) {
   card.hidden = !mathflat.fields.length && !noteText;
 }
 
+// ── 사진 선택 · 리사이즈 ─────────────────────────────────────────────────
+// 해상도와 흐림 정도를 재서 assessImageQuality 가 쓸 지표를 만든다.
+// 축소본으로 계산하므로 큰 사진에서도 부담이 적다.
+function measureBlur(bitmap) {
+  try {
+    const scale = Math.min(1, 512 / Math.max(bitmap.width, bitmap.height));
+    const w = Math.max(2, Math.round(bitmap.width * scale));
+    const h = Math.max(2, Math.round(bitmap.height * scale));
+    const canvas = document.createElement('canvas');
+    canvas.width = w; canvas.height = h;
+    const context = canvas.getContext('2d');
+    context.drawImage(bitmap, 0, 0, w, h);
+    const { data } = context.getImageData(0, 0, w, h);
+    const gray = new Float32Array(w * h);
+    for (let i = 0; i < w * h; i += 1) {
+      gray[i] = 0.299 * data[i * 4] + 0.587 * data[i * 4 + 1] + 0.114 * data[i * 4 + 2];
+    }
+    let sum = 0; let sumSq = 0; let n = 0;
+    for (let y = 1; y < h - 1; y += 1) {
+      for (let x = 1; x < w - 1; x += 1) {
+        const i = y * w + x;
+        const v = 4 * gray[i] - gray[i - 1] - gray[i + 1] - gray[i - w] - gray[i + w];
+        sum += v; sumSq += v * v; n += 1;
+      }
+    }
+    const mean = sum / n;
+    return sumSq / n - mean * mean;
+  } catch { return undefined; }
+}
+
+async function readImage(file) {
+  try {
+    const bitmap = await createImageBitmap(file);
+    return { bitmap, width: bitmap.width, height: bitmap.height, size: file.size, blurScore: measureBlur(bitmap) };
+  } catch { return null; }
+}
+
+// 태블릿 원본은 버킷 제한(10MB)을 넘기 쉬우므로 업로드 전에 줄인다.
+// 실패하면 원본을 그대로 쓰되, 크기 검사는 이미 acceptFiles 에서 끝났다.
+async function shrinkForUpload(file, metrics) {
+  if (!metrics?.bitmap) return file;
+  const plan = resizePlan({ width: metrics.width, height: metrics.height, size: metrics.size });
+  if (!plan.resize) { metrics.bitmap.close(); return file; }
+  try {
+    const canvas = document.createElement('canvas');
+    canvas.width = plan.width;
+    canvas.height = plan.height;
+    canvas.getContext('2d').drawImage(metrics.bitmap, 0, 0, plan.width, plan.height);
+    const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/jpeg', JPEG_QUALITY));
+    if (!blob) return file;
+    const name = file.name.replace(/\.[^.]+$/, '') + '.jpg';
+    return new File([blob], name, { type: 'image/jpeg' });
+  } catch {
+    return file;
+  } finally {
+    metrics.bitmap.close();
+  }
+}
+
+function renderPhotoPreview() {
+  const model = previewModel(selectedPhotos);
+  byId('photoPick').textContent = model.pickLabel;
+  byId('photoPick').disabled = !model.canAddMore || submitting;
+  byId('photoSubmit').disabled = !model.canSubmit || submitting;
+  byId('photoPreview').replaceChildren(...model.items.map((item) => {
+    const figure = document.createElement('figure');
+    figure.className = 'photo-thumb';
+    if (item.url) {
+      const image = document.createElement('img');
+      image.src = item.url;
+      image.alt = item.label;
+      figure.append(image);
+    }
+    const remove = document.createElement('button');
+    remove.type = 'button';
+    remove.className = 'photo-remove';
+    remove.setAttribute('aria-label', item.label + ' 빼기');
+    remove.textContent = '✕';
+    remove.addEventListener('click', () => removePhoto(item.index));
+    figure.append(remove);
+    for (const warning of item.warnings) {
+      const note = document.createElement('figcaption');
+      note.className = 'photo-warn';
+      note.textContent = '⚠ ' + warning + ' 그래도 제출은 할 수 있어요.';
+      figure.append(note);
+    }
+    return figure;
+  }));
+}
+
+function removePhoto(index) {
+  const entry = selectedPhotos[index];
+  if (entry?.url) URL.revokeObjectURL(entry.url);
+  selectedPhotos = selectedPhotos.filter((_, i) => i !== index);
+  showError(byId('photoError'), '');
+  renderPhotoPreview();
+}
+
+function clearPhotos() {
+  for (const entry of selectedPhotos) if (entry.url) URL.revokeObjectURL(entry.url);
+  selectedPhotos = [];
+  showError(byId('photoError'), '');
+  byId('photoStatus').textContent = '';
+  renderPhotoPreview();
+}
+
 function renderDetail(detail) {
   byId('detailTitle').textContent = detail.title;
   byId('detailStatus').textContent = detail.statusIcon + ' ' + detail.statusLabel;
@@ -147,6 +261,12 @@ function renderDetail(detail) {
   byId('detailFeedbackBlock').hidden = !detail.feedbackText && !detail.redoProblems.length;
   byId('detailRedo').textContent = detail.redoProblems.join(', ');
   byId('detailRedoBlock').hidden = !detail.redoProblems.length;
+
+  // 아직 제출 전이거나 재풀이 요청을 받은 과제만 제출 영역을 연다.
+  // 실제 허용 여부는 서버 트리거가 다시 판단한다.
+  const open = detail.attemptCount === 0 || detail.canResubmit;
+  byId('submitBlock').hidden = !open;
+  byId('submitHeading').textContent = detail.canResubmit ? '다시 풀어서 제출하기' : '사진으로 제출하기';
 }
 
 function groupBlock(section, now) {
@@ -194,6 +314,7 @@ function renderToday(profile, assignments, now = new Date()) {
 
 async function loadToday(user) {
   await requireStudent(user);
+  currentUserId = user.id;
   const { data: profile, error: profileError } = await supabase.from('profiles').select('name,must_change_pin').eq('id', user.id).single();
   if (profileError) throw profileError;
   if (profile.must_change_pin) { showPanel('pinChange'); return; }
@@ -220,10 +341,84 @@ function applyRoute() {
   if (route.name !== 'detail') { showPanel('today'); return; }
   const assignment = findAssignment(currentAssignments, route.id);
   if (!assignment) { showPanel('today'); goToday(); return; }
+  if (currentDetailId !== assignment.id) { currentDetailId = assignment.id; clearPhotos(); }
   renderDetail(assignmentDetail(assignment));
+  renderPhotoPreview();
   showPanel('detail');
   window.scrollTo(0, 0);
 }
+
+// ── 사진 제출 ────────────────────────────────────────────────────────────
+byId('photoPick').addEventListener('click', () => byId('photoInput').click());
+
+byId('photoInput').addEventListener('change', async () => {
+  const input = byId('photoInput');
+  const chosen = [...input.files];
+  input.value = '';
+  showError(byId('photoError'), '');
+  const { accepted, rejected } = acceptFiles(selectedPhotos.length, chosen);
+  for (const file of accepted) {
+    const metrics = await readImage(file);
+    selectedPhotos.push({
+      file,
+      metrics,
+      url: URL.createObjectURL(file),
+      warnings: assessImageQuality(metrics),
+    });
+  }
+  if (rejected.length) showError(byId('photoError'), rejected[0].message);
+  renderPhotoPreview();
+});
+
+byId('photoSubmit').addEventListener('click', async () => {
+  if (submitting || !selectedPhotos.length || !currentUserId || !currentDetailId) return;
+  submitting = true;
+  showError(byId('photoError'), '');
+  renderPhotoPreview();
+
+  const uploaded = [];
+  let stage = 'upload';
+  try {
+    byId('photoStatus').textContent = '사진을 올리는 중이에요…';
+    for (const [index, entry] of selectedPhotos.entries()) {
+      byId('photoStatus').textContent = '사진 ' + (index + 1) + '/' + selectedPhotos.length + '장 올리는 중이에요…';
+      const upload = await shrinkForUpload(entry.file, entry.metrics);
+      const path = buildSubmissionPath(currentUserId, currentDetailId, upload.name, crypto.randomUUID());
+      // 서버 정규식과 같은 조건을 한 번 더 확인한다. 어긋나면 업로드 자체를 하지 않는다.
+      if (!isSubmissionPathValid(path, currentUserId, currentDetailId)) throw new Error('invalid submission file');
+      const { error } = await supabase.storage.from('submission-files').upload(path, upload, { contentType: upload.type });
+      if (error) throw error;
+      uploaded.push(path);
+    }
+
+    stage = 'insert';
+    byId('photoStatus').textContent = '제출하는 중이에요…';
+    // attempt_no / status / 소유권은 서버 트리거가 정한다. 여기서 보내지 않는다.
+    const { error } = await supabase.from('submissions').insert({
+      assignment_id: currentDetailId,
+      student_id: currentUserId,
+      file_paths: uploaded,
+    });
+    if (error) throw error;
+
+    clearPhotos();
+    byId('photoStatus').textContent = '제출했어요. 선생님이 확인할 거예요.';
+    const user = { id: currentUserId };
+    await loadToday(user);
+  } catch (error) {
+    console.error(error);
+    // DB 제출이 실패했으면 방금 올린 파일은 남겨두지 않는다.
+    if (uploaded.length) {
+      const { error: cleanupError } = await supabase.storage.from('submission-files').remove(uploaded);
+      if (cleanupError) console.error('정리하지 못한 업로드 파일:', uploaded, cleanupError);
+    }
+    byId('photoStatus').textContent = '';
+    showError(byId('photoError'), submissionErrorMessage(error, stage));
+  } finally {
+    submitting = false;
+    renderPhotoPreview();
+  }
+});
 
 window.addEventListener('hashchange', () => {
   // 로그인 전에는 hash 를 무시한다.
@@ -301,6 +496,9 @@ byId('pinChangeForm').addEventListener('submit', async (event) => {
 // ── 로그아웃 / 세션 복구 ─────────────────────────────────────────────────
 byId('logout').addEventListener('click', async () => {
   currentAssignments = [];
+  currentUserId = null;
+  currentDetailId = null;
+  clearPhotos();
   await signOut();
   // 다음 사람이 이전 학생의 과제 경로를 열지 않도록 hash 도 비운다.
   location.replace(location.pathname);
