@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { isAllowedOrigin } from '../supabase/functions/_shared/origin.ts';
+import { isAllowedOrigin, productionOrigin } from '../supabase/functions/_shared/origin.ts';
 const root = resolve(import.meta.dirname, '..');
 const read = (path) => readFileSync(resolve(root, path), 'utf8');
 describe('student portal security boundary', () => {
@@ -181,6 +181,38 @@ describe('student portal security boundary', () => {
     expect(edge).not.toContain("origin.startsWith('http://localhost:')");
     for (const allowed of ['https://we-math.pages.dev', 'https://abc-123.we-math.pages.dev', 'http://localhost:5173', 'http://127.0.0.1:4173']) expect(isAllowedOrigin(allowed)).toBe(true);
     for (const denied of ['http://we-math.pages.dev', 'https://we-math.pages.dev.evil.test', 'https://evilwe-math.pages.dev', 'https://abc.we-math.pages.dev.evil.test', 'https://we-math.pages.dev/path', 'https://user@we-math.pages.dev', 'null']) expect(isAllowedOrigin(denied)).toBe(false);
+  });
+  it('allows the sequencemath.co.kr primary site over HTTPS only', () => {
+    expect(productionOrigin).toBe('https://sequencemath.co.kr');
+    expect(isAllowedOrigin('https://sequencemath.co.kr')).toBe(true);
+    // www redirects (301) to the apex host, so no browser ever runs on the www origin.
+    for (const denied of [
+      'http://sequencemath.co.kr',
+      'https://www.sequencemath.co.kr',
+      'https://sequencemath.co.kr.evil.test',
+      'https://evilsequencemath.co.kr',
+      'https://sequencemath.co.kr.attacker.example',
+      'https://sequencemath.co.kr/path',
+      'https://sequencemath.co.kr/',
+      'https://user@sequencemath.co.kr',
+      'sequencemath.co.kr',
+    ]) expect(isAllowedOrigin(denied)).toBe(false);
+    // A non-default port on the same host stays allowed, matching the existing preview branch.
+    // Serving it requires control of sequencemath.co.kr, so it is not attacker-reachable.
+    expect(isAllowedOrigin('https://sequencemath.co.kr:8443')).toBe(true);
+  });
+  it('guards every browser-facing function with the shared origin allowlist and a 204 preflight', () => {
+    for (const name of ['admin-users', 'change-pin', 'consultation-intake']) {
+      const source = read(`supabase/functions/${name}/index.ts`);
+      expect(source).toContain("from '../_shared/origin.ts'");
+      // The origin guard must run before any method handling, including OPTIONS.
+      const guardIndex = source.indexOf('isAllowedOrigin(origin)');
+      const optionsIndex = source.indexOf("request.method === 'OPTIONS'");
+      expect(guardIndex).toBeGreaterThan(-1);
+      expect(optionsIndex).toBeGreaterThan(guardIndex);
+      expect(source).toMatch(/OPTIONS'\)[\s\S]{0,200}?204/);
+      expect(source).toContain("'vary': 'Origin'");
+    }
   });
   it('blocks suspended users even while an old access token remains valid', () => {
     const sql = read('supabase/migrations/20260724000000_student_portal_mvp.sql');
