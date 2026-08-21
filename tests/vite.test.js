@@ -11,7 +11,7 @@ const readJavaScript = (directory) => readdirSync(directory, { recursive: true }
   .join('\n');
 
 describe('Vite multi-page build', () => {
-  it('keeps landing, consultation, student, admin, and blog entry points', () => {
+  it('keeps landing, consultation, student, admin, tablet, and blog entry points', () => {
     expect(Object.keys(config.build.rollupOptions.input)).toEqual(expect.arrayContaining([
       'admin',
       'blog',
@@ -20,7 +20,15 @@ describe('Vite multi-page build', () => {
       'consultation',
       'main',
       'student',
+      'tablet',
     ]));
+  });
+  it('keeps the tablet entry outside the generated blog input markers', () => {
+    const source = readFileSync(join(import.meta.dirname, '..', 'vite.config.js'), 'utf8');
+    const generatedBlocks = source.match(/generated-vite-input:[^\n]*:start[\s\S]*?generated-vite-input:[^\n]*:end/g) ?? [];
+    // The blog generator rewrites these blocks, so an entry placed inside one would be lost.
+    for (const block of generatedBlocks) expect(block).not.toContain('tablet');
+    expect(source).toContain("tablet: resolve(__dirname, 'tablet/index.html')");
   });
 
   it('includes public Supabase configuration when Cloudflare build env is empty', async () => {
