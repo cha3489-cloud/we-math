@@ -11,6 +11,7 @@ import {
 import {
   MAX_FILES, ALLOWED_TYPES, JPEG_QUALITY, acceptFiles, buildSubmissionPath,
   isSubmissionPathValid, resizePlan, submissionErrorMessage, previewModel,
+  isUploadable, resizedTooLargeError,
 } from './submission.js';
 
 const byId = (id) => document.getElementById(id);
@@ -383,6 +384,9 @@ byId('photoSubmit').addEventListener('click', async () => {
     for (const [index, entry] of selectedPhotos.entries()) {
       byId('photoStatus').textContent = '사진 ' + (index + 1) + '/' + selectedPhotos.length + '장 올리는 중이에요…';
       const upload = await shrinkForUpload(entry.file, entry.metrics);
+      // 축소를 거친 뒤에도 버킷 한계를 넘으면 여기서 멈춘다. 서버가 413으로
+      // 거절하기 전에 학생에게 무엇을 다시 해야 하는지 먼저 알려준다.
+      if (!isUploadable(upload.size)) throw resizedTooLargeError();
       const path = buildSubmissionPath(currentUserId, currentDetailId, upload.name, crypto.randomUUID());
       // 서버 정규식과 같은 조건을 한 번 더 확인한다. 어긋나면 업로드 자체를 하지 않는다.
       if (!isSubmissionPathValid(path, currentUserId, currentDetailId)) throw new Error('invalid submission file');

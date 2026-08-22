@@ -10,6 +10,11 @@
 // 아래 값은 그 규칙을 화면에서 미리 맞춰주기 위한 것이지, 보안 경계가 아니다.
 
 export const MAX_FILES = 3;
+// 원본 선택 한계와 업로드 최종 한계는 다르다.
+// 최신 기기는 10~20MB 사진을 만드는데, 그것을 선택 단계에서 막아버리면
+// 축소해서 올릴 기회 자체가 사라진다. 그래서 선택은 넉넉히 받고,
+// 축소한 결과가 버킷 한계(10MB)를 넘을 때만 막는다.
+export const MAX_ORIGINAL_BYTES = 30 * 1024 * 1024;
 export const MAX_UPLOAD_BYTES = 10 * 1024 * 1024;
 export const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 export const MAX_EDGE = 1600;
@@ -40,11 +45,24 @@ export function isSubmissionPathValid(path, studentId, assignmentId) {
 const reasonText = {
   count: '사진은 최대 ' + MAX_FILES + '장까지 올릴 수 있어요.',
   type: '사진 파일만 올릴 수 있어요. (JPG, PNG, WebP)',
-  size: '사진 용량이 너무 커요. 다시 촬영하거나 다른 사진을 골라주세요.',
+  size: '사진 용량이 너무 커요. 카메라 설정을 낮추거나 다시 촬영해 주세요.',
 };
 
+// 축소까지 했는데도 버킷 한계를 넘는 경우. 원본 거부와 다른 문구를 쓴다.
+export const RESIZED_TOO_LARGE_MESSAGE = '사진을 줄였지만 아직 너무 커요. 더 가까이·밝게 다시 찍어 주세요.';
+const RESIZED_TOO_LARGE_CODE = 'resized_too_large';
+
+// 축소가 끝난 파일이 실제로 올라갈 수 있는 크기인지 확인한다.
+export function isUploadable(bytes) {
+  return Number(bytes ?? 0) > 0 && Number(bytes) <= MAX_UPLOAD_BYTES;
+}
+
+export function resizedTooLargeError() {
+  return new Error(RESIZED_TOO_LARGE_CODE);
+}
+
 // files 는 { name, type, size } 만 있으면 되므로 File 객체 없이도 테스트할 수 있다.
-export function acceptFiles(currentCount, files = [], { maxBytes = MAX_UPLOAD_BYTES } = {}) {
+export function acceptFiles(currentCount, files = [], { maxBytes = MAX_ORIGINAL_BYTES } = {}) {
   const accepted = [];
   const rejected = [];
   let room = MAX_FILES - Number(currentCount || 0);
@@ -54,7 +72,8 @@ export function acceptFiles(currentCount, files = [], { maxBytes = MAX_UPLOAD_BY
       rejected.push({ name: file?.name ?? '', reason: 'type', message: reasonText.type });
       continue;
     }
-    // 리사이즈로도 못 줄일 만큼 큰 원본은 아예 받지 않는다. (버킷 제한 10MB)
+    // 축소해도 감당이 안 될 만큼 큰 원본만 여기서 막는다. 10MB 대의 카메라
+    // 원본은 통과시키고, 축소 결과가 한계를 넘는지는 제출 직전에 다시 본다.
     if (Number(file?.size ?? 0) > maxBytes) {
       rejected.push({ name: file?.name ?? '', reason: 'size', message: reasonText.size });
       continue;
@@ -91,8 +110,11 @@ export function submissionErrorMessage(error, stage = 'submit') {
   if (error?.name === 'TypeError' || /failed to fetch|networkerror|network request failed/i.test(raw)) {
     return '인터넷 연결이 끊긴 것 같아요. 연결을 확인하고 다시 시도해 주세요.';
   }
-  if (status === 413 || /payload too large|exceeded the maximum allowed size/i.test(raw)) {
-    return '사진 용량이 너무 커요. 다시 촬영하거나 다른 사진을 골라주세요.';
+  // 여기까지 온 파일은 이미 축소를 거쳤다. 그래서 원본 거부와 다른 안내를 한다.
+  if (raw === RESIZED_TOO_LARGE_CODE
+    || status === 413
+    || /payload too large|exceeded the maximum allowed size/i.test(raw)) {
+    return RESIZED_TOO_LARGE_MESSAGE;
   }
   if (/mime type|invalid_mime_type/i.test(raw)) return reasonText.type;
   if (code === '42501' || status === 403 || /row-level security|permission denied|violates row-level/i.test(raw)) {
