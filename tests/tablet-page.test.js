@@ -105,6 +105,17 @@ describe('tablet page boundaries', () => {
     expect(main).toContain("canvas.toBlob(resolve, 'image/jpeg', JPEG_QUALITY)");
   });
 
+  it('checks the upload size only after shrinking, so a big original still gets a chance', () => {
+    const shrinkIndex = main.indexOf('await shrinkForUpload(');
+    const gateIndex = main.indexOf('isUploadable(upload.size)');
+    const uploadIndex = main.indexOf(".from('submission-files').upload(");
+    expect(shrinkIndex).toBeGreaterThan(-1);
+    // 축소 → 크기 검사 → 업로드 순서여야 한다
+    expect(gateIndex).toBeGreaterThan(shrinkIndex);
+    expect(uploadIndex).toBeGreaterThan(gateIndex);
+    expect(main).toContain('throw resizedTooLargeError()');
+  });
+
   it('shows quality warnings without blocking the submission', () => {
     expect(main).toContain('assessImageQuality');
     expect(main).toContain('그래도 제출은 할 수 있어요');

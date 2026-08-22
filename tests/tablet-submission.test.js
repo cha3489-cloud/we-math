@@ -1,8 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import {
-  MAX_FILES, MAX_UPLOAD_BYTES, ALLOWED_TYPES, MAX_EDGE,
+  MAX_FILES, MAX_UPLOAD_BYTES, MAX_ORIGINAL_BYTES, ALLOWED_TYPES, MAX_EDGE,
+  RESIZED_TOO_LARGE_MESSAGE,
   sanitizeFileName, buildSubmissionPath, isSubmissionPathValid,
   acceptFiles, resizePlan, submissionErrorMessage, previewModel,
+  isUploadable, resizedTooLargeError,
 } from '../src/tablet/submission.js';
 
 const STUDENT = '42d621e1-57ed-41ce-9771-c5e11ec55bf8';
@@ -47,15 +49,54 @@ describe('submission file limits', () => {
     expect(rejected[0].message).toContain('사진 파일만');
   });
 
-  it('refuses an original larger than the bucket limit instead of uploading it', () => {
-    const { accepted, rejected } = acceptFiles(0, [file({ size: MAX_UPLOAD_BYTES + 1 })]);
-    expect(accepted).toHaveLength(0);
-    expect(rejected[0].reason).toBe('size');
+  // 선택 한계(원본 30MB)와 업로드 한계(축소 후 10MB)는 서로 다르다.
+  // 최신 기기의 10~20MB 원본이 축소될 기회를 얻어야 하기 때문이다.
+  it('separates the original picking limit from the upload limit', () => {
+    expect(MAX_ORIGINAL_BYTES).toBe(30 * 1024 * 1024);
     expect(MAX_UPLOAD_BYTES).toBe(10 * 1024 * 1024);
+    expect(MAX_ORIGINAL_BYTES).toBeGreaterThan(MAX_UPLOAD_BYTES);
   });
 
-  it('keeps a file that sits exactly on the limit', () => {
-    expect(acceptFiles(0, [file({ size: MAX_UPLOAD_BYTES })]).accepted).toHaveLength(1);
+  it('accepts a camera original that is over the bucket limit so it can be shrunk', () => {
+    for (const size of [MAX_UPLOAD_BYTES + 1, 12 * 1024 * 1024, 20 * 1024 * 1024, MAX_ORIGINAL_BYTES]) {
+      const { accepted, rejected } = acceptFiles(0, [file({ size })]);
+      expect(accepted).toHaveLength(1);
+      expect(rejected).toHaveLength(0);
+    }
+  });
+
+  it('refuses an original too large to be worth shrinking', () => {
+    const { accepted, rejected } = acceptFiles(0, [file({ size: MAX_ORIGINAL_BYTES + 1 })]);
+    expect(accepted).toHaveLength(0);
+    expect(rejected[0].reason).toBe('size');
+    expect(rejected[0].message).toContain('카메라 설정을 낮추거나');
+  });
+});
+
+describe('upload size gate after shrinking', () => {
+  it('allows a shrunk file at or under the bucket limit', () => {
+    for (const bytes of [1, 500 * 1024, MAX_UPLOAD_BYTES]) expect(isUploadable(bytes)).toBe(true);
+  });
+
+  it('blocks a shrunk file that is still over the bucket limit', () => {
+    for (const bytes of [MAX_UPLOAD_BYTES + 1, 12 * 1024 * 1024]) expect(isUploadable(bytes)).toBe(false);
+  });
+
+  it('treats an empty or unknown size as not uploadable', () => {
+    for (const bytes of [0, null, undefined, NaN]) expect(isUploadable(bytes)).toBe(false);
+  });
+
+  it('explains a still-too-large photo differently from a rejected original', () => {
+    const message = submissionErrorMessage(resizedTooLargeError(), 'upload');
+    expect(message).toBe(RESIZED_TOO_LARGE_MESSAGE);
+    expect(message).toContain('줄였지만 아직 너무 커요');
+    // 원본 거부 문구와 섞이면 학생이 무엇을 해야 할지 알 수 없다
+    expect(message).not.toContain('카메라 설정을 낮추거나');
+  });
+
+  it('maps a server 413 to the same post-shrink advice', () => {
+    expect(submissionErrorMessage({ status: 413, message: 'Payload too large' }, 'upload'))
+      .toBe(RESIZED_TOO_LARGE_MESSAGE);
   });
 });
 
@@ -152,9 +193,7 @@ describe('submission error messages', () => {
     expect(messageFor(new TypeError('Failed to fetch'))).toContain('인터넷 연결');
   });
 
-  it('explains an upload rejected for size', () => {
-    expect(messageFor({ status: 413, message: 'Payload too large' }, 'upload')).toContain('용량이 너무 커요');
-  });
+  // 413(용량 초과)은 축소 이후에만 발생하므로 위의 "upload size gate" 블록에서 다룬다.
 
   it('explains an upload rejected for type', () => {
     expect(messageFor({ message: 'invalid_mime_type' }, 'upload')).toContain('사진 파일만');
