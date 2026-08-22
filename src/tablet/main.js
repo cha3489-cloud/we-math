@@ -13,6 +13,9 @@ import {
   isSubmissionPathValid, resizePlan, submissionErrorMessage, previewModel,
   isUploadable, resizedTooLargeError,
 } from './submission.js';
+import {
+  MAX_NOTE_LENGTH, composeSubmissionBody, difficultyPickerModel, toggleTag,
+} from './difficulty.js';
 
 const byId = (id) => document.getElementById(id);
 const showError = (el, message) => { el.textContent = message || ''; };
@@ -23,13 +26,14 @@ const PIN_MAX = 6;
 const FEEDBACK_SELECT = 'feedback(body,auto_composed,created_at,feedback_items(problem_ref,review_tag,comment,redo_required))';
 const LEGACY_FEEDBACK_SELECT = 'feedback(body,created_at,feedback_items(problem_ref,review_tag,comment,redo_required))';
 const assignmentsSelect = (feedbackSelect) =>
-  'id,title,description,due_at,submissions(id,attempt_no,status,submitted_at,' + feedbackSelect + ')';
+  'id,title,description,due_at,submissions(id,attempt_no,status,body,submitted_at,' + feedbackSelect + ')';
 const todayGate = createLatestRequestGate();
 
 let currentAssignments = [];
 let currentUserId = null;
 let currentDetailId = null;
 let selectedPhotos = [];   // { file, url, warnings }
+let selectedTags = [];
 let submitting = false;
 
 async function requireStudent(user) {
@@ -239,9 +243,35 @@ function removePhoto(index) {
 function clearPhotos() {
   for (const entry of selectedPhotos) if (entry.url) URL.revokeObjectURL(entry.url);
   selectedPhotos = [];
+  selectedTags = [];
+  byId('difficultyNote').value = '';
   showError(byId('photoError'), '');
   byId('photoStatus').textContent = '';
   renderPhotoPreview();
+  renderDifficulty();
+}
+
+// ── 어디서 막혔나요? ─────────────────────────────────────────────────────
+function renderDifficulty() {
+  const model = difficultyPickerModel(selectedTags, byId('difficultyNote').value);
+  byId('difficultyOptions').replaceChildren(...model.options.map((option) => {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = option.selected ? 'difficulty-tag difficulty-tag-on' : 'difficulty-tag';
+    button.textContent = option.tag;
+    button.dataset.tag = option.tag;
+    button.setAttribute('aria-pressed', String(option.selected));
+    button.disabled = submitting;
+    button.addEventListener('click', () => {
+      selectedTags = toggleTag(selectedTags, option.tag);
+      renderDifficulty();
+    });
+    return button;
+  }));
+  byId('difficultyNote').disabled = submitting;
+  byId('difficultyCount').textContent = model.noteLength
+    ? model.noteLength + ' / ' + MAX_NOTE_LENGTH + '자'
+    : '';
 }
 
 function renderDetail(detail) {
@@ -257,6 +287,13 @@ function renderDetail(detail) {
   byId('detailDescriptionBlock').hidden = !detail.description;
 
   byId('detailSubmission').textContent = submissionSummaryLabel(detail);
+
+  // 학생이 지난 제출에 무엇을 적어 보냈는지만 되짚어 준다. 그 이상은 보여주지 않는다.
+  byId('detailMineTags').textContent = detail.myTags.length ? '막힌 지점 · ' + detail.myTags.join(', ') : '';
+  byId('detailMineTags').hidden = !detail.myTags.length;
+  byId('detailMineNote').textContent = detail.myNote;
+  byId('detailMineNote').hidden = !detail.myNote;
+  byId('detailMineBlock').hidden = !detail.myTags.length && !detail.myNote;
 
   byId('detailFeedback').textContent = detail.feedbackText;
   byId('detailFeedbackBlock').hidden = !detail.feedbackText && !detail.redoProblems.length;
@@ -351,6 +388,8 @@ function applyRoute() {
 
 // ── 사진 제출 ────────────────────────────────────────────────────────────
 byId('photoPick').addEventListener('click', () => byId('photoInput').click());
+byId('difficultyNote').addEventListener('input', renderDifficulty);
+renderDifficulty();
 
 byId('photoInput').addEventListener('change', async () => {
   const input = byId('photoInput');
@@ -376,6 +415,7 @@ byId('photoSubmit').addEventListener('click', async () => {
   submitting = true;
   showError(byId('photoError'), '');
   renderPhotoPreview();
+  renderDifficulty();
 
   const uploaded = [];
   let stage = 'upload';
@@ -398,9 +438,11 @@ byId('photoSubmit').addEventListener('click', async () => {
     stage = 'insert';
     byId('photoStatus').textContent = '제출하는 중이에요…';
     // attempt_no / status / 소유권은 서버 트리거가 정한다. 여기서 보내지 않는다.
+    // 막힌 지점과 메모는 기존 body 컬럼에 규약 텍스트로 담는다. 둘 다 없으면 빈 문자열이다.
     const { error } = await supabase.from('submissions').insert({
       assignment_id: currentDetailId,
       student_id: currentUserId,
+      body: composeSubmissionBody(selectedTags, byId('difficultyNote').value),
       file_paths: uploaded,
     });
     if (error) throw error;
@@ -421,6 +463,7 @@ byId('photoSubmit').addEventListener('click', async () => {
   } finally {
     submitting = false;
     renderPhotoPreview();
+    renderDifficulty();
   }
 });
 

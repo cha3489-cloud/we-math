@@ -116,6 +116,32 @@ describe('tablet page boundaries', () => {
     expect(main).toContain('throw resizedTooLargeError()');
   });
 
+  it('lets the student say where they got stuck without forcing it', () => {
+    expect(html).toContain('id=difficultyOptions');
+    expect(html).toContain('id=difficultyNote');
+    expect(html).toContain('어디서 막혔나요?');
+    expect(html).toContain('안 골라도 제출할 수 있어요');
+    // 제출 버튼이 선택 여부에 묶이면 안 된다. 사진만 있으면 제출 가능해야 한다.
+    expect(main).toMatch(/byId\('photoSubmit'\)\.disabled = !model\.canSubmit \|\| submitting/);
+    expect(main).not.toMatch(/photoSubmit'\)\.disabled[^;]*selectedTags/);
+  });
+
+  it('stores the stuck point in the existing body column, not a new field', () => {
+    const insert = main.match(/from\('submissions'\)\.insert\(\{[\s\S]*?\}\)/)?.[0] ?? '';
+    expect(insert).toContain('body: composeSubmissionBody(selectedTags');
+    // 보내는 컬럼은 기존 4개뿐이어야 한다. 새 컬럼을 만들지 않았다는 뜻이다.
+    const columns = [...insert.matchAll(/^\s{6}([a-z_]+):/gm)].map((match) => match[1]);
+    expect(columns.sort()).toEqual(['assignment_id', 'body', 'file_paths', 'student_id']);
+  });
+
+  it('shows the student only what they themselves wrote', () => {
+    expect(html).toContain('id=detailMineBlock');
+    expect(main).toContain('detail.myTags');
+    expect(main).toContain('detail.myNote');
+    // 다른 학생 메모나 내부 기록으로 이어지는 통로가 없어야 한다
+    expect(main).not.toContain('review_events');
+  });
+
   it('shows quality warnings without blocking the submission', () => {
     expect(main).toContain('assessImageQuality');
     expect(main).toContain('그래도 제출은 할 수 있어요');
