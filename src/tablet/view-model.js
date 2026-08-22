@@ -5,6 +5,7 @@ import {
   groupAssignments, assignmentStatus, latestAttempt, canSubmitAttempt,
   normalizeRelation, redoProblems, allFeedbackItems, STATUS_META,
 } from '../portal/domain.js';
+import { parseSubmissionBody } from './difficulty.js';
 
 // 표시 순서는 급한 순이다. 재풀이가 가장 먼저 눈에 들어와야 한다.
 export const TODAY_SECTIONS = [
@@ -136,6 +137,8 @@ export function assignmentDetail(assignment, now = new Date()) {
   const parsed = parseAssignmentDescription(assignment.description);
   const feedbackEntries = latest ? normalizeRelation(latest.feedback) : [];
   const feedbackText = feedbackEntries.map((entry) => String(entry?.body ?? '').trim()).filter(Boolean).at(-1) ?? '';
+  // 학생이 지난 제출에 남긴 내용. 자기가 무엇을 적어 보냈는지만 되짚어 보게 한다.
+  const mine = parseSubmissionBody(latest?.body);
 
   return {
     id: assignment.id,
@@ -153,6 +156,8 @@ export function assignmentDetail(assignment, now = new Date()) {
     feedbackText,
     redoProblems: latest ? redoProblems(latest.feedback) : [],
     feedbackItems: latest ? allFeedbackItems(latest.feedback) : [],
+    myTags: mine.tags,
+    myNote: mine.note || mine.rest,
   };
 }
 

@@ -76,6 +76,10 @@
     <div class=detail-block>
       <h2>제출 상태</h2>
       <p id=detailSubmission class=detail-submission></p>
+      <div id=detailMineBlock class=detail-mine hidden>
+        <p id=detailMineTags class=detail-mine-tags></p>
+        <p id=detailMineNote class=detail-mine-note></p>
+      </div>
     </div>
 
     <div id=submitBlock class=detail-block hidden>
@@ -84,6 +88,16 @@
       <input id=photoInput type=file accept="image/jpeg,image/png,image/webp" capture=environment multiple hidden>
       <button id=photoPick class=tablet-secondary type=button>사진 찍기 · 고르기</button>
       <div id=photoPreview class=photo-preview></div>
+
+      <fieldset id=difficultyBlock class=difficulty>
+        <legend>어디서 막혔나요? <span class=difficulty-optional>(안 골라도 제출할 수 있어요)</span></legend>
+        <div id=difficultyOptions class=difficulty-options></div>
+        <label class=difficulty-note>남기고 싶은 말이 있으면 적어주세요
+          <textarea id=difficultyNote rows=2 maxlength=300 placeholder="예: 3번에서 식을 어떻게 세워야 할지 모르겠어요."></textarea>
+        </label>
+        <p id=difficultyCount class=difficulty-count aria-live=polite></p>
+      </fieldset>
+
       <button id=photoSubmit class=tablet-primary type=button disabled>제출하기</button>
       <p id=photoStatus class=submit-status role=status></p>
       <p id=photoError class=tablet-error role=alert></p>
