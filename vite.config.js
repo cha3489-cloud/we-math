@@ -1,6 +1,22 @@
 import { defineConfig } from 'vite';
 import { resolve } from 'node:path';
 export default defineConfig({ root: '.', base: './', build: { outDir: 'dist', emptyOutDir: true, rollupOptions: { input: {
+// generated-vite-input:2026-08-23-math-question-habit-before-answer:start
+blog20260823MathQuestionHabitBeforeAnswer: resolve(__dirname, 'blog/2026-08-23-math-question-habit-before-answer/index.html'),
+// generated-vite-input:2026-08-23-math-question-habit-before-answer:end
+
+// generated-vite-input:2026-08-22-fraction-common-denominator-first-line:start
+blog20260822FractionCommonDenominatorFirstLine: resolve(__dirname, 'blog/2026-08-22-fraction-common-denominator-first-line/index.html'),
+// generated-vite-input:2026-08-22-fraction-common-denominator-first-line:end
+
+// generated-vite-input:2026-08-21-math-learning-records:start
+blog20260821MathLearningRecords: resolve(__dirname, 'blog/2026-08-21-math-learning-records/index.html'),
+// generated-vite-input:2026-08-21-math-learning-records:end
+
+// generated-vite-input:2026-08-16-math-advance-readiness:start
+blog20260816MathAdvanceReadiness: resolve(__dirname, 'blog/2026-08-16-math-advance-readiness/index.html'),
+// generated-vite-input:2026-08-16-math-advance-readiness:end
+
 // generated-vite-input:2026-08-13-math-error-note:start
 blog20260813MathErrorNote: resolve(__dirname, 'blog/2026-08-13-math-error-note/index.html'),
 // generated-vite-input:2026-08-13-math-error-note:end
