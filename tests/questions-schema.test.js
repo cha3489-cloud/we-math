@@ -5,7 +5,9 @@ import { resolve } from 'node:path';
 const root = resolve(import.meta.dirname, '..');
 const read = (path) => readFileSync(resolve(root, path), 'utf8');
 const MIGRATION = 'supabase/migrations/20260823000000_student_questions.sql';
+const HARDENING = 'supabase/migrations/20260823010000_questions_grants_hardening.sql';
 const sql = read(MIGRATION);
+const hardening = read(HARDENING);
 const rlsChecks = read('supabase/tests/questions_rls_checks.sql');
 
 // 설명 주석에 기존 함수 이름이 등장하는 것과, 실제로 그 함수를 건드리는 것은 다르다.
@@ -20,7 +22,10 @@ const executableChecks = stripComments(rlsChecks);
 describe('questions migration ordering', () => {
   it('sorts after every existing migration', () => {
     const files = readdirSync(resolve(root, 'supabase/migrations')).sort();
-    expect(files.at(-1)).toBe('20260823000000_student_questions.sql');
+    expect(files.slice(-2)).toEqual([
+      '20260823000000_student_questions.sql',
+      '20260823010000_questions_grants_hardening.sql',
+    ]);
   });
 
   it('adds only new objects and never alters the existing ones', () => {
@@ -129,6 +134,54 @@ describe('questions row level security', () => {
     expect(sql).not.toMatch(/grant[^;]*delete[^;]*on table public\.questions/i);
     expect(sql).toContain('revoke all on table public.questions from anon');
     expect(sql).not.toMatch(/grant[^;]*on table public\.questions to anon/i);
+  });
+});
+
+// Supabase 는 public 스키마의 새 테이블에 ALL 을, 새 함수에 PUBLIC EXECUTE 를 기본으로 준다.
+// grant 만 해서는 의도한 경계가 서지 않는다. 반드시 먼저 revoke 해야 한다.
+describe('grants hardening migration', () => {
+  it('revokes the Supabase default grants before granting', () => {
+    expect(hardening).toContain('revoke all on table public.questions from anon');
+    expect(hardening).toContain('revoke all on table public.questions from authenticated');
+    const revokeIndex = hardening.indexOf('revoke all on table public.questions from authenticated');
+    const grantIndex = hardening.indexOf('grant select, insert on table public.questions to authenticated');
+    expect(revokeIndex).toBeGreaterThan(-1);
+    expect(grantIndex).toBeGreaterThan(revokeIndex);
+  });
+
+  it('leaves the table with select and insert only', () => {
+    const statements = stripComments(hardening);
+    expect(statements).toContain('grant select, insert on table public.questions to authenticated');
+    expect(statements).not.toMatch(/grant[^;]*update[^;]*on table public\.questions/i);
+    expect(statements).not.toMatch(/grant[^;]*delete[^;]*on table public\.questions/i);
+  });
+
+  it('takes the trigger function away from every caller', () => {
+    expect(hardening).toContain('revoke all on function public.prepare_question() from public, anon, authenticated');
+    expect(hardening).not.toMatch(/grant execute on function public\.prepare_question/);
+  });
+
+  it('revokes the RPCs from public as well as anon', () => {
+    // anon 만 revoke 하면 PUBLIC 기본 권한이 남아 anon 이 계속 호출할 수 있다.
+    for (const fn of ['public.answer_question(uuid, text)', 'public.close_question(uuid)']) {
+      expect(hardening).toContain('revoke all on function ' + fn + ' from public, anon');
+      expect(hardening).toContain('grant execute on function ' + fn + ' to authenticated');
+    }
+  });
+
+  it('follows the same order the original portal migration uses', () => {
+    const original = read('supabase/migrations/20260724000000_student_portal_mvp.sql');
+    expect(original).toContain('revoke all on table public.submissions from authenticated');
+    expect(original).toContain('grant select, insert on table public.submissions to authenticated');
+  });
+
+  it('changes nothing outside the questions feature', () => {
+    for (const forbidden of [
+      'public.submissions', 'public.assignments', 'public.profiles', 'public.feedback',
+      'drop', 'alter table', 'create table',
+    ]) {
+      expect(stripComments(hardening).toLowerCase()).not.toContain(forbidden);
+    }
   });
 });
 
