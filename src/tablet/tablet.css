@@ -194,6 +194,33 @@ body.tablet-app{
 .photo-remove:focus-visible{outline:3px solid var(--paper);outline-offset:2px;}
 .photo-warn{padding:8px 12px;color:var(--gold);font-size:14px;background:var(--gold-soft,#fff8e6);}
 
+/* 어디서 막혔나요? — 고르지 않아도 제출되므로 조용한 톤으로 둔다 */
+.difficulty{margin:16px 0;padding:20px;border:1px solid var(--line);border-radius:16px;background:var(--cream);}
+.difficulty legend{padding:0 8px;font-weight:700;}
+.difficulty-optional{font-weight:400;font-size:15px;color:var(--muted);}
+.difficulty-options{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:16px;}
+.difficulty-tag{
+  min-height:var(--touch-min);padding:0 20px;
+  border:1px solid var(--line);border-radius:999px;
+  background:var(--paper);color:var(--ink);
+  font:inherit;font-size:17px;cursor:pointer;
+}
+.difficulty-tag-on{border-color:var(--green);background:var(--mint-soft);color:var(--green);font-weight:700;}
+.difficulty-tag:disabled{opacity:.5;cursor:not-allowed;}
+.difficulty-tag:focus-visible{outline:3px solid var(--green);outline-offset:2px;}
+.difficulty-note{display:grid;gap:8px;font-weight:700;}
+.difficulty-note textarea{
+  padding:14px 16px;border:1px solid var(--line);border-radius:14px;
+  background:var(--paper);color:var(--ink);font:inherit;font-weight:400;resize:vertical;
+}
+.difficulty-note textarea:focus-visible{outline:3px solid var(--green);outline-offset:2px;}
+.difficulty-count{margin:8px 0 0;text-align:right;color:var(--muted);font-size:15px;min-height:1.4em;}
+
+/* 내가 지난 제출에 남긴 내용 */
+.detail-mine{margin-top:12px;padding:14px 16px;border-radius:12px;background:var(--cream);border:1px solid var(--line);}
+.detail-mine-tags{margin:0;font-weight:700;color:var(--green);}
+.detail-mine-note{margin:6px 0 0;color:var(--muted);white-space:pre-wrap;}
+
 #photoSubmit{width:100%;}
 .submit-status{margin:12px 0 0;color:var(--green);font-weight:700;min-height:1.6em;}
 
