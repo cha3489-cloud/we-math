@@ -216,6 +216,37 @@ body.tablet-app{
 .difficulty-note textarea:focus-visible{outline:3px solid var(--green);outline-offset:2px;}
 .difficulty-count{margin:8px 0 0;text-align:right;color:var(--muted);font-size:15px;min-height:1.4em;}
 
+/* ── 질문하기 (사진 없이) ────────────────────────────────────────────── */
+.question-guide{margin:0 0 16px;color:var(--muted);}
+.question-form{margin:0 0 16px;padding:20px;border:1px solid var(--line);border-radius:16px;background:var(--cream);}
+.question-form legend{padding:0 8px;font-weight:700;}
+.question-category-options{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:16px;}
+.question-category-tag{
+  min-height:var(--touch-min);padding:0 20px;
+  border:1px solid var(--line);border-radius:999px;
+  background:var(--paper);color:var(--ink);
+  font:inherit;font-size:17px;cursor:pointer;
+}
+.question-category-tag-on{border-color:var(--green);background:var(--mint-soft);color:var(--green);font-weight:700;}
+.question-category-tag:disabled{opacity:.5;cursor:not-allowed;}
+.question-category-tag:focus-visible{outline:3px solid var(--green);outline-offset:2px;}
+.question-note{display:grid;gap:8px;font-weight:700;}
+.question-note textarea{
+  padding:14px 16px;border:1px solid var(--line);border-radius:14px;
+  background:var(--paper);color:var(--ink);font:inherit;font-weight:400;resize:vertical;
+}
+.question-note textarea:focus-visible{outline:3px solid var(--green);outline-offset:2px;}
+.question-count{margin:8px 0 0;text-align:right;color:var(--muted);font-size:15px;min-height:1.4em;}
+#questionSubmit{width:100%;}
+
+.question-recent{display:grid;gap:12px;margin-bottom:16px;}
+.question-recent-item{padding:14px 16px;border-radius:12px;background:var(--cream);border:1px solid var(--line);}
+.question-recent-head{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;margin:0 0 6px;font-weight:700;}
+.question-recent-status{font-weight:700;color:var(--muted);}
+.question-recent-status-answered{color:var(--green);}
+.question-recent-body{margin:0;white-space:pre-wrap;}
+.question-recent-answer{margin:10px 0 0;padding:10px 12px;border-radius:10px;background:var(--mint-soft);color:var(--green);white-space:pre-wrap;}
+
 /* 내가 지난 제출에 남긴 내용 */
 .detail-mine{margin-top:12px;padding:14px 16px;border-radius:12px;background:var(--cream);border:1px solid var(--line);}
 .detail-mine-tags{margin:0;font-weight:700;color:var(--green);}
