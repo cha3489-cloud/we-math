@@ -76,7 +76,14 @@ body.tablet-app{
 .tablet-error{margin:16px 0 0;color:var(--coral);font-weight:700;min-height:1.6em;}
 
 .tablet-form{display:grid;gap:20px;}
-.tablet-field{display:grid;gap:8px;font-weight:700;}
+/* grid/flex 자식은 기본 min-width 가 auto 라서 "내용보다 좁아지지 않는다".
+   글꼴이 바뀌거나(안드로이드에는 Malgun Gothic 이 없다) 기기 글자 크기를 키우면
+   한 줄의 내용 폭이 카드 안쪽(496px)을 넘고, 그러면 칸 전체가 그 폭으로 늘어난다.
+   카드 왼쪽 여백은 그대로인데 오른쪽만 잘려 보이는 증상이 이때 생긴다.
+   0 으로 낮춰 어떤 글꼴·글자 크기에서도 카드 밖으로 나가지 못하게 한다. */
+.tablet-form > *,
+.tablet-field > *{min-width:0;}
+.tablet-field{display:grid;gap:8px;font-weight:700;min-width:0;}
 .tablet-field input{
   /* input 은 size 속성에서 오는 고유 폭이 있다. grid 가 늘려주는 것에 기대지 않고
      폭을 명시해 카드 안의 다른 요소와 같은 기준선을 쓰게 한다. */
@@ -98,6 +105,9 @@ body.tablet-app{
   background:var(--cream);
   font-size:28px;letter-spacing:.32em;color:var(--navy);
   cursor:pointer;
+  /* ●○ 여섯 글자는 줄바꿈이 안 되므로 좁은 화면에서 칸을 밀어낼 수 있다.
+     밀어내는 대신 칸 안에서 잘리게 둔다. */
+  min-width:0;overflow:hidden;
 }
 .pin-display-active{border-color:var(--green);box-shadow:0 0 0 3px rgba(47,118,89,.16);}
 

@@ -63,6 +63,25 @@ describe('tablet login layout — no horizontal overflow', () => {
     expect(field).toContain('width:100%');
     expect(field).toContain('min-width:0');
   });
+
+  // 갤럭시탭에서 실제로 나온 증상: 카드 왼쪽 여백은 남고 오른쪽만 잘렸다.
+  // 원인은 grid 자식의 기본 min-width:auto 다. 글꼴이나 기기 글자 크기가 커지면
+  // 한 줄의 내용 폭이 카드 안쪽을 넘고, 칸 전체가 그 폭으로 늘어난다.
+  // (재현: 카드를 260px 로 좁히면 고치기 전 55px 넘쳤고, 고친 뒤 0px 이다.)
+  it('lets every form row shrink below its content width', () => {
+    expect(css).toMatch(/\.tablet-form > \*,\s*\.tablet-field > \*\{min-width:0;\}/);
+  });
+
+  it('lets the field wrapper itself shrink too', () => {
+    const rule = css.match(/\.tablet-field\{[^}]*\}/)?.[0] ?? '';
+    expect(rule).toContain('min-width:0');
+  });
+
+  it('clips the unbreakable PIN dots instead of letting them widen the card', () => {
+    const rule = css.match(/\.pin-display\{[\s\S]*?\}/)?.[0] ?? '';
+    expect(rule).toContain('min-width:0');
+    expect(rule).toContain('overflow:hidden');
+  });
 });
 
 describe('tablet login layout — touch targets survive the fix', () => {
