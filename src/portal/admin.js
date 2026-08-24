@@ -28,12 +28,17 @@ let actionFilter = 'all';
 let operationsSummary = { counts: { submitted: 0, needs_revision: 0, overdue: 0 }, actionItems: [] };
 async function switchTab(tab) {
   const review = tab === 'review';
+  const manage = tab === 'manage';
+  const questions = tab === 'questions';
   byId('reviewSection').hidden = !review;
   byId('noSelection').hidden = !review || Boolean(current);
-  byId('manageSection').hidden = review;
+  byId('manageSection').hidden = !manage;
+  byId('questionsSection').hidden = !questions;
   byId('tabReview').setAttribute('aria-pressed', String(review));
-  byId('tabManage').setAttribute('aria-pressed', String(!review));
-  if (!review) await Promise.all([loadUsers(), loadWorkflows(), loadOperationsSummary()]);
+  byId('tabManage').setAttribute('aria-pressed', String(manage));
+  byId('tabQuestions').setAttribute('aria-pressed', String(questions));
+  if (manage) await Promise.all([loadUsers(), loadWorkflows(), loadOperationsSummary()]);
+  if (questions) await loadQuestionInbox();
 }
 async function openActionFilter(filter) {
   actionFilter = filter;
@@ -44,6 +49,7 @@ async function openActionFilter(filter) {
 }
 byId('tabReview').addEventListener('click', () => switchTab('review').catch((error) => showError(byId('adminError'), error.message)));
 byId('tabManage').addEventListener('click', () => { actionFilter = 'all'; switchTab('manage').catch((error) => showError(byId('adminError'), error.message)); });
+byId('tabQuestions').addEventListener('click', () => switchTab('questions').catch((error) => showError(byId('adminError'), error.message)));
 byId('statSubmitted').addEventListener('click', () => switchTab('review').then(() => byId('queue').scrollIntoView({ behavior: 'smooth', block: 'start' })).catch((error) => showError(byId('adminError'), error.message)));
 byId('statRevision').addEventListener('click', () => openActionFilter('needs_revision').catch((error) => showError(byId('adminError'), error.message)));
 byId('statOverdue').addEventListener('click', () => openActionFilter('overdue').catch((error) => showError(byId('adminError'), error.message)));
@@ -274,6 +280,144 @@ async function decide(status) {
 }
 byId('decideRevision').addEventListener('click', () => decide('needs_revision'));
 byId('decideComplete').addEventListener('click', () => decide('completed'));
+
+// ── 학생 질문 (사진 제출과 별개, questions 테이블) ────────────────────────
+// 상태 변경은 answer_question / close_question RPC 로만 한다. 직접 UPDATE 는
+// questions 에 update 권한 자체가 없어 서버가 거부한다(문서 22/23).
+// student_id 로 profiles 를 두 번 참조하는 FK(student_id, answered_by)가 있어
+// 어느 쪽인지 명시해야 한다. assignment_id 는 questions 에서 하나뿐이라 그대로 둔다.
+const QUESTIONS_SELECT = 'id,category,body,created_at,profiles!questions_student_id_fkey(name),assignments(title)';
+// 오래된 질문부터 보이게 하고(review queue 와 같은 방향), 목록이 한없이 길어지지
+// 않도록 개수를 제한한다. 100건을 넘게 밀리는 상황이면 운영상 이미 다른 조치가 필요하다.
+const QUESTIONS_LIMIT = 100;
+const questionsRequestGate = createLatestRequestGate();
+let questionInbox = [];
+let questionProcessingId = null;
+const questionErrors = new Map();
+const questionDrafts = new Map();
+
+function questionStudentName(entry) {
+  return normalizeRelation(entry.profiles)[0]?.name || '학생';
+}
+function questionAssignmentTitle(entry) {
+  return normalizeRelation(entry.assignments)[0]?.title || '';
+}
+
+async function loadQuestionInbox() {
+  const request = questionsRequestGate.begin();
+  const { data, error } = await supabase
+    .from('questions')
+    .select(QUESTIONS_SELECT)
+    .eq('status', 'open')
+    .order('created_at', { ascending: true })
+    .limit(QUESTIONS_LIMIT);
+  if (!questionsRequestGate.isLatest(request)) return;
+  if (error) { showError(byId('questionsError'), error.message || '질문 목록을 불러오지 못했습니다.'); return; }
+  showError(byId('questionsError'), '');
+  questionInbox = data || [];
+  renderQuestionInbox();
+}
+
+function questionCard(entry) {
+  const card = document.createElement('article');
+  card.className = 'card';
+
+  const heading = document.createElement('h3');
+  heading.textContent = questionStudentName(entry) + ' · ' + entry.category;
+  card.append(heading);
+
+  const assignmentTitle = questionAssignmentTitle(entry);
+  if (assignmentTitle) {
+    const titleEl = document.createElement('p');
+    titleEl.className = 'workflow-title';
+    titleEl.textContent = assignmentTitle;
+    card.append(titleEl);
+  }
+
+  const metaLine = document.createElement('p');
+  metaLine.className = 'meta';
+  metaLine.textContent = new Date(entry.created_at).toLocaleString('ko-KR');
+  card.append(metaLine);
+
+  const body = document.createElement('p');
+  body.textContent = entry.body;
+  card.append(body);
+
+  const answerLabel = document.createElement('label');
+  answerLabel.append('답변');
+  const answerInput = document.createElement('textarea');
+  answerInput.maxLength = 4000;
+  answerInput.placeholder = '학생에게 보여줄 답변을 적어주세요.';
+  answerInput.value = questionDrafts.get(entry.id) || '';
+  answerInput.addEventListener('input', () => questionDrafts.set(entry.id, answerInput.value));
+  answerLabel.append(answerInput);
+  card.append(answerLabel);
+
+  const errorEl = document.createElement('p');
+  errorEl.className = 'error';
+  errorEl.setAttribute('role', 'alert');
+  errorEl.textContent = questionErrors.get(entry.id) || '';
+  card.append(errorEl);
+
+  const busy = Boolean(questionProcessingId);
+  const actions = document.createElement('div');
+  actions.className = 'decide';
+  const closeButton = document.createElement('button');
+  closeButton.type = 'button'; closeButton.className = 'secondary'; closeButton.textContent = '닫기';
+  closeButton.disabled = busy;
+  closeButton.addEventListener('click', () => closeQuestionEntry(entry.id));
+  const answerButton = document.createElement('button');
+  answerButton.type = 'button'; answerButton.textContent = '답변 보내기';
+  answerButton.disabled = busy;
+  answerButton.addEventListener('click', () => answerQuestion(entry.id, answerInput.value));
+  actions.append(closeButton, answerButton);
+  card.append(actions);
+
+  return card;
+}
+
+function renderQuestionInbox() {
+  byId('questionsEmpty').hidden = Boolean(questionInbox.length);
+  byId('questionsList').replaceChildren(...questionInbox.map(questionCard));
+}
+
+async function answerQuestion(questionId, answerBody) {
+  if (questionProcessingId) return;
+  const clean = String(answerBody ?? '').trim();
+  if (!clean) { questionErrors.set(questionId, '답변 내용을 입력하세요.'); renderQuestionInbox(); return; }
+  questionErrors.delete(questionId);
+  questionProcessingId = questionId;
+  renderQuestionInbox();
+  try {
+    const { error } = await supabase.rpc('answer_question', { p_question_id: questionId, p_answer_body: clean });
+    if (error) throw error;
+    questionDrafts.delete(questionId);
+    questionProcessingId = null;
+    await loadQuestionInbox(); // status 가 open 이 아니게 되어 목록에서 빠진다
+  } catch (error) {
+    questionProcessingId = null;
+    questionErrors.set(questionId, error.message || '답변 전송에 실패했습니다.');
+    renderQuestionInbox();
+  }
+}
+
+async function closeQuestionEntry(questionId) {
+  if (questionProcessingId) return;
+  questionErrors.delete(questionId);
+  questionProcessingId = questionId;
+  renderQuestionInbox();
+  try {
+    const { error } = await supabase.rpc('close_question', { p_question_id: questionId });
+    if (error) throw error;
+    questionDrafts.delete(questionId);
+    questionProcessingId = null;
+    await loadQuestionInbox();
+  } catch (error) {
+    questionProcessingId = null;
+    questionErrors.set(questionId, error.message || '질문 닫기에 실패했습니다.');
+    renderQuestionInbox();
+  }
+}
 
 // ── 계정·과제 관리 (기존 동작 유지, 관계 정규화 적용) ─────────────────────
 async function refreshAfterUserAction(action) {
