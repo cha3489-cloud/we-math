@@ -281,11 +281,51 @@ body.tablet-app{
   display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px;
 }
 .question-reference-photos:not(:empty){margin-top:12px;}
+/* 썸네일은 눌러서 크게 볼 수 있어야 하므로 button 이다. 높이 120px 이라
+   터치 타깃 64px 기준을 넘는다. */
 .question-reference-thumb{
-  margin:0;border:1px solid var(--line);border-radius:12px;
-  overflow:hidden;background:var(--paper);
+  display:block;width:100%;min-width:0;
+  margin:0;padding:0;
+  border:1px solid var(--line);border-radius:12px;
+  overflow:hidden;background:var(--paper);cursor:pointer;
 }
+.question-reference-thumb:active{border-color:var(--green);}
+.question-reference-thumb:focus-visible{outline:3px solid var(--green);outline-offset:2px;}
 .question-reference-thumb img{display:block;width:100%;height:120px;object-fit:cover;}
+
+/* ── 제출 사진 크게 보기 ─────────────────────────────────────────────── */
+.reference-viewer{
+  width:min(96vw,1100px);max-width:96vw;max-height:94vh;
+  padding:0;border:0;border-radius:18px;
+  background:var(--paper);color:var(--ink);
+  overflow:hidden;
+}
+.reference-viewer::backdrop{background:rgba(23,33,31,.82);}
+.reference-viewer-inner{display:grid;gap:12px;padding:16px;min-width:0;}
+/* 문항을 확인하는 것이 목적이므로 잘라내지 않고 화면 안에 최대한 크게 담는다.
+   width:100% 로 두면 세로로 긴 사진(수학 풀이는 대부분 세로다)이 넓은 상자 안에
+   레터박스로 들어가 실제 사진은 오히려 작아진다. 그래서 폭을 사진 비율에 맡기고
+   높이로 키운다. 빼는 160px 은 아래 안내 문구와 버튼, 여백 몫이다. */
+.reference-viewer-image{
+  display:block;margin:0 auto;
+  width:auto;max-width:100%;min-width:0;
+  max-height:calc(94vh - 160px);
+  object-fit:contain;
+  background:var(--cream);border-radius:12px;
+}
+.reference-viewer-counter{margin:0;text-align:center;color:var(--muted);}
+.reference-viewer-controls{display:flex;justify-content:center;flex-wrap:wrap;gap:12px;}
+.reference-viewer-nav,.reference-viewer-close{
+  min-height:var(--touch-min);min-width:var(--touch-min);
+  padding:0 24px;
+  border:1px solid var(--line);border-radius:14px;
+  background:var(--cream);color:var(--ink);
+  font:inherit;font-size:20px;font-weight:700;cursor:pointer;
+}
+.reference-viewer-close{background:var(--navy);color:var(--paper);border-color:var(--navy);}
+.reference-viewer-nav:active{background:var(--mint-soft);}
+.reference-viewer-nav:focus-visible,
+.reference-viewer-close:focus-visible{outline:3px solid var(--green);outline-offset:2px;}
 .question-reference-status{margin:8px 0 0;font-size:15px;color:var(--muted);}
 .question-reference-status:empty{margin:0;}
 #questionReferenceRetry{margin-top:12px;font-size:17px;}

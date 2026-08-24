@@ -311,3 +311,76 @@ describe('tablet question form', () => {
     expect(main).toContain("location.hash = '#/assignment/'");
   });
 });
+
+describe('tablet reference image viewer wiring', () => {
+  it('uses a native dialog for modality and the backdrop', () => {
+    expect(html).toContain('<dialog id=referenceViewer');
+    expect(main).toContain('dialog.showModal()');
+  });
+
+  it('closes on Escape explicitly, not only through the dialog default', () => {
+    // 브라우저 기본 동작에만 기대지 않는다. 실측에서 keydown 이 문서까지 도달했는데도
+    // dialog 가 스스로 닫지 않는 경우를 확인했다(자동화 환경).
+    const handler = main.match(/byId\('referenceViewer'\)\.addEventListener\('keydown'[\s\S]*?\n\}\);/)?.[0] ?? '';
+    expect(handler).toBeTruthy();
+    expect(handler).toContain("event.key !== 'Escape'");
+    expect(handler).toContain('closeViewer()');
+  });
+
+  it('makes each thumbnail a real button that opens the viewer', () => {
+    expect(main).toContain("button.className = 'question-reference-thumb'");
+    expect(main).toContain("button.addEventListener('click', () => openViewer(index))");
+    expect(main).toContain('크게 보기');
+  });
+
+  it('offers close, prev and next controls', () => {
+    for (const id of ['referenceViewerClose', 'referenceViewerPrev', 'referenceViewerNext']) {
+      expect(html).toContain('id=' + id);
+      expect(main).toContain("byId('" + id + "').addEventListener('click'");
+    }
+  });
+
+  it('closes when the backdrop itself is clicked', () => {
+    expect(main).toMatch(/if \(event\.target === byId\('referenceViewer'\)\) closeViewer\(\)/);
+  });
+
+  it('hides the nav buttons when there is a single photo', () => {
+    expect(main).toContain("byId('referenceViewerPrev').hidden = !model.showNav");
+    expect(main).toContain("byId('referenceViewerNext').hidden = !model.showNav");
+  });
+
+  it('reuses the already-signed urls instead of asking storage again', () => {
+    // 뷰어를 열고 넘기는 경로에 storage 호출이 없어야 한다.
+    const viewer = main.match(/function openViewer\([\s\S]*?function moveViewer\([\s\S]*?\n\}/)?.[0] ?? '';
+    expect(viewer).toBeTruthy();
+    expect(viewer).not.toContain('supabase.storage');
+    expect(viewer).not.toContain('createSignedUrl');
+    expect(viewer).toContain('referenceUrls');
+  });
+
+  it('closes the viewer when the assignment changes or the student logs out', () => {
+    const loader = main.match(/async function loadReferencePhotos\([\s\S]*?referenceUrls = \[\];/)?.[0] ?? '';
+    expect(loader).toContain('closeViewer()');
+    const logout = main.match(/byId\('logout'\)\.addEventListener[\s\S]*?await signOut\(\)/)?.[0] ?? '';
+    expect(logout).toContain('closeViewer()');
+  });
+
+  it('drops the image source on close so it does not linger for the next student', () => {
+    expect(main).toContain("byId('referenceViewerImage').removeAttribute('src')");
+  });
+
+  it('still signs urls only for the submission bucket', () => {
+    const code = main.split('\n').map((line) => line.replace(/\/\/.*$/, '')).join('\n');
+    expect(code).toContain("supabase.storage.from('submission-files').createSignedUrl(");
+    expect(code).not.toContain("from('assignment-files')");
+    expect(code).not.toContain('getPublicUrl');
+  });
+
+  it('keeps the viewer image contained and the buttons touch sized', () => {
+    const css = read('src/tablet/tablet.css');
+    expect(css).toMatch(/\.reference-viewer-image\{[\s\S]*?object-fit:contain/);
+    const nav = css.match(/\.reference-viewer-nav,\.reference-viewer-close\{[\s\S]*?\}/)?.[0] ?? '';
+    expect(nav).toContain('min-height:var(--touch-min)');
+    expect(nav).toContain('min-width:var(--touch-min)');
+  });
+});

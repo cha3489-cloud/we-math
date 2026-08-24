@@ -4,6 +4,7 @@ import {
   normalizeQuestionBody, canSubmitQuestion, questionFormModel,
   questionInsertPayload, questionErrorMessage, recentQuestionsModel,
   MAX_REFERENCE_PHOTOS, REFERENCE_URL_TTL_SECONDS, ownReferencePaths, referenceModel, referencePhotoErrorMessage,
+  viewerModel, nextViewerIndex,
 } from '../src/tablet/question.js';
 import { isSubmissionPathValid } from '../src/tablet/submission.js';
 
@@ -223,5 +224,44 @@ describe('question reference block — 관련 자료 확인', () => {
     expect(referencePhotoErrorMessage({ name: 'TypeError', message: 'Failed to fetch' }))
       .toMatch(/연결을 확인/);
     expect(referencePhotoErrorMessage(new Error('boom'))).toMatch(/다시 시도/);
+  });
+});
+
+describe('reference image viewer — 크게 보기', () => {
+  const urls = [{ url: 'a.jpg' }, { url: 'b.jpg' }, { url: 'c.jpg' }];
+
+  it('opens on the thumbnail that was tapped', () => {
+    const model = viewerModel(urls, 1);
+    expect(model.url).toBe('b.jpg');
+    expect(model.index).toBe(1);
+    expect(model.counter).toBe('2 / 3');
+    expect(model.canOpen).toBe(true);
+  });
+
+  it('hides prev/next when there is only one photo', () => {
+    expect(viewerModel([{ url: 'only.jpg' }], 0).showNav).toBe(false);
+    expect(viewerModel(urls, 0).showNav).toBe(true);
+  });
+
+  it('refuses to open with no photos', () => {
+    expect(viewerModel([], 0).canOpen).toBe(false);
+    expect(viewerModel(undefined, 0).canOpen).toBe(false);
+  });
+
+  it('wraps around at both ends, like the admin viewer', () => {
+    expect(nextViewerIndex(2, 3, 1)).toBe(0);
+    expect(nextViewerIndex(0, 3, -1)).toBe(2);
+    expect(nextViewerIndex(0, 3, 1)).toBe(1);
+  });
+
+  it('never returns an index outside the list', () => {
+    expect(nextViewerIndex(0, 0, 1)).toBe(0);
+    expect(nextViewerIndex(99, 3, 1)).toBeLessThan(3);
+    expect(viewerModel(urls, 99).index).toBe(2);
+    expect(viewerModel(urls, -5).index).toBe(0);
+  });
+
+  it('labels the photo for screen readers', () => {
+    expect(viewerModel(urls, 0).label).toBe('내가 낸 사진 1');
   });
 });
