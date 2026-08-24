@@ -77,6 +77,45 @@ export function questionErrorMessage(error) {
   return '질문을 남기지 못했어요. 잠시 후 다시 시도해 주세요.';
 }
 
+// ── 질문 전에 확인하는 관련 자료 ─────────────────────────────────────────
+// 학생이 "어떤 문항에 대한 질문인지" 스스로 확인하고 쓰도록 돕는 블록.
+// 보여줄 수 있는 것은 이 학생이 이미 볼 권한을 가진 것뿐이다:
+//   - 과제 제목·매쓰플랫 안내 (이미 상세 화면에 있는 정보)
+//   - 자기가 낸 제출 사진 (Storage 정책 "submission files readable by owner")
+// 매쓰플랫 원문 문제 이미지는 DB 에 없어서 보여줄 수 없다(docs/28).
+export const MAX_REFERENCE_PHOTOS = 3;
+// 학생이 질문을 쓰는 동안 만료되지 않을 만큼 넉넉히 준다. 만료되면 다시 받는다.
+export const REFERENCE_URL_TTL_SECONDS = 300;
+
+// 남의 파일이 섞여 들어오지 않게 경로를 한 번 더 거른다. RLS 와 Storage 정책이
+// 최종 방어선이지만, 화면도 같은 조건을 쓴다(사진 제출 때와 같은 태도).
+export function ownReferencePaths(paths, isOwnPath) {
+  return (paths ?? [])
+    .filter((path) => typeof path === 'string' && path !== '')
+    .filter((path) => isOwnPath(path))
+    .slice(0, MAX_REFERENCE_PHOTOS);
+}
+
+export function referenceModel(detail) {
+  const title = String(detail?.title ?? '');
+  // 매쓰플랫 카드는 이 화면 위쪽에 이미 그려져 있다. 내용을 또 찍지 않고 가리키기만 한다.
+  const mathflatNote = detail?.mathflat ? '위쪽 매쓰플랫 안내도 함께 확인하세요.' : '';
+  return {
+    title,
+    mathflatNote,
+    hasPhotos: Boolean(detail?.myFilePaths?.length),
+    visible: Boolean(title || mathflatNote || detail?.myFilePaths?.length),
+  };
+}
+
+export function referencePhotoErrorMessage(error) {
+  const raw = String(error?.message ?? error ?? '');
+  if (error?.name === 'TypeError' || /failed to fetch|networkerror/i.test(raw)) {
+    return '사진을 불러오지 못했어요. 연결을 확인하고 다시 시도해 주세요.';
+  }
+  return '사진을 불러오지 못했어요. 다시 시도해 주세요.';
+}
+
 // 과도한 이력 노출을 피하려고 화면에는 최근 몇 건만 보여준다.
 export const RECENT_QUESTIONS_LIMIT = 3;
 

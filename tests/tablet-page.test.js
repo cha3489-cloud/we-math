@@ -147,9 +147,16 @@ describe('tablet page boundaries', () => {
     expect(main).toContain('그래도 제출은 할 수 있어요');
   });
 
-  it('still keeps assignment attachments out of scope', () => {
-    expect(main).not.toContain('createSignedUrl');
-    expect(main).not.toContain('attachment_paths');
+  // 이전 PR 까지는 createSignedUrl 자체를 금지했다. 이번 PR 에서 학생이 질문을 쓰기 전에
+  // 자기 제출 사진을 다시 보는 기능이 들어오면서, 같은 자리를
+  // "서명 URL 을 쓰지 않는다" → "제출 버킷에만, 본인 파일에만 쓴다"로 교체한다.
+  it('signs urls only for the submission bucket, never assignment attachments', () => {
+    // 주석에는 attachment_paths 를 설명으로 적을 수 있으므로 실행 코드만 두고 본다.
+    const code = main.split('\n').map((line) => line.replace(/\/\/.*$/, '')).join('\n');
+    expect(code).toContain("supabase.storage.from('submission-files').createSignedUrl(");
+    expect(code).not.toContain('attachment_paths');
+    expect(code).not.toContain("from('assignment-files')");
+    expect(code).not.toContain('getPublicUrl');
   });
 
   it('routes with the hash only, never the History API', () => {

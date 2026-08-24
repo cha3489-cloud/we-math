@@ -19,18 +19,20 @@ import {
 import {
   MAX_QUESTION_BODY_LENGTH, canSubmitQuestion, questionFormModel,
   questionInsertPayload, questionErrorMessage, recentQuestionsModel,
+  REFERENCE_URL_TTL_SECONDS, ownReferencePaths, referenceModel, referencePhotoErrorMessage,
 } from './question.js';
 
 const byId = (id) => document.getElementById(id);
 const showError = (el, message) => { el.textContent = message || ''; };
 const PIN_MAX = 6;
 
-// 첨부 파일과 제출 사진 경로는 아직 다루지 않는다.
-// Storage 를 건드리지 않기 위해 select 에서 파일 경로 컬럼을 모두 제외한다.
+// 과제 첨부(assignments.attachment_paths)는 여전히 다루지 않는다.
+// 제출 사진 경로(submissions.file_paths)만 가져온다. 학생이 질문을 쓰기 전에
+// 자기가 낸 사진을 다시 보기 위한 것이고, Storage 정책상 본인 파일만 열린다.
 const FEEDBACK_SELECT = 'feedback(body,auto_composed,created_at,feedback_items(problem_ref,review_tag,comment,redo_required))';
 const LEGACY_FEEDBACK_SELECT = 'feedback(body,created_at,feedback_items(problem_ref,review_tag,comment,redo_required))';
 const assignmentsSelect = (feedbackSelect) =>
-  'id,title,description,due_at,submissions(id,attempt_no,status,body,submitted_at,' + feedbackSelect + ')';
+  'id,title,description,due_at,submissions(id,attempt_no,status,body,file_paths,submitted_at,' + feedbackSelect + ')';
 const todayGate = createLatestRequestGate();
 
 let currentAssignments = [];
@@ -282,6 +284,73 @@ function renderDifficulty() {
     : '';
 }
 
+// ── 질문 전에 확인하는 관련 자료 ─────────────────────────────────────────
+// 새 데이터를 만들지 않는다. 이미 이 학생 것인 과제 정보와 제출 사진만 다시 보여준다.
+const referenceGate = createLatestRequestGate();
+let referenceUrls = [];
+
+function renderReference(detail) {
+  const model = referenceModel(detail);
+  byId('questionReference').hidden = !model.visible;
+  byId('questionReferenceTitle').textContent = model.title;
+  byId('questionReferenceMathflat').textContent = model.mathflatNote;
+  byId('questionReferenceMathflat').hidden = !model.mathflatNote;
+
+  byId('questionReferencePhotos').replaceChildren(...referenceUrls.map((entry, index) => {
+    const figure = document.createElement('figure');
+    figure.className = 'question-reference-thumb';
+    const image = document.createElement('img');
+    image.src = entry.url;
+    image.alt = '내가 낸 사진 ' + (index + 1);
+    image.loading = 'lazy';
+    // 서명 URL 이 만료되면 이미지가 깨진다. 그때는 다시 받을 수 있게 안내한다.
+    image.addEventListener('error', () => {
+      byId('questionReferenceStatus').textContent = '사진 주소가 만료됐어요.';
+      byId('questionReferenceRetry').hidden = false;
+    });
+    figure.append(image);
+    return figure;
+  }));
+}
+
+async function loadReferencePhotos(detail) {
+  const status = byId('questionReferenceStatus');
+  const retry = byId('questionReferenceRetry');
+  retry.hidden = true;
+  referenceUrls = [];
+  // 경로가 이 학생·이 과제 것인지 화면에서도 한 번 더 확인한다.
+  const paths = ownReferencePaths(
+    detail?.myFilePaths,
+    (path) => isSubmissionPathValid(path, currentUserId, currentDetailId),
+  );
+  if (!paths.length) { status.textContent = ''; renderReference(detail); return; }
+
+  const request = referenceGate.begin();
+  status.textContent = '내가 낸 사진을 불러오는 중이에요…';
+  renderReference(detail);
+  try {
+    const signed = await Promise.all(paths.map((path) =>
+      supabase.storage.from('submission-files').createSignedUrl(path, REFERENCE_URL_TTL_SECONDS)));
+    if (!referenceGate.isLatest(request)) return;
+    const failed = signed.find((result) => result.error);
+    if (failed) throw failed.error;
+    referenceUrls = signed.map((result) => ({ url: result.data.signedUrl }));
+    status.textContent = '';
+  } catch (error) {
+    if (!referenceGate.isLatest(request)) return;
+    console.error(error);
+    referenceUrls = [];
+    status.textContent = referencePhotoErrorMessage(error);
+    retry.hidden = false;
+  }
+  renderReference(detail);
+}
+
+byId('questionReferenceRetry').addEventListener('click', () => {
+  const assignment = findAssignment(currentAssignments, currentDetailId);
+  if (assignment) loadReferencePhotos(assignmentDetail(assignment));
+});
+
 // ── 질문하기 (사진 없이) ─────────────────────────────────────────────────
 function renderQuestionForm() {
   const model = questionFormModel(selectedQuestionCategory, byId('questionBody').value);
@@ -472,6 +541,7 @@ function applyRoute() {
   if (route.name !== 'detail') { showPanel('today'); return; }
   const assignment = findAssignment(currentAssignments, route.id);
   if (!assignment) { showPanel('today'); goToday(); return; }
+  const detail = assignmentDetail(assignment);
   if (currentDetailId !== assignment.id) {
     currentDetailId = assignment.id;
     clearPhotos();
@@ -479,8 +549,9 @@ function applyRoute() {
     currentQuestions = [];
     renderQuestionRecent();
     loadQuestions(assignment.id);
+    loadReferencePhotos(detail);
   }
-  renderDetail(assignmentDetail(assignment));
+  renderDetail(detail);
   renderPhotoPreview();
   showPanel('detail');
   window.scrollTo(0, 0);
@@ -680,6 +751,10 @@ byId('logout').addEventListener('click', async () => {
   clearPhotos();
   currentQuestions = [];
   clearQuestionForm();
+  // 다음 사람이 앞 학생의 사진을 보지 못하게 서명 URL 도 함께 버린다.
+  referenceUrls = [];
+  byId('questionReferencePhotos').replaceChildren();
+  byId('questionReference').hidden = true;
   await signOut();
   // 다음 사람이 이전 학생의 과제 경로를 열지 않도록 hash 도 비운다.
   location.replace(location.pathname);

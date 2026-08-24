@@ -3,7 +3,9 @@ import {
   QUESTION_CATEGORIES, MAX_QUESTION_BODY_LENGTH, RECENT_QUESTIONS_LIMIT,
   normalizeQuestionBody, canSubmitQuestion, questionFormModel,
   questionInsertPayload, questionErrorMessage, recentQuestionsModel,
+  MAX_REFERENCE_PHOTOS, REFERENCE_URL_TTL_SECONDS, ownReferencePaths, referenceModel, referencePhotoErrorMessage,
 } from '../src/tablet/question.js';
+import { isSubmissionPathValid } from '../src/tablet/submission.js';
 
 describe('question categories', () => {
   it('matches the server check constraint exactly', () => {
@@ -168,5 +170,58 @@ describe('recentQuestionsModel — 과도한 이력 노출 방지', () => {
       { id: 'b', category: '기타', body: 'q', status: 'open', answer_body: null },
     ]);
     expect(open[0].answerBody).toBe('');
+  });
+});
+
+describe('question reference block — 관련 자료 확인', () => {
+  const STUDENT = '11111111-1111-1111-1111-111111111111';
+  const OTHER = '99999999-9999-9999-9999-999999999999';
+  const ASSIGNMENT = '22222222-2222-2222-2222-222222222222';
+  const own = (path) => isSubmissionPathValid(path, STUDENT, ASSIGNMENT);
+
+  it('caps the thumbnails at three', () => {
+    expect(MAX_REFERENCE_PHOTOS).toBe(3);
+    const paths = Array.from({ length: 6 }, (_, i) => STUDENT + '/' + ASSIGNMENT + '/p' + i + '.jpg');
+    expect(ownReferencePaths(paths, own)).toHaveLength(3);
+  });
+
+  it('drops any path that is not this student and this assignment', () => {
+    const paths = [
+      STUDENT + '/' + ASSIGNMENT + '/mine.jpg',
+      OTHER + '/' + ASSIGNMENT + '/theirs.jpg',
+      STUDENT + '/33333333-3333-3333-3333-333333333333/other-assignment.jpg',
+    ];
+    expect(ownReferencePaths(paths, own)).toEqual([STUDENT + '/' + ASSIGNMENT + '/mine.jpg']);
+  });
+
+  it('ignores empty and non-string entries instead of requesting a url for them', () => {
+    expect(ownReferencePaths([null, '', undefined, 5], own)).toEqual([]);
+    expect(ownReferencePaths(undefined, own)).toEqual([]);
+  });
+
+  it('shows the assignment title so the student knows what they are asking about', () => {
+    const model = referenceModel({ title: '일차방정식 활용', myFilePaths: [] });
+    expect(model.title).toBe('일차방정식 활용');
+    expect(model.visible).toBe(true);
+  });
+
+  it('points at the mathflat card only when there is one, without repeating it', () => {
+    expect(referenceModel({ title: 'x', mathflat: { fields: [], notes: [] } }).mathflatNote).toMatch(/매쓰플랫/);
+    expect(referenceModel({ title: 'x', mathflat: null }).mathflatNote).toBe('');
+  });
+
+  it('stays hidden when there is nothing to show', () => {
+    expect(referenceModel(null).visible).toBe(false);
+    expect(referenceModel({ title: '', mathflat: null, myFilePaths: [] }).visible).toBe(false);
+  });
+
+  it('uses a ttl long enough to write a question', () => {
+    expect(REFERENCE_URL_TTL_SECONDS).toBeGreaterThanOrEqual(120);
+  });
+
+  it('explains a failed photo load without technical detail', () => {
+    expect(referencePhotoErrorMessage({ name: 'TypeError', message: 'Failed to fetch' }))
+      .toMatch(/연결을 확인/);
+    expect(referencePhotoErrorMessage(new Error('boom'))).toMatch(/다시 시도/);
   });
 });

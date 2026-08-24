@@ -158,6 +158,9 @@ export function assignmentDetail(assignment, now = new Date()) {
     feedbackItems: latest ? allFeedbackItems(latest.feedback) : [],
     myTags: mine.tags,
     myNote: mine.note || mine.rest,
+    // 학생이 질문을 쓰기 전에 "내가 뭘 냈더라"를 다시 볼 수 있게 최근 회차의
+    // 제출 사진 경로만 넘긴다. 실제 표시 여부와 개수 제한은 화면에서 정한다.
+    myFilePaths: [...(latest?.file_paths ?? [])],
   };
 }
 
