@@ -16,6 +16,10 @@ import {
 import {
   MAX_NOTE_LENGTH, composeSubmissionBody, difficultyPickerModel, toggleTag,
 } from './difficulty.js';
+import {
+  MAX_QUESTION_BODY_LENGTH, canSubmitQuestion, questionFormModel,
+  questionInsertPayload, questionErrorMessage, recentQuestionsModel,
+} from './question.js';
 
 const byId = (id) => document.getElementById(id);
 const showError = (el, message) => { el.textContent = message || ''; };
@@ -35,6 +39,10 @@ let currentDetailId = null;
 let selectedPhotos = [];   // { file, url, warnings }
 let selectedTags = [];
 let submitting = false;
+const questionsGate = createLatestRequestGate();
+let currentQuestions = [];
+let selectedQuestionCategory = null;
+let questionSubmitting = false;
 
 async function requireStudent(user) {
   const { data, error } = await supabase.from('user_roles').select('role').eq('user_id', user.id).single();
@@ -274,6 +282,91 @@ function renderDifficulty() {
     : '';
 }
 
+// ── 질문하기 (사진 없이) ─────────────────────────────────────────────────
+function renderQuestionForm() {
+  const model = questionFormModel(selectedQuestionCategory, byId('questionBody').value);
+  byId('questionCategoryOptions').replaceChildren(...model.categories.map((option) => {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = option.selected ? 'question-category-tag question-category-tag-on' : 'question-category-tag';
+    button.textContent = option.tag;
+    button.dataset.category = option.tag;
+    button.setAttribute('aria-pressed', String(option.selected));
+    button.disabled = questionSubmitting;
+    button.addEventListener('click', () => {
+      selectedQuestionCategory = option.tag;
+      renderQuestionForm();
+    });
+    return button;
+  }));
+  byId('questionBody').disabled = questionSubmitting;
+  byId('questionCount').textContent = model.bodyLength
+    ? model.bodyLength + ' / ' + MAX_QUESTION_BODY_LENGTH + '자'
+    : '';
+  byId('questionSubmit').disabled = !model.canSubmit || questionSubmitting;
+}
+
+function clearQuestionForm() {
+  selectedQuestionCategory = null;
+  byId('questionBody').value = '';
+  showError(byId('questionError'), '');
+  byId('questionStatus').textContent = '';
+  renderQuestionForm();
+}
+
+// 이 과제에 대해 최근 남긴 질문만 보여준다. 과도한 이력 노출을 피하려고
+// recentQuestionsModel 이 개수를 제한한다.
+function renderQuestionRecent() {
+  const items = recentQuestionsModel(currentQuestions);
+  const container = byId('questionRecent');
+  container.hidden = !items.length;
+  container.replaceChildren(...items.map((item) => {
+    const wrap = document.createElement('div');
+    wrap.className = 'question-recent-item';
+
+    const head = document.createElement('p');
+    head.className = 'question-recent-head';
+    const category = document.createElement('span');
+    category.textContent = item.category;
+    const status = document.createElement('span');
+    status.className = item.answerBody
+      ? 'question-recent-status question-recent-status-answered'
+      : 'question-recent-status';
+    status.textContent = item.statusLabel;
+    head.append(category, status);
+
+    const body = document.createElement('p');
+    body.className = 'question-recent-body';
+    body.textContent = item.body;
+    wrap.append(head, body);
+
+    if (item.answerBody) {
+      const answer = document.createElement('p');
+      answer.className = 'question-recent-answer';
+      answer.textContent = item.answerBody;
+      wrap.append(answer);
+    }
+    return wrap;
+  }));
+}
+
+// 남에게 보일 이유가 없으므로 student_id 로도 한 번 더 좁힌다. RLS 가 최종
+// 방어선이지만 화면도 같은 조건을 쓴다.
+async function loadQuestions(assignmentId) {
+  const request = questionsGate.begin();
+  const { data, error } = await supabase
+    .from('questions')
+    .select('id,category,body,status,answer_body,created_at')
+    .eq('assignment_id', assignmentId)
+    .eq('student_id', currentUserId)
+    .order('created_at', { ascending: false })
+    .limit(3);
+  if (!questionsGate.isLatest(request)) return;
+  if (error) { console.error(error); currentQuestions = []; renderQuestionRecent(); return; }
+  currentQuestions = data || [];
+  renderQuestionRecent();
+}
+
 function renderDetail(detail) {
   byId('detailTitle').textContent = detail.title;
   byId('detailStatus').textContent = detail.statusIcon + ' ' + detail.statusLabel;
@@ -379,7 +472,14 @@ function applyRoute() {
   if (route.name !== 'detail') { showPanel('today'); return; }
   const assignment = findAssignment(currentAssignments, route.id);
   if (!assignment) { showPanel('today'); goToday(); return; }
-  if (currentDetailId !== assignment.id) { currentDetailId = assignment.id; clearPhotos(); }
+  if (currentDetailId !== assignment.id) {
+    currentDetailId = assignment.id;
+    clearPhotos();
+    clearQuestionForm();
+    currentQuestions = [];
+    renderQuestionRecent();
+    loadQuestions(assignment.id);
+  }
   renderDetail(assignmentDetail(assignment));
   renderPhotoPreview();
   showPanel('detail');
@@ -390,6 +490,8 @@ function applyRoute() {
 byId('photoPick').addEventListener('click', () => byId('photoInput').click());
 byId('difficultyNote').addEventListener('input', renderDifficulty);
 renderDifficulty();
+byId('questionBody').addEventListener('input', renderQuestionForm);
+renderQuestionForm();
 
 byId('photoInput').addEventListener('change', async () => {
   const input = byId('photoInput');
@@ -464,6 +566,36 @@ byId('photoSubmit').addEventListener('click', async () => {
     submitting = false;
     renderPhotoPreview();
     renderDifficulty();
+  }
+});
+
+byId('questionSubmit').addEventListener('click', async () => {
+  if (questionSubmitting || !currentUserId || !currentDetailId) return;
+  if (!canSubmitQuestion(selectedQuestionCategory, byId('questionBody').value)) return;
+  questionSubmitting = true;
+  showError(byId('questionError'), '');
+  renderQuestionForm();
+
+  try {
+    // status / answered_at 등 서버가 정하는 값은 보내지 않는다.
+    const payload = questionInsertPayload({
+      studentId: currentUserId,
+      assignmentId: currentDetailId,
+      category: selectedQuestionCategory,
+      body: byId('questionBody').value,
+    });
+    const { error } = await supabase.from('questions').insert(payload);
+    if (error) throw error;
+
+    clearQuestionForm();
+    byId('questionStatus').textContent = '질문을 남겼어요. 선생님이 확인할게요.';
+    await loadQuestions(currentDetailId);
+  } catch (error) {
+    console.error(error);
+    showError(byId('questionError'), questionErrorMessage(error));
+  } finally {
+    questionSubmitting = false;
+    renderQuestionForm();
   }
 });
 
@@ -546,6 +678,8 @@ byId('logout').addEventListener('click', async () => {
   currentUserId = null;
   currentDetailId = null;
   clearPhotos();
+  currentQuestions = [];
+  clearQuestionForm();
   await signOut();
   // 다음 사람이 이전 학생의 과제 경로를 열지 않도록 hash 도 비운다.
   location.replace(location.pathname);

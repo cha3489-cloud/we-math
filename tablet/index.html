@@ -103,6 +103,25 @@
       <p id=photoError class=tablet-error role=alert></p>
     </div>
 
+    <div id=questionBlock class=detail-block>
+      <h2>질문하기</h2>
+      <p class=question-guide>사진 없이도 궁금한 점을 남길 수 있어요. 선생님이 확인하고 답해드려요.</p>
+
+      <div id=questionRecent class=question-recent hidden></div>
+
+      <fieldset id=questionForm class=question-form>
+        <legend>어떤 게 궁금해요?</legend>
+        <div id=questionCategoryOptions class=question-category-options></div>
+        <label class=question-note>질문 내용
+          <textarea id=questionBody rows=3 maxlength=1000 placeholder="예: 3번에서 식을 어떻게 세워야 할지 모르겠어요."></textarea>
+        </label>
+        <p id=questionCount class=question-count aria-live=polite></p>
+      </fieldset>
+      <button id=questionSubmit class=tablet-primary type=button disabled>질문 남기기</button>
+      <p id=questionStatus class=submit-status role=status></p>
+      <p id=questionError class=tablet-error role=alert></p>
+    </div>
+
     <div id=detailFeedbackBlock class=detail-block hidden>
       <h2>선생님 피드백</h2>
       <p id=detailFeedback class=detail-feedback></p>

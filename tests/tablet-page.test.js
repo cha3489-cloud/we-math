@@ -197,3 +197,110 @@ describe('tablet page boundaries', () => {
     expect(main).toMatch(/byId\('emptyState'\)\.hidden = totalAssignmentCount\(sections\) > 0/);
   });
 });
+
+describe('tablet question form', () => {
+  it('imports the question logic from its own module, not from submissions', () => {
+    expect(main).toContain("from './question.js'");
+    for (const fn of ['canSubmitQuestion', 'questionFormModel', 'questionInsertPayload', 'questionErrorMessage']) {
+      expect(main).toContain(fn);
+    }
+  });
+
+  it('offers a category picker and a free-text body, independent of the photo form', () => {
+    expect(html).toContain('id=questionCategoryOptions');
+    expect(html).toContain('id=questionBody');
+    expect(html).toContain('id=questionSubmit');
+    // 사진 제출 영역(submitBlock)과는 별개의 블록이어야 한다.
+    expect(html).toMatch(/<div id=questionBlock[^>]*>/);
+  });
+
+  it('is not gated behind the photo submission open/closed state, unlike submitBlock', () => {
+    // submitBlock 은 hidden 으로 시작해 renderDetail 이 열어준다. questionBlock 은
+    // 사진 제출과 별개이므로 처음부터 숨겨두지 않는다.
+    expect(html).toMatch(/<div id=submitBlock class=detail-block hidden>/);
+    expect(html).toMatch(/<div id=questionBlock class=detail-block>/);
+    expect(html).not.toMatch(/<div id=questionBlock class=detail-block hidden>/);
+  });
+
+  it('lets the student pick exactly one category', () => {
+    expect(main).toContain('selectedQuestionCategory = option.tag;');
+    expect(main).toContain("button.setAttribute('aria-pressed', String(option.selected))");
+  });
+
+  it('can be submitted with a category and body but no photo', () => {
+    // insert 호출부에 파일 업로드나 selectedPhotos 참조가 없어야 한다.
+    const handler = main.match(/byId\('questionSubmit'\)\.addEventListener\('click', async \(\) => \{[\s\S]*?\n\}\);/)?.[0] ?? '';
+    expect(handler).toBeTruthy();
+    expect(handler).not.toContain('selectedPhotos');
+    expect(handler).not.toContain('storage');
+    expect(handler).toContain("supabase.from('questions').insert(payload)");
+  });
+
+  it('blocks an empty submission before ever calling the server', () => {
+    expect(main).toContain('if (!canSubmitQuestion(selectedQuestionCategory, ' + "byId('questionBody').value)) return;");
+  });
+
+  it('prevents a duplicate submission while one is already in flight', () => {
+    expect(main).toMatch(/if \(questionSubmitting \|\| !currentUserId \|\| !currentDetailId\) return;/);
+    expect(main).toContain('questionSubmitting = true;');
+    expect(main).toMatch(/finally \{\s*questionSubmitting = false;/);
+  });
+
+  it('disables the picker, textarea and submit button while submitting', () => {
+    expect(main).toContain('button.disabled = questionSubmitting;');
+    expect(main).toContain("byId('questionBody').disabled = questionSubmitting;");
+    expect(main).toContain('byId(\'questionSubmit\').disabled = !model.canSubmit || questionSubmitting;');
+  });
+
+  it('shows the exact confirmation text on success', () => {
+    expect(main).toContain("byId('questionStatus').textContent = '질문을 남겼어요. 선생님이 확인할게요.';");
+  });
+
+  it('shows a failure message built from the server error, including the 10-open-question cap', () => {
+    expect(main).toContain('showError(byId(\'questionError\'), questionErrorMessage(error))');
+    const questionModule = read('src/tablet/question.js');
+    expect(questionModule).toMatch(/too many open questions/i);
+    expect(questionModule).toContain('답변을 기다리는 질문이 많아요');
+  });
+
+  it('lets the server decide status and answer fields — the payload builder only takes the minimum', () => {
+    const questionModule = read('src/tablet/question.js');
+    const payloadFn = questionModule.match(/export function questionInsertPayload\([\s\S]*?\n\}/)?.[0] ?? '';
+    expect(payloadFn).toContain('student_id');
+    expect(payloadFn).toContain('assignment_id');
+    expect(payloadFn).toContain('category');
+    expect(payloadFn).toContain('body');
+    for (const forbidden of ['status:', 'answered_at', 'answered_by', 'answer_body', 'closed_at']) {
+      expect(payloadFn).not.toContain(forbidden);
+    }
+  });
+
+  it('sends the current assignment id and the signed-in student id, never invented ones', () => {
+    expect(main).toContain('assignmentId: currentDetailId,');
+    expect(main).toContain('studentId: currentUserId,');
+    // 다른 학생/과제 id 를 만들어내는 통로(crypto.randomUUID 등)가 이 흐름에 없어야 한다.
+    const handler = main.match(/byId\('questionSubmit'\)\.addEventListener\('click', async \(\) => \{[\s\S]*?\n\}\);/)?.[0] ?? '';
+    expect(handler).not.toContain('randomUUID');
+  });
+
+  it('shows only a bounded recent list for the current assignment, scoped to the signed-in student', () => {
+    expect(main).toContain(".eq('assignment_id', assignmentId)");
+    expect(main).toContain(".eq('student_id', currentUserId)");
+    expect(main).toContain('.limit(3)');
+  });
+
+  it('resets the question form when switching to a different assignment', () => {
+    expect(main).toMatch(/clearPhotos\(\);\s*clearQuestionForm\(\);/);
+  });
+
+  it('still leaves the existing photo submission flow untouched', () => {
+    expect(main).toContain("supabase.from('submissions').insert({");
+    expect(main).toContain('shrinkForUpload');
+    expect(main).toContain('composeSubmissionBody(selectedTags');
+  });
+
+  it('still routes with the hash only', () => {
+    expect(main).not.toContain('history.pushState');
+    expect(main).toContain("location.hash = '#/assignment/'");
+  });
+});
