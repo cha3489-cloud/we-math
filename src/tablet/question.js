@@ -108,6 +108,34 @@ export function referenceModel(detail) {
   };
 }
 
+// ── 제출 사진 크게 보기 ──────────────────────────────────────────────────
+// 썸네일은 문항을 확인하기엔 작다. 이미 발급받은 서명 URL 을 그대로 다시 써서
+// 크게 보여준다. 뷰어를 열고 넘기는 동안 Storage 요청을 새로 만들지 않는다.
+
+// 마지막에서 다음을 누르면 처음으로 돌아온다. 관리자 화면 뷰어와 같은 방식이다.
+export function nextViewerIndex(index, total, delta) {
+  const count = Number(total) || 0;
+  if (count <= 0) return 0;
+  const from = Number(index) || 0;
+  return ((from + Number(delta || 0)) % count + count) % count;
+}
+
+export function viewerModel(urls = [], index = 0) {
+  const list = Array.isArray(urls) ? urls : [];
+  const total = list.length;
+  const safeIndex = total ? Math.min(Math.max(0, Number(index) || 0), total - 1) : 0;
+  return {
+    total,
+    index: safeIndex,
+    url: list[safeIndex]?.url ?? '',
+    label: '내가 낸 사진 ' + (safeIndex + 1),
+    counter: total ? (safeIndex + 1) + ' / ' + total : '',
+    // 한 장뿐이면 이전/다음을 감춘다. 눌러도 같은 사진이라 혼란만 준다.
+    showNav: total > 1,
+    canOpen: total > 0,
+  };
+}
+
 export function referencePhotoErrorMessage(error) {
   const raw = String(error?.message ?? error ?? '');
   if (error?.name === 'TypeError' || /failed to fetch|networkerror/i.test(raw)) {

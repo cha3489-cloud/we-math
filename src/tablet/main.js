@@ -20,6 +20,7 @@ import {
   MAX_QUESTION_BODY_LENGTH, canSubmitQuestion, questionFormModel,
   questionInsertPayload, questionErrorMessage, recentQuestionsModel,
   REFERENCE_URL_TTL_SECONDS, ownReferencePaths, referenceModel, referencePhotoErrorMessage,
+  viewerModel, nextViewerIndex,
 } from './question.js';
 
 const byId = (id) => document.getElementById(id);
@@ -297,8 +298,11 @@ function renderReference(detail) {
   byId('questionReferenceMathflat').hidden = !model.mathflatNote;
 
   byId('questionReferencePhotos').replaceChildren(...referenceUrls.map((entry, index) => {
-    const figure = document.createElement('figure');
-    figure.className = 'question-reference-thumb';
+    // 썸네일만으로는 문항을 알아보기 어렵다. 눌러서 크게 볼 수 있어야 하므로 button 으로 둔다.
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'question-reference-thumb';
+    button.setAttribute('aria-label', '내가 낸 사진 ' + (index + 1) + ' 크게 보기');
     const image = document.createElement('img');
     image.src = entry.url;
     image.alt = '내가 낸 사진 ' + (index + 1);
@@ -308,15 +312,72 @@ function renderReference(detail) {
       byId('questionReferenceStatus').textContent = '사진 주소가 만료됐어요.';
       byId('questionReferenceRetry').hidden = false;
     });
-    figure.append(image);
-    return figure;
+    button.append(image);
+    button.addEventListener('click', () => openViewer(index));
+    return button;
   }));
 }
+
+// ── 제출 사진 크게 보기 ──────────────────────────────────────────────────
+// 이미 받아둔 referenceUrls 를 그대로 쓴다. 뷰어를 열거나 넘길 때 Storage 를 다시 부르지 않는다.
+let viewerIndex = 0;
+
+function renderViewer() {
+  const model = viewerModel(referenceUrls, viewerIndex);
+  viewerIndex = model.index;
+  byId('referenceViewerImage').src = model.url;
+  byId('referenceViewerImage').alt = model.label;
+  byId('referenceViewerCounter').textContent = model.counter;
+  byId('referenceViewerPrev').hidden = !model.showNav;
+  byId('referenceViewerNext').hidden = !model.showNav;
+}
+
+function openViewer(index) {
+  const dialog = byId('referenceViewer');
+  if (!viewerModel(referenceUrls, index).canOpen) return;
+  viewerIndex = index;
+  renderViewer();
+  if (!dialog.open) dialog.showModal();
+}
+
+function closeViewer() {
+  const dialog = byId('referenceViewer');
+  if (dialog.open) dialog.close();
+  // 닫은 뒤에도 이미지가 남아 있으면 다음 학생이 볼 수 있다. 주소를 비운다.
+  byId('referenceViewerImage').removeAttribute('src');
+}
+
+function moveViewer(delta) {
+  viewerIndex = nextViewerIndex(viewerIndex, referenceUrls.length, delta);
+  renderViewer();
+}
+
+byId('referenceViewerClose').addEventListener('click', closeViewer);
+byId('referenceViewerPrev').addEventListener('click', () => moveViewer(-1));
+byId('referenceViewerNext').addEventListener('click', () => moveViewer(1));
+// 배경을 누르면 닫는다. 배경 클릭은 dialog 자신이 target 이 된다.
+byId('referenceViewer').addEventListener('click', (event) => {
+  if (event.target === byId('referenceViewer')) closeViewer();
+});
+// Escape 는 원래 dialog 가 스스로 닫아 준다. 다만 그 기본 동작이 실제로 도는지
+// 자동화 환경에서 확인하지 못했고 기기·브라우저에 따라 다를 수 있어, 명시적으로도 닫는다.
+// 기본 동작과 겹쳐 두 번 닫혀도 close() 는 이미 닫힌 dialog 에서 아무 일도 하지 않는다.
+byId('referenceViewer').addEventListener('keydown', (event) => {
+  if (event.key !== 'Escape') return;
+  event.preventDefault();
+  closeViewer();
+});
+// 어떤 경로로 닫히든 뒷정리는 한곳에서 한다.
+byId('referenceViewer').addEventListener('close', () => {
+  byId('referenceViewerImage').removeAttribute('src');
+});
 
 async function loadReferencePhotos(detail) {
   const status = byId('questionReferenceStatus');
   const retry = byId('questionReferenceRetry');
   retry.hidden = true;
+  // 과제를 옮기면 앞 과제의 사진이 뷰어에 남아 있으면 안 된다.
+  closeViewer();
   referenceUrls = [];
   // 경로가 이 학생·이 과제 것인지 화면에서도 한 번 더 확인한다.
   const paths = ownReferencePaths(
@@ -751,7 +812,8 @@ byId('logout').addEventListener('click', async () => {
   clearPhotos();
   currentQuestions = [];
   clearQuestionForm();
-  // 다음 사람이 앞 학생의 사진을 보지 못하게 서명 URL 도 함께 버린다.
+  // 다음 사람이 앞 학생의 사진을 보지 못하게 뷰어를 닫고 서명 URL 도 함께 버린다.
+  closeViewer();
   referenceUrls = [];
   byId('questionReferencePhotos').replaceChildren();
   byId('questionReference').hidden = true;
