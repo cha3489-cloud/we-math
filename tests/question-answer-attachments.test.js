@@ -17,9 +17,15 @@ const stripComments = (source) => source
 const executable = stripComments(sql);
 
 describe('answer attachment migration ordering', () => {
-  it('sorts after every existing migration', () => {
+  it('sorts after every migration that came before it', () => {
+    // "맨 뒤인지"로 검사하면 새 마이그레이션이 붙을 때마다 깨진다.
+    // (questions-schema.test.js 에서 같은 이유로 이미 한 번 고쳤는데 여기서 반복했다.)
+    // 확인하려는 것은 순서다.
     const files = readdirSync(resolve(root, 'supabase/migrations')).filter((f) => f.endsWith('.sql')).sort();
-    expect(files.at(-1)).toBe('20260825000000_question_answer_attachments.sql');
+    const hardening = files.indexOf('20260823010000_questions_grants_hardening.sql');
+    const attachments = files.indexOf('20260825000000_question_answer_attachments.sql');
+    expect(hardening).toBeGreaterThan(-1);
+    expect(attachments).toBe(hardening + 1);
   });
 
   it('leaves the two existing questions migrations untouched', () => {
