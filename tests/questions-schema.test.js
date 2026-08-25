@@ -20,12 +20,16 @@ const executableSql = stripComments(sql);
 const executableChecks = stripComments(rlsChecks);
 
 describe('questions migration ordering', () => {
-  it('sorts after every existing migration', () => {
-    const files = readdirSync(resolve(root, 'supabase/migrations')).sort();
-    expect(files.slice(-2)).toEqual([
-      '20260823000000_student_questions.sql',
-      '20260823010000_questions_grants_hardening.sql',
-    ]);
+  it('sorts after every migration that came before it', () => {
+    // 처음에는 "이 둘이 맨 뒤"로 검사했지만, 뒤에 새 마이그레이션이 붙을 때마다
+    // 깨진다. 원래 확인하려던 것은 순서지 맨 뒤인지가 아니므로 상대 순서로 바꾼다.
+    const files = readdirSync(resolve(root, 'supabase/migrations')).filter((f) => f.endsWith('.sql')).sort();
+    const before = files.indexOf('20260804045106_consultation_intake_rate_limit.sql');
+    const schema = files.indexOf('20260823000000_student_questions.sql');
+    const hardening = files.indexOf('20260823010000_questions_grants_hardening.sql');
+    expect(before).toBeGreaterThan(-1);
+    expect(schema).toBeGreaterThan(before);
+    expect(hardening).toBe(schema + 1);
   });
 
   it('adds only new objects and never alters the existing ones', () => {
