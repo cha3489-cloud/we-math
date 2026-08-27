@@ -62,6 +62,10 @@
     <p class=detail-statusline><span id=detailStatus></span><span id=detailDue class=detail-due></span></p>
     <h1 id=detailTitle></h1>
 
+    <!-- 사진 제출 가능 여부와 무관하게 항상 보인다. 스크롤하지 않아도 바로 보이는
+         자리에 둔다 — completed 과제처럼 사진 제출 영역이 닫혀 있을 때 특히 중요하다. -->
+    <button id=jumpToQuestion type=button class=question-jump>❓ 질문하기</button>
+
     <div id=detailMathflat class=mathflat-card hidden>
       <p class=mathflat-head><span aria-hidden=true>📱</span> 매쓰플랫에서 풀 과제</p>
       <dl id=detailMathflatFields class=mathflat-fields></dl>
@@ -105,7 +109,7 @@
 
     <div id=questionBlock class=detail-block>
       <h2>질문하기</h2>
-      <p class=question-guide>사진 없이도 궁금한 점을 남길 수 있어요. 선생님이 확인하고 답해드려요.</p>
+      <p class=question-guide>사진을 제출하지 않아도 질문을 남길 수 있어요.</p>
 
       <div id=questionReference class=question-reference hidden>
         <p class=question-reference-head>지금 질문하는 과제</p>

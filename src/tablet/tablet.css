@@ -166,6 +166,19 @@ body.tablet-app{
 .assignment-card:focus-visible{outline:3px solid var(--green);outline-offset:2px;}
 .assignment-card h3{grid-column:1;margin:0 0 8px;font-size:20px;}
 .assignment-meta{grid-column:1;display:flex;flex-wrap:wrap;gap:8px 16px;margin:0;color:var(--muted);font-size:16px;}
+
+/* 오늘 카드 전체를 누르면 상세로 가고, 별도의 작은 버튼으로도 질문하기로 바로
+   갈 수 있다. 큰 버튼(.assignment-card) 안에 작은 버튼을 넣을 수 없어 감싸는
+   요소를 하나 둔다. */
+.assignment-card-wrap{display:grid;gap:8px;}
+.assignment-card-question{
+  min-height:var(--touch-min);padding:0 20px;
+  border:1px solid var(--green);border-radius:14px;
+  background:var(--mint-soft);color:var(--green);
+  font:inherit;font-size:16px;font-weight:700;cursor:pointer;
+}
+.assignment-card-question:active{background:var(--green);color:var(--paper);}
+.assignment-card-question:focus-visible{outline:3px solid var(--green);outline-offset:2px;}
 .assignment-due{font-weight:700;}
 .assignment-go{grid-column:2;grid-row:1 / span 2;font-size:32px;color:var(--muted);}
 
@@ -184,6 +197,17 @@ body.tablet-app{
 .detail-statusline{display:flex;flex-wrap:wrap;gap:8px 16px;margin:0 0 8px;color:var(--muted);font-size:16px;}
 .detail-due{font-weight:700;}
 .detail-card h1{margin:0 0 24px;font-size:28px;}
+
+/* 사진 제출이 닫혀 있어도(예: completed 과제) 스크롤 없이 바로 보이는 자리에 둔다.
+   실사용에서 "질문 버튼이 안 보인다"는 신고를 받아 추가했다(문서 39). */
+.question-jump{
+  display:block;width:100%;min-height:var(--touch-min);margin:0 0 24px;padding:0 20px;
+  border:1px solid var(--green);border-radius:16px;
+  background:var(--mint-soft);color:var(--green);
+  font:inherit;font-size:18px;font-weight:700;cursor:pointer;text-align:center;
+}
+.question-jump:active{background:var(--green);color:var(--paper);}
+.question-jump:focus-visible{outline:3px solid var(--green);outline-offset:2px;}
 .detail-block{margin-top:24px;}
 .detail-block h2{margin:0 0 8px;font-size:18px;color:var(--muted);}
 .detail-description,.detail-submission,.detail-feedback{margin:0;white-space:pre-wrap;}
@@ -246,6 +270,9 @@ body.tablet-app{
 .difficulty-count{margin:8px 0 0;text-align:right;color:var(--muted);font-size:15px;min-height:1.4em;}
 
 /* ── 질문하기 (사진 없이) ────────────────────────────────────────────── */
+/* 다른 detail-block 제목(과제 안내, 제출 상태)은 회색이라 "안내문"처럼 보인다.
+   질문하기는 학생이 실제로 눌러야 하는 기능이므로 색을 넣어 구분한다. */
+#questionBlock h2{color:var(--green);}
 .question-guide{margin:0 0 16px;color:var(--muted);}
 .question-form{margin:0 0 16px;padding:20px;border:1px solid var(--line);border-radius:16px;background:var(--cream);}
 .question-form legend{padding:0 8px;font-weight:700;}
