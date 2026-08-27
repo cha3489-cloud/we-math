@@ -5,6 +5,7 @@ import {
   questionInsertPayload, questionErrorMessage, recentQuestionsModel,
   MAX_REFERENCE_PHOTOS, REFERENCE_URL_TTL_SECONDS, ownReferencePaths, referenceModel, referencePhotoErrorMessage,
   viewerModel, nextViewerIndex,
+  MAX_ANSWER_PHOTOS, isAnswerFilePathValid, ownAnswerFilePaths,
 } from '../src/tablet/question.js';
 import { isSubmissionPathValid } from '../src/tablet/submission.js';
 
@@ -263,5 +264,100 @@ describe('reference image viewer — 크게 보기', () => {
 
   it('labels the photo for screen readers', () => {
     expect(viewerModel(urls, 0).label).toBe('내가 낸 사진 1');
+  });
+
+  it('accepts a different label prefix — reused for the teacher answer images below', () => {
+    expect(viewerModel(urls, 0, '선생님이 보낸 이미지').label).toBe('선생님이 보낸 이미지 1');
+  });
+});
+
+describe('isAnswerFilePathValid — {question_id}/{file} 만 통과', () => {
+  const QUESTION_ID = '11111111-2222-3333-4444-555555555555';
+
+  it('matches the server RPC regex from 20260825000000', () => {
+    expect(isAnswerFilePathValid(QUESTION_ID + '/aaa-shot.png', QUESTION_ID)).toBe(true);
+  });
+
+  it('rejects a path for a different question', () => {
+    expect(isAnswerFilePathValid('99999999-9999-9999-9999-999999999999/x.png', QUESTION_ID)).toBe(false);
+  });
+
+  it('rejects an extra path segment', () => {
+    expect(isAnswerFilePathValid(QUESTION_ID + '/sub/x.png', QUESTION_ID)).toBe(false);
+  });
+
+  it('rejects a bare question id with no file segment', () => {
+    expect(isAnswerFilePathValid(QUESTION_ID, QUESTION_ID)).toBe(false);
+  });
+});
+
+describe('ownAnswerFilePaths — 답변 이미지, 학생 화면에서도 한 번 더 거른다', () => {
+  const QUESTION_ID = '11111111-2222-3333-4444-555555555555';
+  const OTHER_QUESTION_ID = '99999999-9999-9999-9999-999999999999';
+
+  it('keeps only paths that start with this question id', () => {
+    const question = {
+      id: QUESTION_ID,
+      answer_file_paths: [
+        QUESTION_ID + '/mine.png',
+        OTHER_QUESTION_ID + '/theirs.png',
+      ],
+    };
+    expect(ownAnswerFilePaths(question)).toEqual([QUESTION_ID + '/mine.png']);
+  });
+
+  it('caps at three even if the server ever returned more', () => {
+    expect(MAX_ANSWER_PHOTOS).toBe(3);
+    const paths = Array.from({ length: 6 }, (_, i) => QUESTION_ID + '/p' + i + '.png');
+    expect(ownAnswerFilePaths({ id: QUESTION_ID, answer_file_paths: paths })).toHaveLength(3);
+  });
+
+  it('ignores null, empty and non-string entries', () => {
+    const question = { id: QUESTION_ID, answer_file_paths: [null, '', undefined, 5, QUESTION_ID + '/ok.png'] };
+    expect(ownAnswerFilePaths(question)).toEqual([QUESTION_ID + '/ok.png']);
+  });
+
+  it('returns an empty list when the field is missing or not an array', () => {
+    expect(ownAnswerFilePaths({ id: QUESTION_ID })).toEqual([]);
+    expect(ownAnswerFilePaths({ id: QUESTION_ID, answer_file_paths: null })).toEqual([]);
+  });
+});
+
+describe('recentQuestionsModel — answer_file_paths도 answered 일 때만 노출', () => {
+  const QUESTION_ID = '11111111-2222-3333-4444-555555555555';
+
+  it('shows attachment paths only for an answered question', () => {
+    const answered = recentQuestionsModel([{
+      id: QUESTION_ID, category: '기타', body: 'q', status: 'answered',
+      answer_body: '답변', answer_file_paths: [QUESTION_ID + '/a.png'],
+    }]);
+    expect(answered[0].answerFilePaths).toEqual([QUESTION_ID + '/a.png']);
+  });
+
+  it('hides attachments on a non-answered question even if the field is populated', () => {
+    // questions_answer_files_answered_check 가 서버에서 이미 이 조합을 막지만,
+    // 화면도 같은 조건을 한 번 더 지킨다.
+    const closed = recentQuestionsModel([{
+      id: QUESTION_ID, category: '기타', body: 'q', status: 'closed',
+      answer_body: '답변', answer_file_paths: [QUESTION_ID + '/a.png'],
+    }]);
+    expect(closed[0].answerFilePaths).toEqual([]);
+  });
+
+  it('keeps working normally for an answered question with no attachments', () => {
+    // 기존(첨부 기능 이전) answered 질문 표시가 깨지지 않아야 한다.
+    const answered = recentQuestionsModel([{
+      id: QUESTION_ID, category: '기타', body: 'q', status: 'answered',
+      answer_body: '답변', answer_file_paths: [],
+    }]);
+    expect(answered[0].answerBody).toBe('답변');
+    expect(answered[0].answerFilePaths).toEqual([]);
+  });
+
+  it('does not crash when answer_file_paths is absent entirely (legacy row shape)', () => {
+    const answered = recentQuestionsModel([{
+      id: QUESTION_ID, category: '기타', body: 'q', status: 'answered', answer_body: '답변',
+    }]);
+    expect(answered[0].answerFilePaths).toEqual([]);
   });
 });

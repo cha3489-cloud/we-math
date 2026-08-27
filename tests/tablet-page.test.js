@@ -383,8 +383,10 @@ describe('tablet reference image viewer wiring', () => {
   });
 
   it('makes each thumbnail a real button that opens the viewer', () => {
+    // PR #38 에서 openViewer 가 (index) 하나만 받던 것에서 (urls, index, labelPrefix)
+    // 로 넓어졌다 — 답변 이미지도 같은 뷰어로 열기 위해서다(문서 38).
     expect(main).toContain("button.className = 'question-reference-thumb'");
-    expect(main).toContain("button.addEventListener('click', () => openViewer(index))");
+    expect(main).toContain("button.addEventListener('click', () => openViewer(referenceUrls, index, REFERENCE_PHOTO_LABEL))");
     expect(main).toContain('크게 보기');
   });
 
@@ -405,12 +407,14 @@ describe('tablet reference image viewer wiring', () => {
   });
 
   it('reuses the already-signed urls instead of asking storage again', () => {
-    // 뷰어를 열고 넘기는 경로에 storage 호출이 없어야 한다.
+    // 뷰어를 열고 넘기는 경로에 storage 호출이 없어야 한다. urls 는 이제 호출부가
+    // 넘기는 인자다(referenceUrls 든 답변 이미지 목록이든) — 뷰어 자체는 어느
+    // 목록인지 모른 채 인자로 받은 것만 그린다(문서 38).
     const viewer = main.match(/function openViewer\([\s\S]*?function moveViewer\([\s\S]*?\n\}/)?.[0] ?? '';
     expect(viewer).toBeTruthy();
     expect(viewer).not.toContain('supabase.storage');
     expect(viewer).not.toContain('createSignedUrl');
-    expect(viewer).toContain('referenceUrls');
+    expect(viewer).toContain('viewerUrls = urls');
   });
 
   it('closes the viewer when the assignment changes or the student logs out', () => {
@@ -437,5 +441,114 @@ describe('tablet reference image viewer wiring', () => {
     const nav = css.match(/\.reference-viewer-nav,\.reference-viewer-close\{[\s\S]*?\}/)?.[0] ?? '';
     expect(nav).toContain('min-height:var(--touch-min)');
     expect(nav).toContain('min-width:var(--touch-min)');
+  });
+});
+
+describe('tablet answer image display — investigation and wiring', () => {
+  it('selects answer_file_paths alongside the existing recent-question columns', () => {
+    const fn = main.match(/async function loadQuestions\([\s\S]*?\n\}/)?.[0] ?? '';
+    expect(fn).toContain("'id,category,body,status,answer_body,answer_file_paths,created_at'");
+  });
+
+  it('signs urls from answer-files, never submission-files, for answer images', () => {
+    const fn = main.match(/async function loadAnswerImages\([\s\S]*?\n\}/)?.[0] ?? '';
+    expect(fn).toBeTruthy();
+    expect(fn).toContain("supabase.storage.from('answer-files').createSignedUrl(");
+    expect(fn).not.toContain('submission-files');
+  });
+
+  it('only requests images for paths already filtered to this question — ownAnswerFilePaths does the first-pass check', () => {
+    const fn = main.match(/async function loadAnswerImages\([\s\S]*?\n\}/)?.[0] ?? '';
+    expect(fn).toContain('ownAnswerFilePaths(question)');
+  });
+
+  it('scopes each signed-url request to a question that is actually answered', () => {
+    const fn = main.match(/async function loadAnswerImages\([\s\S]*?\n\}/)?.[0] ?? '';
+    expect(fn).toMatch(/\.filter\(\(question\) => question\.status === 'answered'\)/);
+  });
+
+  it('reuses the same TTL as the reference photo block', () => {
+    const fn = main.match(/async function loadAnswerImages\([\s\S]*?\n\}/)?.[0] ?? '';
+    expect(fn).toContain('REFERENCE_URL_TTL_SECONDS');
+  });
+
+  it('fetches images after the text is already rendered, not before', () => {
+    const fn = main.match(/async function loadQuestions\([\s\S]*?\n\}/)?.[0] ?? '';
+    const renderIndex = fn.indexOf('renderQuestionRecent();');
+    const loadIndex = fn.indexOf('loadAnswerImages(currentQuestions);');
+    expect(renderIndex).toBeGreaterThan(-1);
+    expect(loadIndex).toBeGreaterThan(renderIndex);
+  });
+});
+
+describe('tablet answer image display — thumbnails reuse the PR #31 viewer', () => {
+  it('renders up to three thumbnails per answered question using the existing reference-photo classes', () => {
+    const fn = main.match(/function renderQuestionRecent\(\)[\s\S]*?\n\}/)?.[0] ?? '';
+    expect(fn).toContain("photos.className = 'question-reference-photos'");
+    expect(fn).toContain("button.className = 'question-reference-thumb'");
+  });
+
+  it('opens the shared viewer with this question\'s own url list and the answer-image label', () => {
+    const fn = main.match(/function renderQuestionRecent\(\)[\s\S]*?\n\}/)?.[0] ?? '';
+    expect(fn).toContain("button.addEventListener('click', () => openViewer(urls, index, ANSWER_IMAGE_LABEL))");
+  });
+
+  it('never re-signs a url inside the render function itself', () => {
+    const fn = main.match(/function renderQuestionRecent\(\)[\s\S]*?\n\}/)?.[0] ?? '';
+    expect(fn).not.toContain('createSignedUrl');
+    expect(fn).not.toContain('supabase.storage');
+  });
+
+  it('does not break an answered question that has no attachments', () => {
+    const fn = main.match(/function renderQuestionRecent\(\)[\s\S]*?\n\}/)?.[0] ?? '';
+    expect(fn).toMatch(/const urls = answerImageUrls\.get\(item\.id\) \|\| \[\];\s*\n\s*if \(urls\.length\)/);
+  });
+});
+
+describe('tablet answer image display — viewer generalised, not duplicated', () => {
+  it('openViewer now takes the url list and label as arguments instead of assuming referenceUrls', () => {
+    expect(main).toContain('function openViewer(urls, index, labelPrefix)');
+    expect(main).toContain('viewerUrls = urls;');
+    expect(main).toContain('viewerLabelPrefix = labelPrefix;');
+  });
+
+  it('moveViewer and renderViewer read from the generic viewerUrls, not referenceUrls directly', () => {
+    const move = main.match(/function moveViewer\([\s\S]*?\n\}/)?.[0] ?? '';
+    const render = main.match(/function renderViewer\(\)[\s\S]*?\n\}/)?.[0] ?? '';
+    expect(move).toContain('viewerUrls.length');
+    expect(render).toContain('viewerModel(viewerUrls, viewerIndex, viewerLabelPrefix)');
+  });
+
+  it('there is still exactly one dialog — no second viewer element was added', () => {
+    expect((html.match(/<dialog/g) || [])).toHaveLength(1);
+  });
+});
+
+describe('tablet answer image display — cleanup on assignment change and logout', () => {
+  it('clears answerImageUrls when switching to a different assignment', () => {
+    const route = main.match(/if \(currentDetailId !== assignment\.id\) \{[\s\S]*?\n  \}/)?.[0] ?? '';
+    expect(route).toContain('answerImageUrls = new Map();');
+    // loadReferencePhotos 가 이 블록에서 이어서 불리고, 그 함수 시작부에서 closeViewer() 를
+    // 하므로 뷰어가 열려 있어도 과제를 옮기면 함께 닫힌다.
+    expect(route).toContain('loadReferencePhotos(detail);');
+  });
+
+  it('clears answerImageUrls on logout, alongside referenceUrls', () => {
+    const logout = main.match(/byId\('logout'\)\.addEventListener[\s\S]*?await signOut\(\)/)?.[0] ?? '';
+    expect(logout).toContain('answerImageUrls = new Map();');
+    expect(logout).toContain('referenceUrls = [];');
+    expect(logout).toContain('closeViewer();');
+  });
+});
+
+describe('tablet answer image display — nothing else touched', () => {
+  it('never queries or uploads to assignment-files, and never writes to submissions for questions', () => {
+    const code = main.split('\n').map((line) => line.replace(/\/\/.*$/, '')).join('\n');
+    expect(code).not.toContain('assignment-files');
+  });
+
+  it('still leaves the existing photo submission and question-writing flows untouched', () => {
+    expect(main).toContain("supabase.from('submissions').insert({");
+    expect(main).toContain("supabase.from('questions').insert(payload)");
   });
 });
