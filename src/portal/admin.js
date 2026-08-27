@@ -10,6 +10,10 @@ import {
   reviewQueue, reconcileQueueSelection,
 } from './domain.js';
 import { currentUserOrNull, signIn, signOut } from '../auth.js';
+import {
+  acceptAnswerImages, answerImagesPreviewModel,
+  buildAnswerFilePath, isAnswerFilePathValid, canSubmitAnswer, answerErrorMessage,
+} from './answer-attachments.js';
 
 const byId = (id) => document.getElementById(id);
 const showError = (el, message) => { el.textContent = message || ''; };
@@ -295,6 +299,13 @@ let questionInbox = [];
 let questionProcessingId = null;
 const questionErrors = new Map();
 const questionDrafts = new Map();
+const questionAnswerFiles = new Map(); // questionId -> [{ file, url }]
+
+function clearAnswerAttachments(questionId) {
+  const list = questionAnswerFiles.get(questionId) || [];
+  for (const entry of list) if (entry.url) URL.revokeObjectURL(entry.url);
+  questionAnswerFiles.delete(questionId);
+}
 
 function questionStudentName(entry) {
   return normalizeRelation(entry.profiles)[0]?.name || '학생';
@@ -349,9 +360,78 @@ function questionCard(entry) {
   answerInput.maxLength = 4000;
   answerInput.placeholder = '학생에게 보여줄 답변을 적어주세요.';
   answerInput.value = questionDrafts.get(entry.id) || '';
-  answerInput.addEventListener('input', () => questionDrafts.set(entry.id, answerInput.value));
   answerLabel.append(answerInput);
   card.append(answerLabel);
+
+  const busy = Boolean(questionProcessingId);
+
+  // ── 답변 이미지 첨부 ─────────────────────────────────────────────────
+  // student.js 의 제출 파일 미리보기와 같은 마크업·클래스(.thumbs/.thumb/.thumb-remove)를
+  // 그대로 쓴다. 새 CSS 를 추가하지 않기 위해서다.
+  const attachmentsBlock = document.createElement('div');
+  const fileInput = document.createElement('input');
+  fileInput.type = 'file';
+  fileInput.accept = 'image/jpeg,image/png,image/webp';
+  fileInput.multiple = true;
+  fileInput.hidden = true;
+  const pickButton = document.createElement('button');
+  pickButton.type = 'button';
+  pickButton.className = 'secondary small';
+  const thumbs = document.createElement('div');
+  thumbs.className = 'thumbs';
+  const attachmentError = document.createElement('p');
+  attachmentError.className = 'error';
+  attachmentError.setAttribute('role', 'alert');
+
+  const renderAttachments = () => {
+    const selected = questionAnswerFiles.get(entry.id) || [];
+    const model = answerImagesPreviewModel(selected);
+    pickButton.textContent = model.pickLabel;
+    pickButton.disabled = busy || !model.canAddMore;
+    thumbs.replaceChildren(...model.items.map((item) => {
+      const figure = document.createElement('figure');
+      figure.className = 'thumb';
+      const img = document.createElement('img');
+      img.src = item.url;
+      img.alt = item.label;
+      figure.append(img);
+      const remove = document.createElement('button');
+      remove.type = 'button';
+      remove.className = 'thumb-remove';
+      remove.setAttribute('aria-label', item.label + ' 빼기');
+      remove.textContent = '✕';
+      remove.disabled = busy;
+      remove.addEventListener('click', () => {
+        const list = questionAnswerFiles.get(entry.id) || [];
+        const target = list[item.index];
+        if (target?.url) URL.revokeObjectURL(target.url);
+        questionAnswerFiles.set(entry.id, list.filter((_, i) => i !== item.index));
+        renderAttachments();
+      });
+      figure.append(remove);
+      return figure;
+    }));
+  };
+  renderAttachments();
+
+  pickButton.addEventListener('click', () => fileInput.click());
+  fileInput.addEventListener('change', () => {
+    const chosen = [...fileInput.files];
+    fileInput.value = '';
+    const current = questionAnswerFiles.get(entry.id) || [];
+    const { accepted, rejected } = acceptAnswerImages(current.length, chosen);
+    if (accepted.length) {
+      questionAnswerFiles.set(entry.id, [
+        ...current,
+        ...accepted.map((file) => ({ file, url: URL.createObjectURL(file) })),
+      ]);
+    }
+    attachmentError.textContent = rejected.length ? rejected[0].message : '';
+    renderAttachments();
+  });
+
+  attachmentsBlock.append(fileInput, pickButton, thumbs, attachmentError);
+  card.append(attachmentsBlock);
 
   const errorEl = document.createElement('p');
   errorEl.className = 'error';
@@ -359,7 +439,6 @@ function questionCard(entry) {
   errorEl.textContent = questionErrors.get(entry.id) || '';
   card.append(errorEl);
 
-  const busy = Boolean(questionProcessingId);
   const actions = document.createElement('div');
   actions.className = 'decide';
   const closeButton = document.createElement('button');
@@ -368,8 +447,13 @@ function questionCard(entry) {
   closeButton.addEventListener('click', () => closeQuestionEntry(entry.id));
   const answerButton = document.createElement('button');
   answerButton.type = 'button'; answerButton.textContent = '답변 보내기';
-  answerButton.disabled = busy;
-  answerButton.addEventListener('click', () => answerQuestion(entry.id, answerInput.value));
+  // 답변 본문은 항상 필수다(첨부만으로는 답변할 수 없다). 입력할 때마다 다시 본다.
+  answerButton.disabled = busy || !canSubmitAnswer(answerInput.value);
+  answerInput.addEventListener('input', () => {
+    questionDrafts.set(entry.id, answerInput.value);
+    answerButton.disabled = Boolean(questionProcessingId) || !canSubmitAnswer(answerInput.value);
+  });
+  answerButton.addEventListener('click', () => answerQuestion(entry.id, answerInput.value, questionAnswerFiles.get(entry.id) || []));
   actions.append(closeButton, answerButton);
   card.append(actions);
 
@@ -381,22 +465,58 @@ function renderQuestionInbox() {
   byId('questionsList').replaceChildren(...questionInbox.map(questionCard));
 }
 
-async function answerQuestion(questionId, answerBody) {
+async function answerQuestion(questionId, answerBody, attachments = []) {
   if (questionProcessingId) return;
   const clean = String(answerBody ?? '').trim();
+  // 답변 본문은 항상 필수다. 첨부 이미지가 있어도 이 검사를 건너뛰지 않는다
+  // (questions_answer_files_answered_check 가 서버에서도 같은 규칙을 강제한다).
   if (!clean) { questionErrors.set(questionId, '답변 내용을 입력하세요.'); renderQuestionInbox(); return; }
   questionErrors.delete(questionId);
   questionProcessingId = questionId;
   renderQuestionInbox();
+
+  const uploaded = [];
   try {
-    const { error } = await supabase.rpc('answer_question', { p_question_id: questionId, p_answer_body: clean });
+    for (const attachment of attachments) {
+      // 경로 만들기 전에 질문 id 형식부터 확인한다. buildAnswerFilePath 가 던지면
+      // 아래 catch 로 빠져 업로드를 하나도 하지 않는다.
+      const path = buildAnswerFilePath(questionId, attachment.file.name, crypto.randomUUID());
+      // 서버 정규식과 같은 조건을 한 번 더 확인한다. 어긋나면 업로드 자체를 하지 않는다.
+      if (!isAnswerFilePathValid(path, questionId)) throw new Error('invalid answer file');
+      const { error } = await supabase.storage.from('answer-files')
+        .upload(path, attachment.file, { contentType: attachment.file.type });
+      if (error) throw error;
+      uploaded.push(path);
+    }
+
+    // 기존 2인자 호출과 같은 모양을 유지하되, 파일이 없을 때도 빈 배열을 명시해서 보낸다.
+    // RPC 의 세 번째 인자는 기본값이 '{}' 라 생략해도 동작하지만, 값을 명시하는 편이
+    // "이번 호출이 무엇을 보냈는지"를 코드에서 바로 알 수 있어 더 낫다.
+    const { error } = await supabase.rpc('answer_question', {
+      p_question_id: questionId,
+      p_answer_body: clean,
+      p_file_paths: uploaded,
+    });
     if (error) throw error;
+
     questionDrafts.delete(questionId);
+    clearAnswerAttachments(questionId);
     questionProcessingId = null;
     await loadQuestionInbox(); // status 가 open 이 아니게 되어 목록에서 빠진다
   } catch (error) {
+    console.error(error);
+    // DB 호출이 실패했으면 방금 올린 파일만 정리한다. 이전에 이미 답변된 첨부는 건드리지 않는다.
+    let message = answerErrorMessage(error);
+    if (uploaded.length) {
+      const { error: cleanupError } = await supabase.storage.from('answer-files').remove(uploaded);
+      if (cleanupError) {
+        console.error('정리하지 못한 답변 이미지:', uploaded, cleanupError);
+        message += ' 첨부 이미지 일부가 남아있을 수 있어요. 화면을 새로고침한 뒤 다시 시도해 주세요.';
+      }
+    }
     questionProcessingId = null;
-    questionErrors.set(questionId, error.message || '답변 전송에 실패했습니다.');
+    // 답변 본문과 첨부 선택은 지우지 않는다 — 실패해도 다시 입력할 필요가 없게 한다.
+    questionErrors.set(questionId, message);
     renderQuestionInbox();
   }
 }
@@ -410,6 +530,7 @@ async function closeQuestionEntry(questionId) {
     const { error } = await supabase.rpc('close_question', { p_question_id: questionId });
     if (error) throw error;
     questionDrafts.delete(questionId);
+    clearAnswerAttachments(questionId);
     questionProcessingId = null;
     await loadQuestionInbox();
   } catch (error) {
