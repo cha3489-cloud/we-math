@@ -120,7 +120,10 @@ export function nextViewerIndex(index, total, delta) {
   return ((from + Number(delta || 0)) % count + count) % count;
 }
 
-export function viewerModel(urls = [], index = 0) {
+// labelPrefix 는 alt 텍스트 접두어다. 기본값은 기존 호출(제출 사진 다시 보기)과
+// 그대로 호환된다. 답변 이미지는 "내가 낸 사진"이 아니라 선생님이 보낸 것이므로,
+// PR #34 뷰어를 그대로 재사용하되 이 한 값만 다르게 넘긴다(문서 38 조사 결과).
+export function viewerModel(urls = [], index = 0, labelPrefix = '내가 낸 사진') {
   const list = Array.isArray(urls) ? urls : [];
   const total = list.length;
   const safeIndex = total ? Math.min(Math.max(0, Number(index) || 0), total - 1) : 0;
@@ -128,7 +131,7 @@ export function viewerModel(urls = [], index = 0) {
     total,
     index: safeIndex,
     url: list[safeIndex]?.url ?? '',
-    label: '내가 낸 사진 ' + (safeIndex + 1),
+    label: labelPrefix + ' ' + (safeIndex + 1),
     counter: total ? (safeIndex + 1) + ' / ' + total : '',
     // 한 장뿐이면 이전/다음을 감춘다. 눌러도 같은 사진이라 혼란만 준다.
     showNav: total > 1,
@@ -149,6 +152,33 @@ export const RECENT_QUESTIONS_LIMIT = 3;
 
 const STATUS_LABEL = { open: '답변 기다리는 중', answered: '답변 완료', closed: '정리됨' };
 
+// ── 답변 이미지 (관리자가 답변에 붙인 스크린샷) ──────────────────────────
+// 서버(20260825000000_question_answer_attachments.sql)가 이미 강제하는 규칙:
+//   - answer-files 버킷: 이미지만, 파일당 10MB, 최대 3장
+//   - Storage 정책: 경로 첫 칸 = question_id, 그 question 의 answer_file_paths 에
+//     실제로 들어 있어야 학생에게 읽힌다
+// 아래 값은 그 규칙을 화면에서 미리 맞춰 헛된 서명 URL 요청을 줄이는 것이지,
+// 보안 경계가 아니다. 최종 방어선은 RLS 와 Storage 정책이다.
+export const MAX_ANSWER_PHOTOS = 3;
+
+// 관리자 화면(src/portal/answer-attachments.js)의 isAnswerFilePathValid 와 같은
+// 조건이다. 두 앱은 번들이 분리돼 있어 import 하지 않고 각자 작게 다시 둔다.
+export function isAnswerFilePathValid(path, questionId) {
+  const pattern = new RegExp('^' + String(questionId) + '/[^/]+$');
+  return pattern.test(String(path ?? ''));
+}
+
+// 서버가 돌려준 배열을 그대로 믿지 않는다. 이 질문 id로 시작하는 경로만,
+// 최대 3장으로 다시 자른다.
+export function ownAnswerFilePaths(question) {
+  const id = String(question?.id ?? '');
+  const raw = Array.isArray(question?.answer_file_paths) ? question.answer_file_paths : [];
+  return raw
+    .filter((path) => typeof path === 'string' && path !== '')
+    .filter((path) => isAnswerFilePathValid(path, id))
+    .slice(0, MAX_ANSWER_PHOTOS);
+}
+
 // 이 과제에 대해 최근 남긴 질문만 화면에 필요한 범위로 추려낸다.
 export function recentQuestionsModel(questions = []) {
   return (questions ?? []).slice(0, RECENT_QUESTIONS_LIMIT).map((question) => ({
@@ -157,5 +187,7 @@ export function recentQuestionsModel(questions = []) {
     body: question.body,
     statusLabel: STATUS_LABEL[question.status] ?? question.status,
     answerBody: question.status === 'answered' ? String(question.answer_body ?? '') : '',
+    // 첨부는 답변이 실제로 된 질문에서만 노출한다. answerBody 와 같은 조건이다.
+    answerFilePaths: question.status === 'answered' ? ownAnswerFilePaths(question) : [],
   }));
 }

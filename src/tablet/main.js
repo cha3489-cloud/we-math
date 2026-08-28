@@ -20,8 +20,10 @@ import {
   MAX_QUESTION_BODY_LENGTH, canSubmitQuestion, questionFormModel,
   questionInsertPayload, questionErrorMessage, recentQuestionsModel,
   REFERENCE_URL_TTL_SECONDS, ownReferencePaths, referenceModel, referencePhotoErrorMessage,
-  viewerModel, nextViewerIndex,
+  viewerModel, nextViewerIndex, ownAnswerFilePaths,
 } from './question.js';
+const ANSWER_IMAGE_LABEL = '선생님이 보낸 이미지';
+const REFERENCE_PHOTO_LABEL = '내가 낸 사진';
 
 const byId = (id) => document.getElementById(id);
 const showError = (el, message) => { el.textContent = message || ''; };
@@ -44,6 +46,8 @@ let selectedTags = [];
 let submitting = false;
 const questionsGate = createLatestRequestGate();
 let currentQuestions = [];
+const answerImagesGate = createLatestRequestGate();
+let answerImageUrls = new Map(); // question id -> [{ url }] 서명 URL
 let selectedQuestionCategory = null;
 let questionSubmitting = false;
 
@@ -340,17 +344,24 @@ function renderReference(detail) {
       byId('questionReferenceRetry').hidden = false;
     });
     button.append(image);
-    button.addEventListener('click', () => openViewer(index));
+    button.addEventListener('click', () => openViewer(referenceUrls, index, REFERENCE_PHOTO_LABEL));
     return button;
   }));
 }
 
-// ── 제출 사진 크게 보기 ──────────────────────────────────────────────────
-// 이미 받아둔 referenceUrls 를 그대로 쓴다. 뷰어를 열거나 넘길 때 Storage 를 다시 부르지 않는다.
+// ── 사진 크게 보기 ────────────────────────────────────────────────────────
+// PR #31 에서 "내가 낸 사진"용으로 만든 뷰어를 그대로 쓴다. 사진마다 별도
+// 다이얼로그를 두지 않고, 지금 어느 목록을 보는 중인지만 바꿔 끼운다 — 한 번에
+// 하나만 열리므로(학생이 자기 사진과 선생님 이미지를 동시에 보는 상황이 없다)
+// 이렇게 하는 편이 다이얼로그를 두 개 두는 것보다 단순하다.
+// 어느 쪽이든 이미 받아둔 서명 URL 을 그대로 쓴다. 뷰어를 열거나 넘길 때
+// Storage 를 다시 부르지 않는다.
+let viewerUrls = [];
+let viewerLabelPrefix = REFERENCE_PHOTO_LABEL;
 let viewerIndex = 0;
 
 function renderViewer() {
-  const model = viewerModel(referenceUrls, viewerIndex);
+  const model = viewerModel(viewerUrls, viewerIndex, viewerLabelPrefix);
   viewerIndex = model.index;
   byId('referenceViewerImage').src = model.url;
   byId('referenceViewerImage').alt = model.label;
@@ -359,9 +370,11 @@ function renderViewer() {
   byId('referenceViewerNext').hidden = !model.showNav;
 }
 
-function openViewer(index) {
+function openViewer(urls, index, labelPrefix) {
   const dialog = byId('referenceViewer');
-  if (!viewerModel(referenceUrls, index).canOpen) return;
+  if (!viewerModel(urls, index, labelPrefix).canOpen) return;
+  viewerUrls = urls;
+  viewerLabelPrefix = labelPrefix;
   viewerIndex = index;
   renderViewer();
   if (!dialog.open) dialog.showModal();
@@ -375,7 +388,7 @@ function closeViewer() {
 }
 
 function moveViewer(delta) {
-  viewerIndex = nextViewerIndex(viewerIndex, referenceUrls.length, delta);
+  viewerIndex = nextViewerIndex(viewerIndex, viewerUrls.length, delta);
   renderViewer();
 }
 
@@ -502,9 +515,60 @@ function renderQuestionRecent() {
       answer.className = 'question-recent-answer';
       answer.textContent = item.answerBody;
       wrap.append(answer);
+
+      // 서명 URL 은 loadAnswerImages 가 따로 받아온다. 아직 안 왔거나 실패했으면
+      // 그냥 아무것도 안 보여준다 — 답변 텍스트만으로도 이미 온전한 화면이다.
+      const urls = answerImageUrls.get(item.id) || [];
+      if (urls.length) {
+        // 기존 참고 사진과 같은 격자·버튼 스타일을 그대로 쓴다(question-reference-*).
+        const photos = document.createElement('div');
+        photos.className = 'question-reference-photos';
+        photos.append(...urls.map((entry, index) => {
+          const button = document.createElement('button');
+          button.type = 'button';
+          button.className = 'question-reference-thumb';
+          button.setAttribute('aria-label', ANSWER_IMAGE_LABEL + ' ' + (index + 1) + ' 크게 보기');
+          const image = document.createElement('img');
+          image.src = entry.url;
+          image.alt = ANSWER_IMAGE_LABEL + ' ' + (index + 1);
+          image.loading = 'lazy';
+          button.append(image);
+          button.addEventListener('click', () => openViewer(urls, index, ANSWER_IMAGE_LABEL));
+          return button;
+        }));
+        wrap.append(photos);
+      }
     }
     return wrap;
   }));
+}
+
+// 답변에 붙은 이미지의 서명 URL을 받아온다. 질문 목록을 먼저 그린 뒤 이어서
+// 부르므로, 텍스트는 바로 보이고 이미지만 조금 늦게 채워진다.
+async function loadAnswerImages(questions) {
+  // recentQuestionsModel 이 화면에 답변을 보여주는 조건(answered)과 맞춘다.
+  // 답변 후 닫힌 질문처럼 answer_file_paths 가 남아 있어도 화면엔 안 보이므로 요청하지 않는다.
+  const jobs = questions
+    .filter((question) => question.status === 'answered')
+    .map((question) => ({ id: question.id, paths: ownAnswerFilePaths(question) }))
+    .filter((job) => job.paths.length);
+  if (!jobs.length) {
+    if (answerImageUrls.size) { answerImageUrls = new Map(); renderQuestionRecent(); }
+    return;
+  }
+  const request = answerImagesGate.begin();
+  const entries = await Promise.all(jobs.map(async (job) => {
+    // 본인 질문에 붙은 파일만 요청한다 — ownAnswerFilePaths 가 이미 이 질문 id로
+    // 시작하는 경로만 골라 넘겨준다. Storage 정책이 최종 방어선이므로, 여기서
+    // 걸러도 서명 자체는 RLS 가 다시 확인한다.
+    const signed = await Promise.all(job.paths.map((path) =>
+      supabase.storage.from('answer-files').createSignedUrl(path, REFERENCE_URL_TTL_SECONDS)));
+    const urls = signed.filter((result) => !result.error).map((result) => ({ url: result.data.signedUrl }));
+    return [job.id, urls];
+  }));
+  if (!answerImagesGate.isLatest(request)) return;
+  answerImageUrls = new Map(entries.filter(([, urls]) => urls.length));
+  renderQuestionRecent();
 }
 
 // 남에게 보일 이유가 없으므로 student_id 로도 한 번 더 좁힌다. RLS 가 최종
@@ -513,15 +577,16 @@ async function loadQuestions(assignmentId) {
   const request = questionsGate.begin();
   const { data, error } = await supabase
     .from('questions')
-    .select('id,category,body,status,answer_body,created_at')
+    .select('id,category,body,status,answer_body,answer_file_paths,created_at')
     .eq('assignment_id', assignmentId)
     .eq('student_id', currentUserId)
     .order('created_at', { ascending: false })
     .limit(3);
   if (!questionsGate.isLatest(request)) return;
-  if (error) { console.error(error); currentQuestions = []; renderQuestionRecent(); return; }
+  if (error) { console.error(error); currentQuestions = []; answerImageUrls = new Map(); renderQuestionRecent(); return; }
   currentQuestions = data || [];
   renderQuestionRecent();
+  loadAnswerImages(currentQuestions);
 }
 
 function renderDetail(detail) {
@@ -635,6 +700,7 @@ function applyRoute() {
     clearPhotos();
     clearQuestionForm();
     currentQuestions = [];
+    answerImageUrls = new Map();
     renderQuestionRecent();
     loadQuestions(assignment.id);
     loadReferencePhotos(detail);
@@ -852,6 +918,7 @@ byId('logout').addEventListener('click', async () => {
   // 다음 사람이 앞 학생의 사진을 보지 못하게 뷰어를 닫고 서명 URL 도 함께 버린다.
   closeViewer();
   referenceUrls = [];
+  answerImageUrls = new Map();
   byId('questionReferencePhotos').replaceChildren();
   byId('questionReference').hidden = true;
   await signOut();
