@@ -312,6 +312,61 @@ describe('tablet question form', () => {
   });
 });
 
+// 실사용 신고: 학생 화면에서 질문하기를 찾지 못했다. questionBlock 자체는 PR #27 부터
+// 상태와 무관하게 항상 렌더링됐지만(사진 제출 카드처럼 hidden 으로 시작하지 않음),
+// 눈에 잘 안 띄어서 못 찾은 것이었다. 발견하기 쉽도록 점프 버튼과 오늘 카드
+// 진입점을 더한다(문서 39).
+describe('tablet question discoverability fix', () => {
+  it('never hides questionBlock for any assignment status — renderDetail only toggles submitBlock', () => {
+    const renderDetailFn = main.match(/function renderDetail\(detail\) \{[\s\S]*?\n\}/)?.[0] ?? '';
+    expect(renderDetailFn).toBeTruthy();
+    expect(renderDetailFn).not.toContain('questionBlock');
+    // submitBlock 은 attemptCount/canResubmit 에 따라 열고 닫힌다 — completed·submitted·
+    // needs_revision 모두 이 한 줄을 거치지만 questionBlock 은 그 로직에 전혀 안 걸린다.
+    expect(renderDetailFn).toContain("byId('submitBlock').hidden = !open;");
+  });
+
+  it('puts a jump-to-question button right after the title, before the photo submission card', () => {
+    expect(html).toContain('id=jumpToQuestion');
+    const titleIndex = html.indexOf('id=detailTitle');
+    const jumpIndex = html.indexOf('id=jumpToQuestion');
+    const submitBlockIndex = html.indexOf('id=submitBlock');
+    expect(jumpIndex).toBeGreaterThan(titleIndex);
+    expect(jumpIndex).toBeLessThan(submitBlockIndex);
+  });
+
+  it('wires the jump button to scroll to and focus the question area', () => {
+    expect(main).toContain("byId('jumpToQuestion').addEventListener('click', focusQuestionArea)");
+    expect(main).toContain("byId('questionBlock').scrollIntoView(");
+  });
+
+  it('adds a question entry button to every today assignment card, separate from the card click', () => {
+    expect(main).toContain("questionButton.className = 'assignment-card-question';");
+    expect(main).toContain('questionButton.addEventListener(\'click\', () => goDetail(assignment.id, true));');
+    // 버튼 안에 버튼을 넣을 수 없으므로 감싸는 요소를 하나 둔다.
+    expect(main).toContain("wrap.className = 'assignment-card-wrap';");
+    expect(main).toContain('wrap.append(card, questionButton);');
+  });
+
+  it('routes a /question suffix to the detail screen and marks it for auto-focus', () => {
+    expect(main).toMatch(/\/\^#\\\/assignment\\\/\(\[\^\/\]\+\)\(\\\/question\)\?\$\//);
+    expect(main).toContain('goDetail = (id, focusQuestion = false)');
+    expect(main).toContain("(focusQuestion ? '/question' : '')");
+  });
+
+  it('focuses the question area instead of scrolling to the top when arriving via the question shortcut', () => {
+    const applyRouteFn = main.match(/function applyRoute\(\) \{[\s\S]*?\n\}/)?.[0] ?? '';
+    expect(applyRouteFn).toContain('if (route.focusQuestion) {');
+    expect(applyRouteFn).toContain('focusQuestionArea();');
+  });
+
+  it('uses the exact wording the task specified', () => {
+    expect(html).toMatch(/<h2>질문하기<\/h2>/);
+    expect(html).toContain('사진을 제출하지 않아도 질문을 남길 수 있어요.');
+    expect(html).toContain('>질문 남기기</button>');
+  });
+});
+
 describe('tablet reference image viewer wiring', () => {
   it('uses a native dialog for modality and the backdrop', () => {
     expect(html).toContain('<dialog id=referenceViewer');

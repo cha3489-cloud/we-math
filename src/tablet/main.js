@@ -59,12 +59,24 @@ function showPanel(name) {
 
 // 화면 전환은 hash 로만 한다. History API 를 쓰면 GitHub Pages 에서
 // 새로고침 시 404 가 나므로 사용하지 않는다.
+// id 부분은 [^/]+ 로 한 구간만 받는다. 뒤에 /question 이 붙으면 상세로 이동한
+// 뒤 질문하기 영역으로 스크롤·포커스한다(오늘 카드의 질문하기 바로가기용).
 const routeOf = () => {
-  const match = String(location.hash || '').match(/^#\/assignment\/(.+)$/);
-  return match ? { name: 'detail', id: decodeURIComponent(match[1]) } : { name: 'today' };
+  const match = String(location.hash || '').match(/^#\/assignment\/([^/]+)(\/question)?$/);
+  return match
+    ? { name: 'detail', id: decodeURIComponent(match[1]), focusQuestion: Boolean(match[2]) }
+    : { name: 'today' };
 };
 const goToday = () => { location.hash = '#/today'; };
-const goDetail = (id) => { location.hash = '#/assignment/' + encodeURIComponent(id); };
+const goDetail = (id, focusQuestion = false) => {
+  location.hash = '#/assignment/' + encodeURIComponent(id) + (focusQuestion ? '/question' : '');
+};
+
+// 상세 화면 안에서도, 오늘 카드에서 바로 와도 같은 동작을 쓴다.
+function focusQuestionArea() {
+  byId('questionBlock').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  byId('questionCategoryOptions').querySelector('button')?.focus();
+}
 
 // ── 대형 숫자 키패드 ─────────────────────────────────────────────────────
 function buildKeypad(container, onKey) {
@@ -97,9 +109,14 @@ function focusPinField(field) {
 }
 
 // ── 오늘의 수학 ──────────────────────────────────────────────────────────
+// 카드 전체를 누르면 상세로, 별도의 작은 버튼으로는 질문하기로 바로 간다.
+// 버튼 안에 버튼을 넣을 수 없어 감싸는 요소(wrap)를 하나 둔다.
 function assignmentCard(assignment, now) {
   const status = assignmentStatus(assignment, now);
   const meta = STATUS_META[status] ?? { icon: '•', label: status };
+  const wrap = document.createElement('div');
+  wrap.className = 'assignment-card-wrap';
+
   const card = document.createElement('button');
   card.type = 'button';
   card.className = 'assignment-card';
@@ -130,7 +147,17 @@ function assignmentCard(assignment, now) {
   chevron.textContent = '›';
 
   card.append(heading, line, chevron);
-  return card;
+
+  // 사진 제출 여부·과제 상태(completed 포함)와 무관하게 항상 누를 수 있다.
+  const questionButton = document.createElement('button');
+  questionButton.type = 'button';
+  questionButton.className = 'assignment-card-question';
+  questionButton.textContent = '❓ 질문하기';
+  questionButton.setAttribute('aria-label', assignment.title + ' 질문하기로 바로가기');
+  questionButton.addEventListener('click', () => goDetail(assignment.id, true));
+
+  wrap.append(card, questionButton);
+  return wrap;
 }
 
 // ── 과제 상세 ────────────────────────────────────────────────────────────
@@ -615,8 +642,18 @@ function applyRoute() {
   renderDetail(detail);
   renderPhotoPreview();
   showPanel('detail');
-  window.scrollTo(0, 0);
+  // 질문하기로 바로가기(오늘 카드의 ❓ 버튼, 상세 화면의 점프 버튼)로 들어왔을 때는
+  // 맨 위로 스크롤하지 않고 곧바로 질문하기 영역으로 이동한다.
+  if (route.focusQuestion) {
+    focusQuestionArea();
+  } else {
+    window.scrollTo(0, 0);
+  }
 }
+
+// 상세 화면 안에서 이미 보이는 점프 버튼 — 사진 제출 영역이 닫혀 있어도 스크롤 없이
+// 바로 눌러서 질문하기 영역으로 이동할 수 있다.
+byId('jumpToQuestion').addEventListener('click', focusQuestionArea);
 
 // ── 사진 제출 ────────────────────────────────────────────────────────────
 byId('photoPick').addEventListener('click', () => byId('photoInput').click());
