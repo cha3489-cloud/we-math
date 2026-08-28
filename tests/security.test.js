@@ -1,9 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { readFileSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { isAllowedOrigin, productionOrigin } from '../supabase/functions/_shared/origin.ts';
 const root = resolve(import.meta.dirname, '..');
 const read = (path) => readFileSync(resolve(root, path), 'utf8');
+const statements = (sql) => sql.split('\n').filter((line) => !line.trim().startsWith('--')).join('\n');
+const hardening = 'supabase/migrations/20260828000000_table_grants_hardening.sql';
 describe('student portal security boundary', () => {
   it('removes public signup', () => {
     expect(read('src/auth.js')).not.toContain('auth.signUp');
@@ -285,5 +287,42 @@ describe('student portal security boundary', () => {
     const browser = [read("src/auth.js"), read("src/portal/student.js"), read("src/portal/admin.js")].join();
     expect(browser).not.toMatch(/SERVICE_ROLE|service_role/i);
     expect(read('supabase/functions/admin-users/index.ts')).toContain('SUPABASE_SERVICE_ROLE_KEY');
+  });
+  it('strips API-role privileges that RLS cannot reach', () => {
+    const sql = read(hardening);
+    // profiles: revoke all 로 TRUNCATE 까지 걷어낸 뒤 select 만 되돌린다.
+    // 20260724000000 의 `revoke insert, update, delete` 는 TRUNCATE 를 남겼고,
+    // TRUNCATE 는 RLS 정책의 적용을 받지 않는다.
+    expect(sql).toMatch(/revoke all on table public[.]profiles from authenticated/i);
+    expect(sql).toMatch(/grant select on table public[.]profiles to authenticated/i);
+    expect(statements(sql)).not.toMatch(/grant[^;]*(insert|update|delete|truncate)[^;]*on table public[.]profiles/i);
+    // withdrawn_phones: security definer 함수로만 접근하므로 grant 가 하나도 없어야 한다.
+    for (const role of ['anon', 'authenticated']) {
+      expect(sql).toMatch(new RegExp('revoke all on table public[.]withdrawn_phones from ' + role, 'i'));
+    }
+    expect(statements(sql)).not.toMatch(/grant[^;]*on table public[.]withdrawn_phones/i);
+  });
+  it('never widens assignments back to table-level update', () => {
+    // 소유권 컬럼(student_id, created_by)이 열리지 않도록 컬럼 단위 update 만 유지한다.
+    const ownership = statements(read('supabase/migrations/20260726010000_portal_operational_hardening.sql'));
+    expect(ownership).toMatch(/revoke update on table public[.]assignments from authenticated/i);
+    expect(ownership).toMatch(/grant update [(]title, description, due_at, attachment_paths, updated_at[)]\s*on table public[.]assignments to authenticated/i);
+    expect(ownership).not.toMatch(/grant update [(][^)]*(student_id|created_by)/i);
+    // mvp 이후 어떤 마이그레이션도 assignments 에 테이블 전체 update 를 되돌려서는 안 된다.
+    const later = readdirSync(resolve(root, 'supabase/migrations'))
+      .filter((file) => file.endsWith('.sql') && file > '20260724000000_student_portal_mvp.sql')
+      .map((file) => statements(read('supabase/migrations/' + file))).join('\n');
+    expect(later).not.toMatch(/grant[^;(]*update[^;(]*on table public[.]assignments to authenticated/i);
+  });
+  it('keeps the grants hardening migration safe to re-run', () => {
+    const sql = read(hardening);
+    // 운영 DB 에 이미 적용됐다. revoke/grant 외의 상태 변경이 섞이면 재실행이 위험해진다.
+    expect(statements(sql)).not.toMatch(/\b(create (table|function|policy|type|index|trigger)|alter table|drop |insert into|delete from|truncate table)\b/i);
+    // 의도한 상태가 실제로 섰는지 마이그레이션 스스로 확인한다.
+    expect(sql).toMatch(/has_table_privilege[(]'authenticated', 'public[.]profiles', 'TRUNCATE'[)]/i);
+    expect(sql).toMatch(/has_table_privilege[(]'authenticated', 'public[.]assignments', 'UPDATE'[)]/i);
+    expect(sql.match(/raise exception/gi)?.length).toBeGreaterThanOrEqual(5);
+    // ALTER DEFAULT PRIVILEGES 는 별도 후속 작업으로 분리했다.
+    expect(statements(sql)).not.toMatch(/alter default privileges/i);
   });
 });

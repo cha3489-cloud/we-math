@@ -21,9 +21,11 @@ const executable = stripComments(fix);
 
 describe('search_path fix — migration ordering', () => {
   it('sorts after the migration it corrects', () => {
+    // 상대 순서만 본다. "마지막 파일"로 고정하면 이후 모든 신규 마이그레이션이 이 테스트를 깬다.
     const files = readdirSync(resolve(root, 'supabase/migrations')).filter((f) => f.endsWith('.sql')).sort();
-    expect(files.at(-1)).toBe('20260825010000_answer_file_paths_valid_search_path.sql');
-    expect(files.at(-2)).toBe('20260825000000_question_answer_attachments.sql');
+    const corrected = files.indexOf('20260825000000_question_answer_attachments.sql');
+    expect(corrected).toBeGreaterThanOrEqual(0);
+    expect(files[corrected + 1]).toBe('20260825010000_answer_file_paths_valid_search_path.sql');
   });
 
   it('leaves the already-applied migration untouched', () => {
