@@ -5,6 +5,7 @@ import {
   validatePin, validateLoginInput, validateAccountInput, normalizeRelation,
   waitingLabel, REVIEW_TAGS, validateProblemRef,
   validateFeedbackItems, checkItemsForStatus, composeFeedbackBody, isAutoComposedFeedback,
+  validateInternalNote,
   authErrorMessage, adminWorkflowMeta, summarizeAdminWorkflows,
   isActiveStudentAssignment, isActiveProfile, collectKeysetPages, createLatestRequestGate,
   reviewQueue, reconcileQueueSelection,
@@ -138,6 +139,7 @@ async function openReview(index) {
   byId('reviewDetail').hidden = false;
   showError(byId('reviewError'), ''); showError(byId('viewerError'), '');
   byId('overallComment').value = ''; byId('problemRef').value = ''; byId('itemComment').value = ''; byId('redoRequired').checked = true;
+  byId('internalNote').value = ''; showError(byId('internalNoteStatus'), '');
   renderTagChips(); renderItems();
 
   const student = normalizeRelation(entry.assignment.profiles)[0]?.name || '학생';
@@ -147,6 +149,8 @@ async function openReview(index) {
   await loadQueue(); // active 표시 갱신
 
   // 검토 시작 이벤트 (실패해도 검토는 진행)
+  await loadInternalNote(entry.attempt.id);
+
   const { error } = await supabase.from('review_events').insert({ submission_id: entry.attempt.id, event_type: 'review_opened', actor_id: currentAdmin.id });
   if (error) console.warn('review_opened 기록 실패:', error.message);
 }
@@ -231,6 +235,39 @@ byId('addItem').addEventListener('click', () => {
   } catch (error) { showError(byId('reviewError'), error.message); }
 });
 
+
+// ── 내부 메모(원장 전용) ────────────────────────────────────────────────
+// review_internal_notes 는 admin-only RLS 라 학생 세션에서는 0행이 온다.
+// 학생 화면(student.js)은 이 테이블도 이 RPC 도 절대 호출하지 않는다.
+async function loadInternalNote(submissionId) {
+  const { data, error } = await supabase.from('review_internal_notes')
+    .select('note').eq('submission_id', submissionId).maybeSingle();
+  if (error) { console.warn('내부 메모 조회 실패:', error.message); return; }
+  if (current?.attempt.id === submissionId) byId('internalNote').value = data?.note || '';
+}
+
+async function saveInternalNote(submissionId) {
+  const note = validateInternalNote(byId('internalNote').value);
+  const { error } = await supabase.rpc('upsert_review_internal_note', {
+    p_submission_id: submissionId, p_note: note,
+  });
+  if (error) throw error;
+  return note;
+}
+
+byId('saveInternalNote').addEventListener('click', async () => {
+  if (!current) return;
+  const button = byId('saveInternalNote');
+  button.disabled = true;
+  showError(byId('internalNoteStatus'), '');
+  showError(byId('reviewError'), '');
+  try {
+    const note = await saveInternalNote(current.attempt.id);
+    showError(byId('internalNoteStatus'), note ? '메모를 저장했습니다.' : '메모를 비웠습니다.');
+  } catch (error) { showError(byId('reviewError'), error.message); }
+  finally { button.disabled = false; }
+});
+
 // ── 확정: 중복 클릭 방지 + 트랜잭션 RPC + 다음 대기 건으로 이동 ──────────
 async function decide(status) {
   if (processing || !current) return;
@@ -244,6 +281,8 @@ async function decide(status) {
     const body = composeFeedbackBody(validItems, overallComment);
     const decidedId = current.attempt.id;
     processing = true; buttons.forEach((b) => { b.disabled = true; });
+    // 내부 메모를 먼저 저장한다. 확정이 검증에서 막혀도 입력한 메모는 남는다.
+    await saveInternalNote(decidedId);
     let result = await supabase.rpc('review_submission_v2', {
       p_submission_id: decidedId, p_body: body, p_status: status,
       p_items: validItems, p_auto_composed: autoComposed,
