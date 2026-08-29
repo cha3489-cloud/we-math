@@ -11,7 +11,7 @@ import {
 } from './domain.js';
 import { currentUserOrNull, signIn, signOut } from '../auth.js';
 import {
-  acceptAnswerImages, answerImagesPreviewModel,
+  acceptAnswerImages, answerImagesPreviewModel, extractPastedImageFiles,
   buildAnswerFilePath, isAnswerFilePathValid, canSubmitAnswer, answerErrorMessage,
 } from './answer-attachments.js';
 
@@ -414,12 +414,12 @@ function questionCard(entry) {
   };
   renderAttachments();
 
-  pickButton.addEventListener('click', () => fileInput.click());
-  fileInput.addEventListener('change', () => {
-    const chosen = [...fileInput.files];
-    fileInput.value = '';
+  // 파일 선택과 붙여넣기(Ctrl+V) 둘 다 이 함수 하나로 첨부한다 — 매번
+  // questionAnswerFiles 에서 현재 개수를 다시 읽으므로, 파일 선택 몇 장 +
+  // 붙여넣기 몇 장을 섞어도 acceptAnswerImages 가 합쳐서 최대 3장으로 막는다.
+  const addAnswerFiles = (files) => {
     const current = questionAnswerFiles.get(entry.id) || [];
-    const { accepted, rejected } = acceptAnswerImages(current.length, chosen);
+    const { accepted, rejected } = acceptAnswerImages(current.length, files);
     if (accepted.length) {
       questionAnswerFiles.set(entry.id, [
         ...current,
@@ -428,9 +428,31 @@ function questionCard(entry) {
     }
     attachmentError.textContent = rejected.length ? rejected[0].message : '';
     renderAttachments();
+  };
+
+  pickButton.addEventListener('click', () => fileInput.click());
+  fileInput.addEventListener('change', () => {
+    const chosen = [...fileInput.files];
+    fileInput.value = '';
+    addAnswerFiles(chosen);
   });
 
-  attachmentsBlock.append(fileInput, pickButton, thumbs, attachmentError);
+  const attachmentGuide = document.createElement('p');
+  attachmentGuide.className = 'meta';
+  attachmentGuide.textContent = '답변 칸에서 캡처 후 붙여넣기(Ctrl+V)로도 첨부할 수 있어요.';
+
+  // 캡처 이미지를 답변 textarea 에 바로 붙여넣을 수 있게 한다. 클립보드에
+  // 이미지가 없으면(순수 텍스트 붙여넣기 등) 아무것도 하지 않고 기존
+  // textarea 기본 동작(텍스트 삽입)에 그대로 맡긴다 — 이미지가 있을 때만
+  // preventDefault 해서 이미지 텍스트 표현이 답변 칸에 섞여 들어가지 않게 한다.
+  answerInput.addEventListener('paste', (event) => {
+    const pastedImages = extractPastedImageFiles(event.clipboardData?.items);
+    if (!pastedImages.length) return;
+    event.preventDefault();
+    addAnswerFiles(pastedImages);
+  });
+
+  attachmentsBlock.append(fileInput, pickButton, attachmentGuide, thumbs, attachmentError);
   card.append(attachmentsBlock);
 
   const errorEl = document.createElement('p');

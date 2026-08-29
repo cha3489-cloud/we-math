@@ -192,8 +192,11 @@ describe('admin answer image attachments — file picker UI', () => {
   });
 
   it('filters every selection through acceptAnswerImages before adding it', () => {
+    // 붙여넣기(Ctrl+V) 지원이 들어오며 파일 선택 쪽 로직이 addAnswerFiles(files) 로
+    // 옮겨갔다 — 호출 자체(acceptAnswerImages(current.length, files))는 그대로다.
+    // 파일 선택이 실제로 그 공유 함수를 거치는지는 별도 테스트(아래 paste 섹션)에서 본다.
     const card = admin.match(/function questionCard\(entry\)[\s\S]*?\n\}/)?.[0] ?? '';
-    expect(card).toContain('acceptAnswerImages(current.length, chosen)');
+    expect(card).toContain('acceptAnswerImages(current.length, files)');
   });
 
   it('shows the first rejection reason inline instead of silently dropping files', () => {
@@ -210,6 +213,49 @@ describe('admin answer image attachments — file picker UI', () => {
   it('disables the pick button once three images are selected or while processing', () => {
     const card = admin.match(/function questionCard\(entry\)[\s\S]*?\n\}/)?.[0] ?? '';
     expect(card).toContain('pickButton.disabled = busy || !model.canAddMore;');
+  });
+});
+
+describe('admin answer image attachments — paste to attach (Ctrl+V)', () => {
+  it('imports the clipboard extraction helper from the same admin-only module', () => {
+    expect(admin).toContain("from './answer-attachments.js'");
+    expect(admin).toContain('extractPastedImageFiles');
+  });
+
+  it('listens for paste on the answer textarea, not on the whole card', () => {
+    expect(admin).toContain("answerInput.addEventListener('paste', (event) => {");
+  });
+
+  it('only prevents the default textarea paste when an image was actually found', () => {
+    // 텍스트만 붙여넣을 때는 이 가드에서 그냥 return 하므로 preventDefault 가 호출되지
+    // 않고, textarea 의 기본 붙여넣기 동작(텍스트 삽입)이 그대로 유지된다.
+    const listener = admin.match(/answerInput\.addEventListener\('paste', \(event\) => \{[\s\S]*?\}\);/)?.[0] ?? '';
+    expect(listener).toBeTruthy();
+    expect(listener).toContain('extractPastedImageFiles(event.clipboardData?.items)');
+    expect(listener).toMatch(/if \(!pastedImages\.length\) return;/);
+    // preventDefault 는 그 return 가드 다음 줄에만 나온다 — 이미지가 있을 때만 실행된다.
+    const guardIndex = listener.indexOf('if (!pastedImages.length) return;');
+    const preventIndex = listener.indexOf('event.preventDefault();');
+    expect(preventIndex).toBeGreaterThan(guardIndex);
+  });
+
+  it('feeds pasted images into the same addAnswerFiles path the file picker uses', () => {
+    const card = admin.match(/function questionCard\(entry\)[\s\S]*?\n\}/)?.[0] ?? '';
+    // 공유 함수가 한 곳에서만 정의되고, 파일 선택과 붙여넣기 둘 다에서 호출된다 —
+    // acceptAnswerImages 호출이 중복 구현되지 않았다는 뜻이다.
+    expect(card).toContain('const addAnswerFiles = (files) => {');
+    expect(card.match(/acceptAnswerImages\(current\.length, files\)/g)?.length).toBe(1);
+    expect(card).toContain('addAnswerFiles(chosen);');
+    expect(card).toContain('addAnswerFiles(pastedImages);');
+  });
+
+  it('adds the Ctrl+V hint text to the attachment UI', () => {
+    expect(admin).toContain('캡처 후 붙여넣기(Ctrl+V)');
+  });
+
+  it('reuses the existing .meta class for the hint instead of adding new CSS', () => {
+    const card = admin.match(/function questionCard\(entry\)[\s\S]*?\n\}/)?.[0] ?? '';
+    expect(card).toContain("attachmentGuide.className = 'meta'");
   });
 });
 

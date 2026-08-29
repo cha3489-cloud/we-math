@@ -49,6 +49,36 @@ const reasonText = {
   size: '파일 용량이 너무 커요. 10MB 이하로 올려주세요.',
 };
 
+// ── 캡처 이미지 붙여넣기(Ctrl+V) ─────────────────────────────────────────
+// 캡처 도구가 클립보드에 주는 파일 이름은 비어 있거나 제각각이라, Storage
+// 경로에 그대로 쓰기보다 고정된 기본 이름으로 통일한다. 최종 경로는
+// buildAnswerFilePath 가 앞에 UUID 를 붙여 만들므로 이름이 겹쳐도 문제없다.
+const PASTED_IMAGE_EXTENSIONS = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp' };
+export function pastedAnswerFileName(mimeType) {
+  const ext = PASTED_IMAGE_EXTENSIONS[String(mimeType ?? '')] || 'png';
+  return 'pasted-answer-image.' + ext;
+}
+
+// paste 이벤트의 clipboardData.items 에서 이미지 파일만 뽑는다. 텍스트 등 다른
+// 종류의 클립보드 항목은 건드리지 않고 그냥 건너뛴다 — 그래야 텍스트 붙여넣기의
+// textarea 기본 동작이 그대로 유지된다(호출부에서 이 함수가 빈 배열을 돌려주면
+// preventDefault 를 하지 않는 방식으로 이를 보장한다).
+// items 는 실제 DataTransferItemList 이거나, 테스트에서 흉내낸 배열(각 항목이
+// { kind, type, getAsFile() } 만 있으면 됨)이어도 된다 — DOM 의존이 없다.
+// 여기서는 image/* 인지만 보고, jpeg/png/webp 로 더 좁히는 허용 목록 검사는
+// acceptAnswerImages 가 그대로 맡는다(파일 선택과 같은 검사 경로를 탄다).
+export function extractPastedImageFiles(items) {
+  const files = [];
+  for (const item of items || []) {
+    if (item?.kind !== 'file' || !String(item?.type ?? '').startsWith('image/')) continue;
+    const blob = typeof item.getAsFile === 'function' ? item.getAsFile() : null;
+    if (!blob) continue;
+    const type = blob.type || item.type;
+    files.push(new File([blob], pastedAnswerFileName(type), { type }));
+  }
+  return files;
+}
+
 // files 는 { name, type, size } 만 있으면 되므로 File 객체 없이도 테스트할 수 있다.
 export function acceptAnswerImages(currentCount, files = [], { maxBytes = MAX_ANSWER_FILE_BYTES } = {}) {
   const accepted = [];
