@@ -113,6 +113,16 @@ describe('internal notes — admin surface', () => {
     const decide = admin.slice(admin.indexOf('async function decide('), admin.indexOf("rpc('review_submission_v2'"));
     expect(decide).toContain('await saveInternalNote(decidedId)');
   });
+
+  it('does not block review decisions while the internal-note migration is pending', () => {
+    // GitHub Pages can deploy the new frontend before Supabase db push applies the new RPC.
+    // In that mixed-version window, review_submission_v2 must still run.
+    const save = admin.slice(admin.indexOf('async function saveInternalNote('), admin.indexOf("byId('saveInternalNote').addEventListener"));
+    expect(save).toMatch(/isMissingInternalNotesFeature[(]error[)]/);
+    expect(save).toMatch(/return \{ note, skipped: true \}/);
+    const decide = admin.slice(admin.indexOf('async function decide('), admin.indexOf("rpc('review_submission_v2'"));
+    expect(decide).toContain('await saveInternalNote(decidedId)');
+  });
 });
 
 describe('validateInternalNote', () => {

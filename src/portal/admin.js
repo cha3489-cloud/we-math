@@ -246,13 +246,26 @@ async function loadInternalNote(submissionId) {
   if (current?.attempt.id === submissionId) byId('internalNote').value = data?.note || '';
 }
 
+function isMissingInternalNotesFeature(error) {
+  const message = String(error?.message || '') + ' ' + String(error?.details || '');
+  return (error?.code === 'PGRST202' && message.includes('upsert_review_internal_note'))
+    || (error?.code === '42P01' && message.includes('review_internal_notes'))
+    || (error?.code === 'PGRST205' && message.includes('review_internal_notes'));
+}
+
 async function saveInternalNote(submissionId) {
   const note = validateInternalNote(byId('internalNote').value);
   const { error } = await supabase.rpc('upsert_review_internal_note', {
     p_submission_id: submissionId, p_note: note,
   });
-  if (error) throw error;
-  return note;
+  if (error) {
+    if (isMissingInternalNotesFeature(error)) {
+      console.warn('내부 메모 기능이 아직 DB에 적용되지 않았습니다:', error.message);
+      return { note, skipped: true };
+    }
+    throw error;
+  }
+  return { note, skipped: false };
 }
 
 byId('saveInternalNote').addEventListener('click', async () => {
@@ -262,8 +275,9 @@ byId('saveInternalNote').addEventListener('click', async () => {
   showError(byId('internalNoteStatus'), '');
   showError(byId('reviewError'), '');
   try {
-    const note = await saveInternalNote(current.attempt.id);
-    showError(byId('internalNoteStatus'), note ? '메모를 저장했습니다.' : '메모를 비웠습니다.');
+    const { note, skipped } = await saveInternalNote(current.attempt.id);
+    if (skipped) showError(byId('reviewError'), '운영 DB 적용 전이라 내부 메모는 아직 저장되지 않았습니다. 검토 확정은 계속 진행할 수 있습니다.');
+    else showError(byId('internalNoteStatus'), note ? '메모를 저장했습니다.' : '메모를 비웠습니다.');
   } catch (error) { showError(byId('reviewError'), error.message); }
   finally { button.disabled = false; }
 });
