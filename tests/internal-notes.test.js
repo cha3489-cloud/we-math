@@ -16,6 +16,7 @@ const executable = stripComments(migration);
 
 const admin = read('src/portal/admin.js');
 const student = read('src/portal/student.js');
+const adminCss = read('src/portal/portal.css');
 const adminHtml = read('admin/index.html');
 const studentHtml = read('student/index.html');
 
@@ -122,6 +123,23 @@ describe('internal notes — admin surface', () => {
     expect(save).toMatch(/return \{ note, skipped: true \}/);
     const decide = admin.slice(admin.indexOf('async function decide('), admin.indexOf("rpc('review_submission_v2'"));
     expect(decide).toContain('await saveInternalNote(decidedId)');
+  });
+
+  it('shows saved internal notes again in the admin history, not only while review is pending', () => {
+    expect(admin).toMatch(/review_internal_notes\(note,updated_at\)/);
+    const card = admin.slice(admin.indexOf('function workflowCard('), admin.indexOf('const OPERATIONS_SUMMARY_SELECT'));
+    expect(card).toContain('internal-note-history');
+    expect(card).toContain('원장 내부 메모');
+    expect(card).toMatch(/normalizeRelation\(attempt\.review_internal_notes\)/);
+  });
+
+  it('keeps old attempts folded by default so current work stays separate from history', () => {
+    const card = admin.slice(admin.indexOf('function workflowCard('), admin.indexOf('const OPERATIONS_SUMMARY_SELECT'));
+    expect(card).toMatch(/document\.createElement\('details'\)/);
+    expect(card).toMatch(/document\.createElement\('summary'\)/);
+    expect(card).not.toMatch(/details\.open\s*=\s*true/);
+    expect(adminHtml).toMatch(/지난 기록은 접어서 보관/);
+    expect(adminCss).toContain('.internal-note-history');
   });
 });
 

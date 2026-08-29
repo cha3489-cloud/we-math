@@ -709,31 +709,37 @@ function workflowCard(item) {
   card.append(title, metaLine);
   if (item.description) { const description = document.createElement('p'); description.textContent = item.description; card.append(description); }
 
-  const attempts = normalizeRelation(item.submissions).sort((a, b) => a.attempt_no - b.attempt_no);
+  const attempts = normalizeRelation(item.submissions).sort((a, b) => b.attempt_no - a.attempt_no);
   if (!attempts.length) { const empty = document.createElement('p'); empty.textContent = '아직 제출하지 않았습니다.'; card.append(empty); }
   for (const attempt of attempts) {
-    const section = document.createElement('section'); section.className = 'attempt';
-    const heading = document.createElement('h4');
-    heading.textContent = attempt.attempt_no + '차 제출 · ' + ({ submitted: '검토 대기', needs_revision: '수정 필요', completed: '완료' }[attempt.status] || attempt.status);
-    section.append(heading);
-    if (attempt.body) { const body = document.createElement('p'); body.textContent = attempt.body; section.append(body); }
+    const details = document.createElement('details'); details.className = 'attempt attempt-history';
+    const summary = document.createElement('summary');
+    summary.textContent = attempt.attempt_no + '차 제출 · ' + ({ submitted: '검토 대기', needs_revision: '수정 필요', completed: '완료' }[attempt.status] || attempt.status);
+    details.append(summary);
+    if (attempt.body) { const body = document.createElement('p'); body.textContent = attempt.body; details.append(body); }
     for (const path of attempt.file_paths || []) {
       const button = document.createElement('button'); button.type = 'button'; button.className = 'secondary small'; button.textContent = '제출 파일 열기';
       button.addEventListener('click', async () => { button.disabled = true; try { await download('submission-files', path); } catch (error) { showError(byId('adminError'), error.message); button.disabled = false; } });
-      section.append(button);
+      details.append(button);
+    }
+    for (const internal of normalizeRelation(attempt.review_internal_notes)) {
+      if (!internal?.note) continue;
+      const box = document.createElement('p'); box.className = 'internal-note-history';
+      box.textContent = '원장 내부 메모: ' + internal.note;
+      details.append(box);
     }
     for (const note of normalizeRelation(attempt.feedback)) {
       const structured = normalizeRelation(note.feedback_items);
       for (const item of structured) {
         const text = document.createElement('p'); text.className = 'feedback';
         text.textContent = item.problem_ref + ' · ' + item.review_tag + (item.redo_required ? ' · 다시 풀기' : '') + (item.comment ? ' — ' + item.comment : '');
-        section.append(text);
+        details.append(text);
       }
       const autoComposed = isAutoComposedFeedback(note, structured);
-      if (note.body && !autoComposed) { const text = document.createElement('p'); text.className = 'feedback'; text.textContent = '총평: ' + note.body; section.append(text); }
+      if (note.body && !autoComposed) { const text = document.createElement('p'); text.className = 'feedback'; text.textContent = '총평: ' + note.body; details.append(text); }
     }
-    if (attempt.status === 'submitted') { const pending = document.createElement('p'); pending.className = 'meta'; pending.textContent = '과제 검토 탭에서 처리할 수 있습니다.'; section.append(pending); }
-    card.append(section);
+    if (attempt.status === 'submitted') { const pending = document.createElement('p'); pending.className = 'meta'; pending.textContent = '과제 검토 탭에서 처리할 수 있습니다.'; details.append(pending); }
+    card.append(details);
   }
   return card;
 }
@@ -787,7 +793,7 @@ function renderActionItems() {
 }
 
 const WORKFLOW_PAGE_SIZE = 50;
-const WORKFLOW_SELECT = 'id,title,description,due_at,profiles!assignments_student_id_fkey(name,suspended_at),submissions(id,attempt_no,status,body,file_paths,submitted_at,feedback(body,auto_composed,created_at,feedback_items(problem_ref,review_tag,comment,redo_required)))';
+const WORKFLOW_SELECT = 'id,title,description,due_at,profiles!assignments_student_id_fkey(name,suspended_at),submissions(id,attempt_no,status,body,file_paths,submitted_at,review_internal_notes(note,updated_at),feedback(body,auto_composed,created_at,feedback_items(problem_ref,review_tag,comment,redo_required)))';
 const LEGACY_FEEDBACK_SELECT = 'id,title,description,due_at,profiles!assignments_student_id_fkey(name,suspended_at),submissions(id,attempt_no,status,body,file_paths,submitted_at,feedback(body,created_at,feedback_items(problem_ref,review_tag,comment,redo_required)))';
 let workflowPage = 0;
 const workflowsRequestGate = createLatestRequestGate();

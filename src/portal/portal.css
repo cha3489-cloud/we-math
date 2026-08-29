@@ -111,6 +111,8 @@ a.file{display:block;margin:8px 0;color:var(--navy);font-weight:800}
 .attempt{margin-top:17px;padding-top:17px;border-top:1px solid var(--line)}
 .attempt form{margin-top:14px}
 .attempt button+button,.card button+button{margin-left:8px}
+.attempt-history{padding:12px 0 0}.attempt-history summary{cursor:pointer;font-weight:900;color:var(--navy)}
+.internal-note-history{margin:10px 0;padding:12px 14px;border-left:3px solid var(--navy);border-radius:0 10px 10px 0;background:var(--mint-soft);color:var(--navy);font-weight:800;white-space:pre-wrap}
 .badge{display:inline-flex;align-items:center;padding:5px 10px;border:1px solid;border-radius:999px;font-size:.78rem;font-weight:900}
 .badge-needs_revision{border-color:#e5a896;background:var(--coral-soft);color:#8f392b}
 .badge-open,.badge-overdue{border-color:#9fcbb9;background:var(--mint-soft);color:#245c49}
