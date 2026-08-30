@@ -61,6 +61,16 @@ describe('portal design v2', () => {
     expect(css).toContain('.workflow-status');
   });
 
+  it('keeps routine admin tools folded below today work so the page is less cluttered', () => {
+    expect(admin).toContain('id=adminTools');
+    expect(admin).toContain('<summary><span>운영 도구</span>');
+    expect(admin).toContain('계정 발급과 과제 등록은 필요할 때만 펼쳐서 사용합니다.');
+    expect(admin).toMatch(/<details id=adminTools class="admin-tools">[\s\S]*<div class=manage-grid>/);
+    expect(admin).not.toMatch(/<details id=adminTools[^>]*open/);
+    expect(css).toContain('.admin-tools');
+    expect(css).toContain('.admin-tools summary');
+  });
+
   it('uses sanitized Claude illustrations with the portal brand palette', () => {
     expect(student).toContain('/portal/login-progress.svg');
     expect(student).toContain('/portal/empty-state.svg');
