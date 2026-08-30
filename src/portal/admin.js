@@ -7,6 +7,7 @@ import {
   validateFeedbackItems, checkItemsForStatus, composeFeedbackBody, isAutoComposedFeedback,
   validateInternalNote,
   authErrorMessage, adminWorkflowMeta, summarizeAdminWorkflows, summarizeStudentOperations,
+  studentOperationStatusCopy,
   isActiveStudentAssignment, isActiveProfile, collectKeysetPages, createLatestRequestGate,
   reviewQueue, reconcileQueueSelection, filteredAdminListCopy,
 } from './domain.js';
@@ -871,12 +872,13 @@ function openStudentQuestions(studentName) {
   setQuestionStudentFilter(studentName);
 }
 function studentStatusCard(entry) {
+  const copy = studentOperationStatusCopy(entry);
   const card = document.createElement('article');
   card.className = 'card student-status-card';
   const heading = document.createElement('h3'); heading.textContent = entry.name;
   const label = document.createElement('span'); label.className = 'workflow-status'; label.textContent = entry.label;
   const counts = document.createElement('p'); counts.className = 'meta';
-  counts.textContent = '처리할 항목 ' + entry.total + '건 · 원장확인 ' + entry.counts.principal_check + ' · 검토 ' + entry.counts.submitted + ' · 수정 ' + entry.counts.needs_revision + ' · 미제출 ' + entry.counts.overdue + ' · 질문 ' + entry.counts.questions;
+  counts.textContent = copy.summary;
   const itemList = document.createElement('ul');
   itemList.className = 'student-status-items-list';
   itemList.replaceChildren(...entry.visibleItems.map((text) => {
@@ -896,18 +898,18 @@ function studentStatusCard(entry) {
   const showHistory = document.createElement('button');
   showHistory.type = 'button';
   showHistory.className = 'secondary small';
-  showHistory.textContent = '이 학생 기록 보기';
+  showHistory.textContent = copy.historyLabel;
   showHistory.addEventListener('click', () => setWorkflowStudentFilter(entry.name));
   const showReview = document.createElement('button');
   showReview.type = 'button';
   showReview.className = 'secondary small';
-  showReview.textContent = '검토 대기 보기';
+  showReview.textContent = copy.reviewLabel;
   showReview.hidden = !entry.counts.submitted;
   showReview.addEventListener('click', () => openStudentReview(entry.name).catch((error) => showError(byId('adminError'), error.message)));
   const showQuestions = document.createElement('button');
   showQuestions.type = 'button';
   showQuestions.className = 'secondary small';
-  showQuestions.textContent = '질문 보기';
+  showQuestions.textContent = copy.questionsLabel;
   showQuestions.hidden = !entry.counts.questions;
   showQuestions.addEventListener('click', () => openStudentQuestions(entry.name));
   actions.append(showHistory, showReview, showQuestions);

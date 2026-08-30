@@ -199,6 +199,30 @@ export function summarizeStudentOperations(assignments = [], now = new Date(), q
     .map(({ priority, ...row }) => row);
 }
 
+export function studentOperationStatusCopy(entry = {}) {
+  const counts = entry.counts || {};
+  const parts = [
+    ['principal_check', '원장확인'],
+    ['submitted', '검토'],
+    ['needs_revision', '수정'],
+    ['overdue', '미제출'],
+    ['questions', '질문'],
+  ]
+    .map(([key, label]) => ({ label, count: Number(counts[key] || 0) }))
+    .filter((item) => item.count > 0)
+    .map((item) => item.label + ' ' + item.count);
+  const fallbackTotal = Object.values(counts).reduce((sum, count) => sum + Number(count || 0), 0);
+  const total = Number(entry.total || fallbackTotal);
+  const submittedCount = Number(counts.submitted || 0);
+  const questionCount = Number(counts.questions || 0);
+  return {
+    summary: ['처리할 항목 ' + total + '건', ...parts].join(' · '),
+    historyLabel: '과제 이력 보기',
+    reviewLabel: submittedCount > 1 ? '검토 대기 ' + submittedCount + '건 열기' : '검토 대기 열기',
+    questionsLabel: questionCount > 1 ? '질문 ' + questionCount + '건 보기' : '질문 보기',
+  };
+}
+
 // ── 관계 데이터 정규화: null / object / array 어떤 형태든 배열로 ──────────
 export function normalizeRelation(value) {
   if (Array.isArray(value)) return value;

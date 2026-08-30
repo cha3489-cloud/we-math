@@ -39,6 +39,7 @@ describe('portal design v2', () => {
     expect(admin).toContain('질문 미답변');
     expect(admin).toContain('학생별 현재 상태');
     expect(adminJs).toContain('summarizeStudentOperations');
+    expect(adminJs).toContain('studentOperationStatusCopy');
     expect(adminJs).toContain('renderStudentStatusItems');
     expect(adminJs).toContain('student-status-card');
     expect(adminJs).toContain("byId('studentStatusItems')");
@@ -58,6 +59,8 @@ describe('portal design v2', () => {
     expect(adminJs).toContain('student-status-actions');
     expect(css).toContain('.student-status-actions');
     expect(adminJs).toContain('showQuestions.hidden = !entry.counts.questions');
+    expect(domainJs).toContain('historyLabel');
+    expect(domainJs).toContain('questionsLabel');
     expect(adminJs).toContain('fetchQuestionSummary');
     expect(admin).toContain('id=questionFilterStatus');
     expect(admin).toContain('id=questionFilterClear');

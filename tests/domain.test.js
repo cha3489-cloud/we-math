@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { normalizePhone, validatePin, validateLoginInput, validateAccountInput, validateSubmissionInput, assignmentStatus, latestAttempt, canSubmitAttempt, feedbackItems, isAutoComposedFeedback, authErrorMessage, adminWorkflowMeta, summarizeAdminWorkflows, summarizeStudentOperations, isActiveStudentAssignment, isActiveProfile, collectKeysetPages, createLatestRequestGate, reconcileQueueSelection, filteredAdminListCopy } from '../src/portal/domain.js';
+import { normalizePhone, validatePin, validateLoginInput, validateAccountInput, validateSubmissionInput, assignmentStatus, latestAttempt, canSubmitAttempt, feedbackItems, isAutoComposedFeedback, authErrorMessage, adminWorkflowMeta, summarizeAdminWorkflows, summarizeStudentOperations, studentOperationStatusCopy, isActiveStudentAssignment, isActiveProfile, collectKeysetPages, createLatestRequestGate, reconcileQueueSelection, filteredAdminListCopy } from '../src/portal/domain.js';
 describe('portal domain rules', () => {
   it('normalizes Korean mobile numbers', () => { expect(normalizePhone('010-1234-5678')).toBe('01012345678'); expect(() => normalizePhone('02-123-4567')).toThrow(); });
   it('temporarily accepts legacy four-digit or current six-digit login PINs', () => { expect(validateLoginInput('01012345678', '1234').pin).toBe('1234'); expect(validateLoginInput('01012345678', '123456').pin).toBe('123456'); for (const bad of ['12345', '1234567', '12ab']) expect(() => validateLoginInput('01012345678', bad)).toThrow('PIN'); });
@@ -83,6 +83,18 @@ describe('portal domain rules', () => {
     const [summary] = summarizeStudentOperations(assignments, now, [{ profiles: { name: '테스트 A' } }]);
     expect(summary.visibleItems).toEqual(['원장 확인 필요 · 오래된 미제출', '수정 필요 · 수정 대기 1', '수정 필요 · 수정 대기 2']);
     expect(summary.hiddenItemCount).toBe(2);
+  });
+  it('formats student status summaries and buttons around nonzero operator actions', () => {
+    const copy = studentOperationStatusCopy({
+      total: 4,
+      counts: { principal_check: 1, submitted: 0, needs_revision: 1, overdue: 0, questions: 2 },
+    });
+    expect(copy.summary).toBe('처리할 항목 4건 · 원장확인 1 · 수정 1 · 질문 2');
+    expect(copy.historyLabel).toBe('과제 이력 보기');
+    expect(copy.reviewLabel).toBe('검토 대기 열기');
+    expect(copy.questionsLabel).toBe('질문 2건 보기');
+    expect(studentOperationStatusCopy({ total: 1, counts: { principal_check: 0, submitted: 1, needs_revision: 0, overdue: 0, questions: 0 } }).summary)
+      .toBe('처리할 항목 1건 · 검토 1');
   });
   it('includes only assignments whose student profile exists and is active', () => {
     expect(isActiveProfile({ suspended_at: null })).toBe(true);
