@@ -180,7 +180,8 @@ export function summarizeStudentOperations(assignments = [], now = new Date(), q
   }
   for (const question of normalizeRelation(questions)) {
     const profile = normalizeRelation(question?.profiles)[0];
-    const name = profile?.name || '학생';
+    if (!isActiveProfile(profile)) continue;
+    const name = profile.name || '학생';
     const row = ensureRow(name);
     row.total += 1;
     row.counts.questions += 1;

@@ -72,6 +72,17 @@ describe('portal domain rules', () => {
       { name: '테스트 D', total: 1, label: '질문 미답변', counts: { principal_check: 0, submitted: 0, needs_revision: 0, overdue: 0, questions: 1 }, nextAction: '질문에 답변하세요.', items: ['질문 미답변 · 1건'], visibleItems: ['질문 미답변 · 1건'], hiddenItemCount: 0 },
     ]);
   });
+  it('excludes suspended student questions from student status summaries', () => {
+    const questions = [
+      { profiles: { name: '활성 학생', suspended_at: null } },
+      { profiles: { name: '정지 학생', suspended_at: '2026-07-24T12:00:00Z' } },
+      { profiles: null },
+    ];
+    expect(summarizeStudentOperations([], new Date('2026-07-24T12:00:00Z'), questions))
+      .toEqual([
+        { name: '활성 학생', total: 1, label: '질문 미답변', counts: { principal_check: 0, submitted: 0, needs_revision: 0, overdue: 0, questions: 1 }, nextAction: '질문에 답변하세요.', items: ['질문 미답변 · 1건'], visibleItems: ['질문 미답변 · 1건'], hiddenItemCount: 0 },
+      ]);
+  });
   it('keeps student status cards compact by previewing three current items', () => {
     const now = new Date('2026-07-24T12:00:00Z');
     const assignments = [
