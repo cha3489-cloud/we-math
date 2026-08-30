@@ -168,7 +168,10 @@ export function summarizeStudentOperations(assignments = [], now = new Date(), q
     }
   }
   return [...byStudent.values()]
-    .map((row) => ({ ...row, items: row.counts.questions ? [...row.items, `질문 미답변 · ${row.counts.questions}건`] : row.items }))
+    .map((row) => {
+      const items = row.counts.questions ? [...row.items, `질문 미답변 · ${row.counts.questions}건`] : row.items;
+      return { ...row, items, visibleItems: items.slice(0, 3), hiddenItemCount: Math.max(0, items.length - 3) };
+    })
     .sort((a, b) => a.priority - b.priority || b.total - a.total || a.name.localeCompare(b.name, 'ko'))
     .map(({ priority, ...row }) => row);
 }

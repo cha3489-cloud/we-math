@@ -52,7 +52,9 @@ describe('portal design v2', () => {
     expect(adminJs).toContain('questionStudentFilter');
     expect(adminJs).toContain('counts.questions');
     expect(adminJs).toContain('student-status-items-list');
-    expect(adminJs).toContain('entry.items.map');
+    expect(adminJs).toContain('entry.visibleItems.map');
+    expect(adminJs).toContain('entry.hiddenItemCount');
+    expect(css).toContain('.student-status-more');
     expect(adminJs).toContain('showQuestions.hidden = !entry.counts.questions');
     expect(adminJs).toContain('fetchQuestionSummary');
     expect(admin).toContain('id=questionFilterStatus');
