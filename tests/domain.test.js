@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { normalizePhone, validatePin, validateLoginInput, validateAccountInput, validateSubmissionInput, assignmentStatus, latestAttempt, canSubmitAttempt, feedbackItems, isAutoComposedFeedback, authErrorMessage, adminWorkflowMeta, summarizeAdminWorkflows, summarizeStudentOperations, isActiveStudentAssignment, isActiveProfile, collectKeysetPages, createLatestRequestGate, reconcileQueueSelection } from '../src/portal/domain.js';
+import { normalizePhone, validatePin, validateLoginInput, validateAccountInput, validateSubmissionInput, assignmentStatus, latestAttempt, canSubmitAttempt, feedbackItems, isAutoComposedFeedback, authErrorMessage, adminWorkflowMeta, summarizeAdminWorkflows, summarizeStudentOperations, isActiveStudentAssignment, isActiveProfile, collectKeysetPages, createLatestRequestGate, reconcileQueueSelection, filteredAdminListCopy } from '../src/portal/domain.js';
 describe('portal domain rules', () => {
   it('normalizes Korean mobile numbers', () => { expect(normalizePhone('010-1234-5678')).toBe('01012345678'); expect(() => normalizePhone('02-123-4567')).toThrow(); });
   it('temporarily accepts legacy four-digit or current six-digit login PINs', () => { expect(validateLoginInput('01012345678', '1234').pin).toBe('1234'); expect(validateLoginInput('01012345678', '123456').pin).toBe('123456'); for (const bad of ['12345', '1234567', '12ab']) expect(() => validateLoginInput('01012345678', bad)).toThrow('PIN'); });
@@ -169,6 +169,23 @@ describe('portal domain rules', () => {
     expect(reconcileQueueSelection(selected, [refreshed])).toBe(refreshed);
     expect(reconcileQueueSelection(selected, [{ attempt: { id: 'other' } }])).toBeNull();
     expect(reconcileQueueSelection(null, [refreshed])).toBeNull();
+  });
+  it('uses student-specific empty copy when admin history or question lists are filtered', () => {
+    expect(filteredAdminListCopy('workflows', '')).toEqual({
+      status: '전체 학생 기록을 표시합니다.',
+      emptyTitle: '과제 없음',
+      emptyBody: '등록된 과제가 생기면 여기에 표시됩니다.',
+    });
+    expect(filteredAdminListCopy('workflows', '테스트 A')).toEqual({
+      status: '테스트 A 학생 기록만 표시합니다.',
+      emptyTitle: '테스트 A 학생의 표시할 과제 기록이 없습니다.',
+      emptyBody: '필터를 해제하면 전체 학생 기록을 다시 볼 수 있습니다.',
+    });
+    expect(filteredAdminListCopy('questions', '테스트 A')).toEqual({
+      status: '테스트 A 학생 질문만 표시합니다.',
+      emptyTitle: '테스트 A 학생의 답변 대기 질문이 없습니다.',
+      emptyBody: '필터를 해제하면 전체 학생 질문을 다시 볼 수 있습니다.',
+    });
   });
   it('normalizes absent, singular, and array feedback relations', () => { const note = { body: '다시 풀기' }; expect(feedbackItems(null)).toEqual([]); expect(feedbackItems(note)).toEqual([note]); expect(feedbackItems([note])).toEqual([note]); });
   it('uses explicit feedback source and limits prefix inference to legacy rows', () => {

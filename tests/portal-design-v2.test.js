@@ -97,6 +97,16 @@ describe('portal design v2', () => {
     expect(css).toContain('.workflow-status');
   });
 
+  it('keeps filtered history and question empty states specific to the selected student', () => {
+    expect(domainJs).toContain('filteredAdminListCopy');
+    expect(admin).toContain('id=workflowEmpty');
+    expect(adminJs).toContain('filteredAdminListCopy');
+    expect(adminJs).toContain("const copy = filteredAdminListCopy('questions', questionStudentFilter)");
+    expect(adminJs).toContain("byId('questionsEmpty').querySelector('h3').textContent = copy.emptyTitle");
+    expect(adminJs).toContain("const copy = filteredAdminListCopy('workflows', workflowStudentFilter)");
+    expect(adminJs).toContain("byId('workflowEmpty').querySelector('h3').textContent = copy.emptyTitle");
+  });
+
   it('keeps routine admin tools folded below today work so the page is less cluttered', () => {
     expect(admin).toContain('id=adminTools');
     expect(admin).toContain('<summary><span>운영 도구</span>');

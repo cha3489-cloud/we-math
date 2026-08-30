@@ -114,6 +114,29 @@ export function reconcileQueueSelection(selected, queue = []) {
   if (!selectedId) return null;
   return queue.find((entry) => entry?.attempt?.id === selectedId) ?? null;
 }
+export function filteredAdminListCopy(kind, studentName = '') {
+  const name = String(studentName || '').trim();
+  if (kind === 'questions') {
+    return name ? {
+      status: name + ' 학생 질문만 표시합니다.',
+      emptyTitle: name + ' 학생의 답변 대기 질문이 없습니다.',
+      emptyBody: '필터를 해제하면 전체 학생 질문을 다시 볼 수 있습니다.',
+    } : {
+      status: '전체 학생 질문을 표시합니다.',
+      emptyTitle: '답변을 기다리는 질문이 없습니다.',
+      emptyBody: '학생이 새 질문을 남기면 여기에 표시됩니다.',
+    };
+  }
+  return name ? {
+    status: name + ' 학생 기록만 표시합니다.',
+    emptyTitle: name + ' 학생의 표시할 과제 기록이 없습니다.',
+    emptyBody: '필터를 해제하면 전체 학생 기록을 다시 볼 수 있습니다.',
+  } : {
+    status: '전체 학생 기록을 표시합니다.',
+    emptyTitle: '과제 없음',
+    emptyBody: '등록된 과제가 생기면 여기에 표시됩니다.',
+  };
+}
 export function summarizeAdminWorkflows(assignments = [], now = new Date()) {
   const counts = { principal_check: 0, submitted: 0, needs_revision: 0, overdue: 0 };
   const actionItems = [];

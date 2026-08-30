@@ -8,7 +8,7 @@ import {
   validateInternalNote,
   authErrorMessage, adminWorkflowMeta, summarizeAdminWorkflows, summarizeStudentOperations,
   isActiveStudentAssignment, isActiveProfile, collectKeysetPages, createLatestRequestGate,
-  reviewQueue, reconcileQueueSelection,
+  reviewQueue, reconcileQueueSelection, filteredAdminListCopy,
 } from './domain.js';
 import { currentUserOrNull, signIn, signOut } from '../auth.js';
 import {
@@ -550,8 +550,11 @@ function questionCard(entry) {
 }
 
 function renderQuestionInbox() {
-  byId('questionFilterStatus').textContent = questionStudentFilter ? questionStudentFilter + ' 학생 질문만 표시합니다.' : '전체 학생 질문을 표시합니다.';
+  const copy = filteredAdminListCopy('questions', questionStudentFilter);
+  byId('questionFilterStatus').textContent = copy.status;
   byId('questionFilterClear').hidden = !questionStudentFilter;
+  byId('questionsEmpty').querySelector('h3').textContent = copy.emptyTitle;
+  byId('questionsEmpty').querySelector('p').textContent = copy.emptyBody;
   byId('questionsEmpty').hidden = Boolean(questionInbox.length);
   byId('questionsList').replaceChildren(...questionInbox.map(questionCard));
 }
@@ -919,7 +922,8 @@ function renderStudentStatusItems() {
 function setWorkflowStudentFilter(studentName) {
   workflowStudentFilter = studentName || '';
   workflowPage = 0;
-  byId('workflowFilterStatus').textContent = workflowStudentFilter ? workflowStudentFilter + ' 학생 기록만 표시합니다.' : '전체 학생 기록을 표시합니다.';
+  const copy = filteredAdminListCopy('workflows', workflowStudentFilter);
+  byId('workflowFilterStatus').textContent = copy.status;
   byId('workflowFilterClear').hidden = !workflowStudentFilter;
   loadWorkflows()
     .then(() => byId('workflows').scrollIntoView({ behavior: 'smooth', block: 'start' }))
@@ -966,9 +970,13 @@ async function loadWorkflows() {
   if (result.error) throw result.error;
   const { data, count } = result;
   const rows = normalizeRelation(data).filter((row) => !workflowStudentFilter || assignmentStudent(row) === workflowStudentFilter);
+  const copy = filteredAdminListCopy('workflows', workflowStudentFilter);
   byId('workflows').replaceChildren(...rows.map(workflowCard));
-  byId('workflowFilterStatus').textContent = workflowStudentFilter ? workflowStudentFilter + ' 학생 기록만 표시합니다.' : '전체 학생 기록을 표시합니다.';
+  byId('workflowFilterStatus').textContent = copy.status;
   byId('workflowFilterClear').hidden = !workflowStudentFilter;
+  byId('workflowEmpty').querySelector('h3').textContent = copy.emptyTitle;
+  byId('workflowEmpty').querySelector('p').textContent = copy.emptyBody;
+  byId('workflowEmpty').hidden = Boolean(rows.length);
   const total = count || 0;
   const last = Math.min(from + rows.length, total);
   byId('workflowPageStatus').textContent = total ? (from + 1) + '–' + last + ' / ' + total : '과제 없음';
