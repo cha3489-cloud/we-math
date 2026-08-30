@@ -223,6 +223,36 @@ export function studentOperationStatusCopy(entry = {}) {
   };
 }
 
+const ADMIN_ACTION_FILTER_COPY = {
+  all: {
+    status: '전체 후속 확인: 원장 확인, 수정 대기, 미제출 지연을 조치 순서대로 표시합니다.',
+    emptyTitle: '후속 확인이 필요한 과제가 없습니다.',
+    emptyBody: '새 원장 확인·수정 대기·미제출 지연이 생기면 여기에 표시됩니다.',
+    clearHidden: true,
+  },
+  principal_check: {
+    status: '원장 확인 필요만 표시합니다: 반복 미제출 또는 반복 수정으로 원장 판단이 필요한 학생입니다.',
+    emptyTitle: '원장 확인 필요 과제가 없습니다.',
+    emptyBody: '필터를 해제하면 수정 대기와 미제출 지연까지 다시 볼 수 있습니다.',
+    clearHidden: false,
+  },
+  needs_revision: {
+    status: '수정 대기만 표시합니다: 피드백 이후 재풀이 제출을 기다리는 학생입니다.',
+    emptyTitle: '수정 대기 과제가 없습니다.',
+    emptyBody: '필터를 해제하면 원장 확인과 미제출 지연까지 다시 볼 수 있습니다.',
+    clearHidden: false,
+  },
+  overdue: {
+    status: '미제출 지연만 표시합니다: 마감이 지났지만 아직 제출이 없는 학생입니다.',
+    emptyTitle: '미제출 지연 과제가 없습니다.',
+    emptyBody: '필터를 해제하면 원장 확인과 수정 대기까지 다시 볼 수 있습니다.',
+    clearHidden: false,
+  },
+};
+export function adminActionFilterCopy(filter = 'all') {
+  return ADMIN_ACTION_FILTER_COPY[filter] || ADMIN_ACTION_FILTER_COPY.all;
+}
+
 // ── 관계 데이터 정규화: null / object / array 어떤 형태든 배열로 ──────────
 export function normalizeRelation(value) {
   if (Array.isArray(value)) return value;

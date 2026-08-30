@@ -9,7 +9,7 @@ import {
   authErrorMessage, adminWorkflowMeta, summarizeAdminWorkflows, summarizeStudentOperations,
   studentOperationStatusCopy,
   isActiveStudentAssignment, isActiveProfile, collectKeysetPages, createLatestRequestGate,
-  reviewQueue, reconcileQueueSelection, filteredAdminListCopy,
+  reviewQueue, reconcileQueueSelection, filteredAdminListCopy, adminActionFilterCopy,
 } from './domain.js';
 import { currentUserOrNull, signIn, signOut } from '../auth.js';
 import {
@@ -855,9 +855,11 @@ function actionCard(entry) {
 }
 function renderActionItems() {
   const rows = operationsSummary.actionItems.filter((entry) => actionFilter === 'all' || entry.status === actionFilter);
-  const labels = { all: '원장 확인 필요, 수정 대기, 미제출 지연을 조치 순서대로 표시합니다.', principal_check: '반복 미제출 또는 반복 수정으로 원장 판단이 필요한 학생만 표시합니다.', needs_revision: '수정 대기 학생만 표시합니다.', overdue: '마감이 지난 미제출 학생만 표시합니다.' };
-  byId('actionFilterStatus').textContent = labels[actionFilter];
-  byId('actionEmpty').querySelector('h3').textContent = actionFilter === 'all' ? '후속 확인이 필요한 과제가 없습니다.' : '선택한 상태의 과제가 없습니다.';
+  const copy = adminActionFilterCopy(actionFilter);
+  byId('actionFilterStatus').textContent = copy.status;
+  byId('actionShowAll').hidden = copy.clearHidden;
+  byId('actionEmpty').querySelector('h3').textContent = copy.emptyTitle;
+  byId('actionEmpty').querySelector('p').textContent = copy.emptyBody;
   byId('actionEmpty').hidden = Boolean(rows.length);
   byId('actionItems').replaceChildren(...rows.map(actionCard));
 }
