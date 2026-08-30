@@ -42,6 +42,10 @@ describe('portal design v2', () => {
     expect(adminJs).toContain('studentOperationStatusCopy');
     expect(adminJs).toContain('renderStudentStatusItems');
     expect(adminJs).toContain('student-status-card');
+    expect(adminJs).toContain('const statusKey = String(entry.status');
+    expect(adminJs).toContain("card.className = 'card student-status-card student-status-' + statusKey");
+    expect(css).toContain('.student-status-principal_check');
+    expect(css).toContain('.student-status-questions');
     expect(adminJs).toContain("byId('studentStatusItems')");
     expect(admin).toContain('id=workflowFilterStatus');
     expect(admin).toContain('id=workflowFilterClear');
