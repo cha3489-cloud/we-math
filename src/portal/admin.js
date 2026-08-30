@@ -553,7 +553,9 @@ function questionCard(entry) {
 function renderQuestionInbox() {
   const copy = filteredAdminListCopy('questions', questionStudentFilter);
   byId('questionFilterStatus').textContent = copy.status;
-  byId('questionFilterClear').hidden = !questionStudentFilter;
+  byId('questionFilterClear').textContent = copy.resetLabel;
+  byId('questionFilterClear').setAttribute('aria-label', copy.resetAriaLabel);
+  byId('questionFilterClear').hidden = copy.clearHidden;
   byId('questionsEmpty').querySelector('h3').textContent = copy.emptyTitle;
   byId('questionsEmpty').querySelector('p').textContent = copy.emptyBody;
   byId('questionsEmpty').hidden = Boolean(questionInbox.length);
@@ -931,7 +933,9 @@ function setWorkflowStudentFilter(studentName) {
   workflowPage = 0;
   const copy = filteredAdminListCopy('workflows', workflowStudentFilter);
   byId('workflowFilterStatus').textContent = copy.status;
-  byId('workflowFilterClear').hidden = !workflowStudentFilter;
+  byId('workflowFilterClear').textContent = copy.resetLabel;
+  byId('workflowFilterClear').setAttribute('aria-label', copy.resetAriaLabel);
+  byId('workflowFilterClear').hidden = copy.clearHidden;
   loadWorkflows()
     .then(() => byId('workflows').scrollIntoView({ behavior: 'smooth', block: 'start' }))
     .catch((error) => showError(byId('adminError'), error.message));
@@ -980,7 +984,9 @@ async function loadWorkflows() {
   const copy = filteredAdminListCopy('workflows', workflowStudentFilter);
   byId('workflows').replaceChildren(...rows.map(workflowCard));
   byId('workflowFilterStatus').textContent = copy.status;
-  byId('workflowFilterClear').hidden = !workflowStudentFilter;
+  byId('workflowFilterClear').textContent = copy.resetLabel;
+  byId('workflowFilterClear').setAttribute('aria-label', copy.resetAriaLabel);
+  byId('workflowFilterClear').hidden = copy.clearHidden;
   byId('workflowEmpty').querySelector('h3').textContent = copy.emptyTitle;
   byId('workflowEmpty').querySelector('p').textContent = copy.emptyBody;
   byId('workflowEmpty').hidden = Boolean(rows.length);

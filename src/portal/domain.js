@@ -121,20 +121,32 @@ export function filteredAdminListCopy(kind, studentName = '') {
       status: name + ' 학생 질문만 표시합니다.',
       emptyTitle: name + ' 학생의 답변 대기 질문이 없습니다.',
       emptyBody: '필터를 해제하면 전체 학생 질문을 다시 볼 수 있습니다.',
+      resetLabel: '전체 학생 질문 보기',
+      resetAriaLabel: name + ' 학생 질문 필터를 해제하고 전체 학생 질문 보기',
+      clearHidden: false,
     } : {
       status: '전체 학생 질문을 표시합니다.',
       emptyTitle: '답변을 기다리는 질문이 없습니다.',
       emptyBody: '학생이 새 질문을 남기면 여기에 표시됩니다.',
+      resetLabel: '필터 해제',
+      resetAriaLabel: '학생 질문 필터 없이 전체 질문 보기',
+      clearHidden: true,
     };
   }
   return name ? {
     status: name + ' 학생 기록만 표시합니다.',
     emptyTitle: name + ' 학생의 표시할 과제 기록이 없습니다.',
     emptyBody: '필터를 해제하면 전체 학생 기록을 다시 볼 수 있습니다.',
+    resetLabel: '전체 학생 기록 보기',
+    resetAriaLabel: name + ' 학생 기록 필터를 해제하고 전체 학생 기록 보기',
+    clearHidden: false,
   } : {
     status: '전체 학생 기록을 표시합니다.',
     emptyTitle: '과제 없음',
     emptyBody: '등록된 과제가 생기면 여기에 표시됩니다.',
+    resetLabel: '필터 해제',
+    resetAriaLabel: '학생 기록 필터 없이 전체 기록 보기',
+    clearHidden: true,
   };
 }
 export function summarizeAdminWorkflows(assignments = [], now = new Date()) {

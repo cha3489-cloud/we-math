@@ -227,21 +227,30 @@ describe('portal domain rules', () => {
     expect(reconcileQueueSelection(selected, [{ attempt: { id: 'other' } }])).toBeNull();
     expect(reconcileQueueSelection(null, [refreshed])).toBeNull();
   });
-  it('uses student-specific empty copy when admin history or question lists are filtered', () => {
+  it('uses student-specific empty and reset copy when admin history or question lists are filtered', () => {
     expect(filteredAdminListCopy('workflows', '')).toEqual({
       status: '전체 학생 기록을 표시합니다.',
       emptyTitle: '과제 없음',
       emptyBody: '등록된 과제가 생기면 여기에 표시됩니다.',
+      resetLabel: '필터 해제',
+      resetAriaLabel: '학생 기록 필터 없이 전체 기록 보기',
+      clearHidden: true,
     });
     expect(filteredAdminListCopy('workflows', '테스트 A')).toEqual({
       status: '테스트 A 학생 기록만 표시합니다.',
       emptyTitle: '테스트 A 학생의 표시할 과제 기록이 없습니다.',
       emptyBody: '필터를 해제하면 전체 학생 기록을 다시 볼 수 있습니다.',
+      resetLabel: '전체 학생 기록 보기',
+      resetAriaLabel: '테스트 A 학생 기록 필터를 해제하고 전체 학생 기록 보기',
+      clearHidden: false,
     });
     expect(filteredAdminListCopy('questions', '테스트 A')).toEqual({
       status: '테스트 A 학생 질문만 표시합니다.',
       emptyTitle: '테스트 A 학생의 답변 대기 질문이 없습니다.',
       emptyBody: '필터를 해제하면 전체 학생 질문을 다시 볼 수 있습니다.',
+      resetLabel: '전체 학생 질문 보기',
+      resetAriaLabel: '테스트 A 학생 질문 필터를 해제하고 전체 학생 질문 보기',
+      clearHidden: false,
     });
   });
   it('normalizes absent, singular, and array feedback relations', () => { const note = { body: '다시 풀기' }; expect(feedbackItems(null)).toEqual([]); expect(feedbackItems(note)).toEqual([note]); expect(feedbackItems([note])).toEqual([note]); });

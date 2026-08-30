@@ -109,8 +109,14 @@ describe('portal design v2', () => {
     expect(adminJs).toContain('filteredAdminListCopy');
     expect(adminJs).toContain("const copy = filteredAdminListCopy('questions', questionStudentFilter)");
     expect(adminJs).toContain("byId('questionsEmpty').querySelector('h3').textContent = copy.emptyTitle");
+    expect(adminJs).toContain("byId('questionFilterClear').textContent = copy.resetLabel");
+    expect(adminJs).toContain("byId('questionFilterClear').setAttribute('aria-label', copy.resetAriaLabel)");
+    expect(adminJs).toContain("byId('questionFilterClear').hidden = copy.clearHidden");
     expect(adminJs).toContain("const copy = filteredAdminListCopy('workflows', workflowStudentFilter)");
     expect(adminJs).toContain("byId('workflowEmpty').querySelector('h3').textContent = copy.emptyTitle");
+    expect(adminJs).toContain("byId('workflowFilterClear').textContent = copy.resetLabel");
+    expect(adminJs).toContain("byId('workflowFilterClear').setAttribute('aria-label', copy.resetAriaLabel)");
+    expect(adminJs).toContain("byId('workflowFilterClear').hidden = copy.clearHidden");
   });
 
   it('keeps routine admin tools folded below today work so the page is less cluttered', () => {
