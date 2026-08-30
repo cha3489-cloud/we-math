@@ -783,6 +783,12 @@ function actionCard(entry) {
   const title = document.createElement('p'); title.className = 'workflow-title'; title.textContent = assignment.title;
   const metaLine = document.createElement('p'); metaLine.className = 'meta'; metaLine.textContent = dueText(assignment);
   card.append(heading, status, title, metaLine);
+  if (entry.reason) {
+    const reason = document.createElement('p');
+    reason.className = 'action-reason';
+    reason.textContent = '사유: ' + entry.reason;
+    card.append(reason);
+  }
   return card;
 }
 function renderActionItems() {

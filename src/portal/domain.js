@@ -54,19 +54,20 @@ const ADMIN_WORKFLOW_META = {
   open: { label: '미제출', actionRequired: false, priority: 4 },
   completed: { label: '완료', actionRequired: false, priority: 5 },
 };
-function needsPrincipalCheck(assignment, now = new Date()) {
+function principalCheckReason(assignment, now = new Date()) {
   const latest = latestAttempt(normalizeRelation(assignment.submissions));
-  if (latest?.status === 'needs_revision' && Number(latest.attempt_no) >= 2) return true;
+  if (latest?.status === 'needs_revision' && Number(latest.attempt_no) >= 2) return `${Number(latest.attempt_no)}차 수정 필요`;
   if (!latest && assignment.due_at) {
     const due = new Date(assignment.due_at).getTime();
     const current = new Date(now).getTime();
-    return Number.isFinite(due) && Number.isFinite(current) && current - due >= 2 * 24 * 60 * 60 * 1000;
+    if (Number.isFinite(due) && Number.isFinite(current) && current - due >= 2 * 24 * 60 * 60 * 1000) return '마감 2일 이상 미제출';
   }
-  return false;
+  return '';
 }
 export function adminWorkflowMeta(assignment, now = new Date()) {
-  const status = needsPrincipalCheck(assignment, now) ? 'principal_check' : assignmentStatus(assignment, now);
-  return { status, ...ADMIN_WORKFLOW_META[status] };
+  const reason = principalCheckReason(assignment, now);
+  const status = reason ? 'principal_check' : assignmentStatus(assignment, now);
+  return { status, ...ADMIN_WORKFLOW_META[status], ...(reason ? { reason } : {}) };
 }
 export function isActiveProfile(profile) {
   return Boolean(profile) && !profile.suspended_at;

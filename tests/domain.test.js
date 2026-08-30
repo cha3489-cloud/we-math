@@ -33,10 +33,10 @@ describe('portal domain rules', () => {
     expect(adminWorkflowMeta({ due_at: '2026-07-25T11:00:00Z', submissions: [] }, now)).toEqual({ status: 'open', label: '미제출', actionRequired: false, priority: 4 });
     expect(adminWorkflowMeta({ submissions: [{ attempt_no: 1, status: 'completed' }] }, now)).toEqual({ status: 'completed', label: '완료', actionRequired: false, priority: 5 });
   });
-  it('promotes repeated misses and repeated revision failures to principal check', () => {
+  it('promotes repeated misses and repeated revision failures to principal check with a reason', () => {
     const now = new Date('2026-07-24T12:00:00Z');
-    expect(adminWorkflowMeta({ due_at: '2026-07-22T11:00:00Z', submissions: [] }, now)).toEqual({ status: 'principal_check', label: '원장 확인 필요', actionRequired: true, priority: 0 });
-    expect(adminWorkflowMeta({ submissions: [{ attempt_no: 2, status: 'needs_revision' }] }, now)).toEqual({ status: 'principal_check', label: '원장 확인 필요', actionRequired: true, priority: 0 });
+    expect(adminWorkflowMeta({ due_at: '2026-07-22T11:00:00Z', submissions: [] }, now)).toEqual({ status: 'principal_check', label: '원장 확인 필요', actionRequired: true, priority: 0, reason: '마감 2일 이상 미제출' });
+    expect(adminWorkflowMeta({ submissions: [{ attempt_no: 2, status: 'needs_revision' }] }, now)).toEqual({ status: 'principal_check', label: '원장 확인 필요', actionRequired: true, priority: 0, reason: '2차 수정 필요' });
   });
   it('summarizes only latest states and prioritizes principal-check items first', () => {
     const now = new Date('2026-07-24T12:00:00Z');

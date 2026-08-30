@@ -37,6 +37,8 @@ describe('portal design v2', () => {
     expect(admin).toContain('오늘 후속 확인');
     expect(admin).toContain('원장 확인 필요');
     expect(adminJs).toContain("openActionFilter('principal_check')");
+    expect(adminJs).toContain('action-reason');
+    expect(adminJs).toContain('entry.reason');
     expect(adminJs).toContain('summarizeAdminWorkflows');
     expect(adminJs).toContain('REMOTE_PAGE_SIZE = 1000');
     expect(adminJs).toContain('collectKeysetPages(fetchQueuePage, REMOTE_PAGE_SIZE)');
