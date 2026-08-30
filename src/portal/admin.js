@@ -30,7 +30,7 @@ async function cleanup(bucket, paths) { if (paths.length) await supabase.storage
 
 // ── 탭 ──────────────────────────────────────────────────────────────────
 let actionFilter = 'all';
-let operationsSummary = { counts: { submitted: 0, needs_revision: 0, overdue: 0 }, actionItems: [] };
+let operationsSummary = { counts: { principal_check: 0, submitted: 0, needs_revision: 0, overdue: 0 }, actionItems: [] };
 async function switchTab(tab) {
   const review = tab === 'review';
   const manage = tab === 'manage';
@@ -55,6 +55,7 @@ async function openActionFilter(filter) {
 byId('tabReview').addEventListener('click', () => switchTab('review').catch((error) => showError(byId('adminError'), error.message)));
 byId('tabManage').addEventListener('click', () => { actionFilter = 'all'; switchTab('manage').catch((error) => showError(byId('adminError'), error.message)); });
 byId('tabQuestions').addEventListener('click', () => switchTab('questions').catch((error) => showError(byId('adminError'), error.message)));
+byId('statPrincipalCheck').addEventListener('click', () => openActionFilter('principal_check').catch((error) => showError(byId('adminError'), error.message)));
 byId('statSubmitted').addEventListener('click', () => switchTab('review').then(() => byId('queue').scrollIntoView({ behavior: 'smooth', block: 'start' })).catch((error) => showError(byId('adminError'), error.message)));
 byId('statRevision').addEventListener('click', () => openActionFilter('needs_revision').catch((error) => showError(byId('adminError'), error.message)));
 byId('statOverdue').addEventListener('click', () => openActionFilter('overdue').catch((error) => showError(byId('adminError'), error.message)));
@@ -767,6 +768,7 @@ async function loadOperationsSummary() {
   const nextSummary = summarizeAdminWorkflows(activeAssignments);
   if (!operationsSummaryRequestGate.isLatest(request)) return;
   operationsSummary = nextSummary;
+  byId('principalCheckCount').textContent = String(operationsSummary.counts.principal_check);
   byId('queueCount').textContent = String(operationsSummary.counts.submitted);
   byId('revisionCount').textContent = String(operationsSummary.counts.needs_revision);
   byId('overdueCount').textContent = String(operationsSummary.counts.overdue);
@@ -785,7 +787,7 @@ function actionCard(entry) {
 }
 function renderActionItems() {
   const rows = operationsSummary.actionItems.filter((entry) => actionFilter === 'all' || entry.status === actionFilter);
-  const labels = { all: '수정 대기와 미제출 지연을 조치 순서대로 표시합니다.', needs_revision: '수정 대기 학생만 표시합니다.', overdue: '마감이 지난 미제출 학생만 표시합니다.' };
+  const labels = { all: '원장 확인 필요, 수정 대기, 미제출 지연을 조치 순서대로 표시합니다.', principal_check: '반복 미제출 또는 반복 수정으로 원장 판단이 필요한 학생만 표시합니다.', needs_revision: '수정 대기 학생만 표시합니다.', overdue: '마감이 지난 미제출 학생만 표시합니다.' };
   byId('actionFilterStatus').textContent = labels[actionFilter];
   byId('actionEmpty').querySelector('h3').textContent = actionFilter === 'all' ? '후속 확인이 필요한 과제가 없습니다.' : '선택한 상태의 과제가 없습니다.';
   byId('actionEmpty').hidden = Boolean(rows.length);

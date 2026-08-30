@@ -27,25 +27,31 @@ describe('portal domain rules', () => {
   it('classifies assignment state from the latest attempt', () => { const now = new Date('2026-07-24T12:00:00Z'); expect(assignmentStatus({ submissions: [{ attempt_no: 1, status: 'needs_revision' }] }, now)).toBe('needs_revision'); expect(assignmentStatus({ submissions: [{ attempt_no: 1, status: 'completed' }] }, now)).toBe('completed'); expect(assignmentStatus({ submissions: [{ attempt_no: 1, status: 'submitted' }] }, now)).toBe('submitted'); expect(assignmentStatus({ due_at: '2026-07-24T11:00:00Z', submissions: [] }, now)).toBe('overdue'); expect(assignmentStatus({ due_at: '2026-07-25T11:00:00Z' }, now)).toBe('open'); });
   it('gives administrators explicit text labels for every workflow state', () => {
     const now = new Date('2026-07-24T12:00:00Z');
-    expect(adminWorkflowMeta({ due_at: '2026-07-24T11:00:00Z', submissions: [] }, now)).toEqual({ status: 'overdue', label: '마감 지남 · 미제출', actionRequired: true, priority: 0 });
-    expect(adminWorkflowMeta({ submissions: [{ attempt_no: 1, status: 'needs_revision' }] }, now)).toEqual({ status: 'needs_revision', label: '수정 필요', actionRequired: true, priority: 1 });
-    expect(adminWorkflowMeta({ submissions: [{ attempt_no: 1, status: 'submitted' }] }, now)).toEqual({ status: 'submitted', label: '검토 대기', actionRequired: false, priority: 2 });
-    expect(adminWorkflowMeta({ due_at: '2026-07-25T11:00:00Z', submissions: [] }, now)).toEqual({ status: 'open', label: '미제출', actionRequired: false, priority: 3 });
-    expect(adminWorkflowMeta({ submissions: [{ attempt_no: 1, status: 'completed' }] }, now)).toEqual({ status: 'completed', label: '완료', actionRequired: false, priority: 4 });
+    expect(adminWorkflowMeta({ due_at: '2026-07-24T11:00:00Z', submissions: [] }, now)).toEqual({ status: 'overdue', label: '마감 지남 · 미제출', actionRequired: true, priority: 1 });
+    expect(adminWorkflowMeta({ submissions: [{ attempt_no: 1, status: 'needs_revision' }] }, now)).toEqual({ status: 'needs_revision', label: '수정 필요', actionRequired: true, priority: 2 });
+    expect(adminWorkflowMeta({ submissions: [{ attempt_no: 1, status: 'submitted' }] }, now)).toEqual({ status: 'submitted', label: '검토 대기', actionRequired: false, priority: 3 });
+    expect(adminWorkflowMeta({ due_at: '2026-07-25T11:00:00Z', submissions: [] }, now)).toEqual({ status: 'open', label: '미제출', actionRequired: false, priority: 4 });
+    expect(adminWorkflowMeta({ submissions: [{ attempt_no: 1, status: 'completed' }] }, now)).toEqual({ status: 'completed', label: '완료', actionRequired: false, priority: 5 });
   });
-  it('summarizes only latest states and prioritizes the oldest overdue follow-up', () => {
+  it('promotes repeated misses and repeated revision failures to principal check', () => {
+    const now = new Date('2026-07-24T12:00:00Z');
+    expect(adminWorkflowMeta({ due_at: '2026-07-22T11:00:00Z', submissions: [] }, now)).toEqual({ status: 'principal_check', label: '원장 확인 필요', actionRequired: true, priority: 0 });
+    expect(adminWorkflowMeta({ submissions: [{ attempt_no: 2, status: 'needs_revision' }] }, now)).toEqual({ status: 'principal_check', label: '원장 확인 필요', actionRequired: true, priority: 0 });
+  });
+  it('summarizes only latest states and prioritizes principal-check items first', () => {
     const now = new Date('2026-07-24T12:00:00Z');
     const assignments = [
       { title: '재제출됨', submissions: [{ attempt_no: 1, status: 'needs_revision' }, { attempt_no: 2, status: 'submitted' }] },
       { title: '수정 대기', submissions: [{ attempt_no: 1, status: 'needs_revision', reviewed_at: '2026-07-24T10:00:00Z' }] },
-      { title: '어제 미제출', due_at: '2026-07-23T10:00:00Z', submissions: [] },
+      { title: '원장 확인 재풀이', submissions: [{ attempt_no: 2, status: 'needs_revision', reviewed_at: '2026-07-24T09:00:00Z' }] },
+      { title: '오래된 미제출', due_at: '2026-07-22T10:00:00Z', submissions: [] },
       { title: '오늘 미제출', due_at: '2026-07-24T10:00:00Z', submissions: [] },
       { title: '미래 과제', due_at: '2026-07-25T10:00:00Z', submissions: [] },
       { title: '완료', submissions: [{ attempt_no: 1, status: 'completed' }] },
     ];
     const summary = summarizeAdminWorkflows(assignments, now);
-    expect(summary.counts).toEqual({ submitted: 1, needs_revision: 1, overdue: 2 });
-    expect(summary.actionItems.map((item) => item.assignment.title)).toEqual(['어제 미제출', '오늘 미제출', '수정 대기']);
+    expect(summary.counts).toEqual({ principal_check: 2, submitted: 1, needs_revision: 1, overdue: 1 });
+    expect(summary.actionItems.map((item) => item.assignment.title)).toEqual(['오래된 미제출', '원장 확인 재풀이', '오늘 미제출', '수정 대기']);
   });
   it('includes only assignments whose student profile exists and is active', () => {
     expect(isActiveProfile({ suspended_at: null })).toBe(true);

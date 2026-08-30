@@ -47,14 +47,25 @@ export function assignmentStatus(assignment, now = new Date()) {
 }
 
 const ADMIN_WORKFLOW_META = {
-  overdue: { label: '마감 지남 · 미제출', actionRequired: true, priority: 0 },
-  needs_revision: { label: '수정 필요', actionRequired: true, priority: 1 },
-  submitted: { label: '검토 대기', actionRequired: false, priority: 2 },
-  open: { label: '미제출', actionRequired: false, priority: 3 },
-  completed: { label: '완료', actionRequired: false, priority: 4 },
+  principal_check: { label: '원장 확인 필요', actionRequired: true, priority: 0 },
+  overdue: { label: '마감 지남 · 미제출', actionRequired: true, priority: 1 },
+  needs_revision: { label: '수정 필요', actionRequired: true, priority: 2 },
+  submitted: { label: '검토 대기', actionRequired: false, priority: 3 },
+  open: { label: '미제출', actionRequired: false, priority: 4 },
+  completed: { label: '완료', actionRequired: false, priority: 5 },
 };
+function needsPrincipalCheck(assignment, now = new Date()) {
+  const latest = latestAttempt(normalizeRelation(assignment.submissions));
+  if (latest?.status === 'needs_revision' && Number(latest.attempt_no) >= 2) return true;
+  if (!latest && assignment.due_at) {
+    const due = new Date(assignment.due_at).getTime();
+    const current = new Date(now).getTime();
+    return Number.isFinite(due) && Number.isFinite(current) && current - due >= 2 * 24 * 60 * 60 * 1000;
+  }
+  return false;
+}
 export function adminWorkflowMeta(assignment, now = new Date()) {
-  const status = assignmentStatus(assignment, now);
+  const status = needsPrincipalCheck(assignment, now) ? 'principal_check' : assignmentStatus(assignment, now);
   return { status, ...ADMIN_WORKFLOW_META[status] };
 }
 export function isActiveProfile(profile) {
@@ -96,7 +107,7 @@ export function reconcileQueueSelection(selected, queue = []) {
   return queue.find((entry) => entry?.attempt?.id === selectedId) ?? null;
 }
 export function summarizeAdminWorkflows(assignments = [], now = new Date()) {
-  const counts = { submitted: 0, needs_revision: 0, overdue: 0 };
+  const counts = { principal_check: 0, submitted: 0, needs_revision: 0, overdue: 0 };
   const actionItems = [];
   for (const assignment of assignments) {
     const meta = adminWorkflowMeta(assignment, now);
