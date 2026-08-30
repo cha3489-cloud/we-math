@@ -67,9 +67,9 @@ describe('portal domain rules', () => {
       { profiles: { name: '테스트 D' } },
     ];
     expect(summarizeStudentOperations(assignments, now, questions)).toEqual([
-      { name: '테스트 A', total: 4, label: '원장 확인 필요', counts: { principal_check: 1, submitted: 0, needs_revision: 1, overdue: 0, questions: 2 }, nextAction: '오늘 수업 전 과제량과 난이도 조정을 확인하세요.', items: ['원장 확인 필요 · 오래된 미제출', '수정 필요 · 수정 대기', '질문 미답변 · 2건'], visibleItems: ['원장 확인 필요 · 오래된 미제출', '수정 필요 · 수정 대기', '질문 미답변 · 2건'], hiddenItemCount: 0 },
-      { name: '테스트 B', total: 1, label: '검토 대기', counts: { principal_check: 0, submitted: 1, needs_revision: 0, overdue: 0, questions: 0 }, nextAction: '제출물을 검토하세요.', items: ['검토 대기 · 검토 대기'], visibleItems: ['검토 대기 · 검토 대기'], hiddenItemCount: 0 },
-      { name: '테스트 D', total: 1, label: '질문 미답변', counts: { principal_check: 0, submitted: 0, needs_revision: 0, overdue: 0, questions: 1 }, nextAction: '질문에 답변하세요.', items: ['질문 미답변 · 1건'], visibleItems: ['질문 미답변 · 1건'], hiddenItemCount: 0 },
+      { name: '테스트 A', total: 4, label: '원장 확인 필요', status: 'principal_check', counts: { principal_check: 1, submitted: 0, needs_revision: 1, overdue: 0, questions: 2 }, nextAction: '오늘 수업 전 과제량과 난이도 조정을 확인하세요.', items: ['원장 확인 필요 · 오래된 미제출', '수정 필요 · 수정 대기', '질문 미답변 · 2건'], visibleItems: ['원장 확인 필요 · 오래된 미제출', '수정 필요 · 수정 대기', '질문 미답변 · 2건'], hiddenItemCount: 0 },
+      { name: '테스트 B', total: 1, label: '검토 대기', status: 'submitted', counts: { principal_check: 0, submitted: 1, needs_revision: 0, overdue: 0, questions: 0 }, nextAction: '제출물을 검토하세요.', items: ['검토 대기 · 검토 대기'], visibleItems: ['검토 대기 · 검토 대기'], hiddenItemCount: 0 },
+      { name: '테스트 D', total: 1, label: '질문 미답변', status: 'questions', counts: { principal_check: 0, submitted: 0, needs_revision: 0, overdue: 0, questions: 1 }, nextAction: '질문에 답변하세요.', items: ['질문 미답변 · 1건'], visibleItems: ['질문 미답변 · 1건'], hiddenItemCount: 0 },
     ]);
   });
   it('excludes suspended student questions from student status summaries', () => {
@@ -80,7 +80,7 @@ describe('portal domain rules', () => {
     ];
     expect(summarizeStudentOperations([], new Date('2026-07-24T12:00:00Z'), questions))
       .toEqual([
-        { name: '활성 학생', total: 1, label: '질문 미답변', counts: { principal_check: 0, submitted: 0, needs_revision: 0, overdue: 0, questions: 1 }, nextAction: '질문에 답변하세요.', items: ['질문 미답변 · 1건'], visibleItems: ['질문 미답변 · 1건'], hiddenItemCount: 0 },
+        { name: '활성 학생', total: 1, label: '질문 미답변', status: 'questions', counts: { principal_check: 0, submitted: 0, needs_revision: 0, overdue: 0, questions: 1 }, nextAction: '질문에 답변하세요.', items: ['질문 미답변 · 1건'], visibleItems: ['질문 미답변 · 1건'], hiddenItemCount: 0 },
       ]);
   });
   it('keeps student status cards compact by previewing three current items', () => {
@@ -112,6 +112,14 @@ describe('portal domain rules', () => {
     ]);
     expect(summary.visibleItems).toEqual(summary.items.slice(0, 3));
     expect(summary.hiddenItemCount).toBe(2);
+  });
+
+  it('keeps the top student status available for consistent card styling', () => {
+    const now = new Date('2026-07-24T12:00:00Z');
+    expect(summarizeStudentOperations([
+      { title: '수정 대기', profiles: { name: '테스트 A' }, submissions: [{ attempt_no: 1, status: 'needs_revision' }] },
+    ], now, [])[0].status).toBe('needs_revision');
+    expect(summarizeStudentOperations([], now, [{ profiles: { name: '테스트 B' } }])[0].status).toBe('questions');
   });
 
   it('formats student status summaries and buttons around nonzero operator actions', () => {

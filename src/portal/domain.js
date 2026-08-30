@@ -171,7 +171,7 @@ export function summarizeStudentOperations(assignments = [], now = new Date(), q
   const byStudent = new Map();
   const ensureRow = (name) => {
     if (!byStudent.has(name)) {
-      byStudent.set(name, { name, total: 0, label: '', priority: Infinity, counts: { principal_check: 0, submitted: 0, needs_revision: 0, overdue: 0, questions: 0 }, nextAction: '', items: [] });
+      byStudent.set(name, { name, total: 0, label: '', status: '', priority: Infinity, counts: { principal_check: 0, submitted: 0, needs_revision: 0, overdue: 0, questions: 0 }, nextAction: '', items: [] });
     }
     return byStudent.get(name);
   };
@@ -187,6 +187,7 @@ export function summarizeStudentOperations(assignments = [], now = new Date(), q
     if (meta.priority < row.priority) {
       row.priority = meta.priority;
       row.label = meta.label;
+      row.status = meta.status;
       row.nextAction = meta.nextAction || (meta.status === 'submitted' ? '제출물을 검토하세요.' : '');
     }
   }
@@ -200,6 +201,7 @@ export function summarizeStudentOperations(assignments = [], now = new Date(), q
     if (6 < row.priority) {
       row.priority = 6;
       row.label = '질문 미답변';
+      row.status = 'questions';
       row.nextAction = '질문에 답변하세요.';
     }
   }
