@@ -203,6 +203,7 @@ a.file{display:block;margin:8px 0;color:var(--navy);font-weight:800}
 .section-heading{margin:38px 0 14px}.section-heading h2,.section-heading h3{margin-bottom:6px;font-size:1.55rem}.section-heading>p:last-child{color:var(--muted)}
 .workflow-filter-bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:10px}
 .action-section{scroll-margin-top:16px;margin-bottom:28px;padding:20px;border:1px solid #d8b063;border-radius:16px;background:var(--gold-soft);outline:none}
+.action-section-filtered{border-color:var(--navy);box-shadow:inset 0 0 0 2px rgba(23,63,58,.16)}
 .student-status-section{margin-bottom:28px;padding:20px;border:1px solid var(--line);border-radius:16px;background:var(--paper)}
 .student-status-items{grid-template-columns:repeat(2,minmax(0,1fr))}
 .student-status-card{position:relative}.student-status-card h3{padding-right:120px}.student-status-items-list{margin:10px 0 0;padding-left:18px;color:var(--ink);font-weight:800}.student-status-items-list li{margin:4px 0}.student-status-more{color:var(--muted);font-weight:850}

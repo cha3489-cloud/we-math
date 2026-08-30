@@ -71,6 +71,9 @@ describe('portal design v2', () => {
     expect(adminJs).toContain('action-reason');
     expect(adminJs).toContain('action-next');
     expect(adminJs).toContain('action-card-actions');
+    expect(adminJs).toContain("byId('actionSection').classList.toggle('action-section-filtered'");
+    expect(adminJs).toContain("byId('actionShowAll').setAttribute('aria-label', copy.resetAriaLabel)");
+    expect(css).toContain('.action-section-filtered');
     expect(adminJs).toContain('setWorkflowStudentFilter(assignmentStudent(assignment))');
     expect(adminJs).toContain('entry.reason');
     expect(adminJs).toContain('entry.nextAction');

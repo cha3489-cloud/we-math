@@ -857,6 +857,9 @@ function renderActionItems() {
   const rows = operationsSummary.actionItems.filter((entry) => actionFilter === 'all' || entry.status === actionFilter);
   const copy = adminActionFilterCopy(actionFilter);
   byId('actionFilterStatus').textContent = copy.status;
+  byId('actionSection').classList.toggle('action-section-filtered', actionFilter !== 'all');
+  byId('actionShowAll').textContent = copy.resetLabel;
+  byId('actionShowAll').setAttribute('aria-label', copy.resetAriaLabel);
   byId('actionShowAll').hidden = copy.clearHidden;
   byId('actionEmpty').querySelector('h3').textContent = copy.emptyTitle;
   byId('actionEmpty').querySelector('p').textContent = copy.emptyBody;
