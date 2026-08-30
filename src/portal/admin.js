@@ -825,7 +825,12 @@ function studentStatusCard(entry) {
   const counts = document.createElement('p'); counts.className = 'meta';
   counts.textContent = '처리할 항목 ' + entry.total + '건 · 원장확인 ' + entry.counts.principal_check + ' · 검토 ' + entry.counts.submitted + ' · 수정 ' + entry.counts.needs_revision + ' · 미제출 ' + entry.counts.overdue;
   const next = document.createElement('p'); next.className = 'action-next'; next.textContent = '다음 조치: ' + entry.nextAction;
-  card.append(heading, label, counts, next);
+  const showHistory = document.createElement('button');
+  showHistory.type = 'button';
+  showHistory.className = 'secondary small';
+  showHistory.textContent = '이 학생 기록 보기';
+  showHistory.addEventListener('click', () => setWorkflowStudentFilter(entry.name));
+  card.append(heading, label, counts, next, showHistory);
   return card;
 }
 function renderStudentStatusItems() {
@@ -833,16 +838,33 @@ function renderStudentStatusItems() {
   byId('studentStatusEmpty').hidden = Boolean(rows.length);
   byId('studentStatusItems').replaceChildren(...rows.map(studentStatusCard));
 }
+function setWorkflowStudentFilter(studentName) {
+  workflowStudentFilter = studentName || '';
+  workflowPage = 0;
+  byId('workflowFilterStatus').textContent = workflowStudentFilter ? workflowStudentFilter + ' 학생 기록만 표시합니다.' : '전체 학생 기록을 표시합니다.';
+  byId('workflowFilterClear').hidden = !workflowStudentFilter;
+  loadWorkflows()
+    .then(() => byId('workflows').scrollIntoView({ behavior: 'smooth', block: 'start' }))
+    .catch((error) => showError(byId('adminError'), error.message));
+}
+byId('workflowFilterClear').addEventListener('click', () => setWorkflowStudentFilter(''));
 
 const WORKFLOW_PAGE_SIZE = 50;
 const WORKFLOW_SELECT = 'id,title,description,due_at,profiles!assignments_student_id_fkey(name,suspended_at),submissions(id,attempt_no,status,body,file_paths,submitted_at,review_internal_notes(note,updated_at),feedback(body,auto_composed,created_at,feedback_items(problem_ref,review_tag,comment,redo_required)))';
 const LEGACY_FEEDBACK_SELECT = 'id,title,description,due_at,profiles!assignments_student_id_fkey(name,suspended_at),submissions(id,attempt_no,status,body,file_paths,submitted_at,feedback(body,created_at,feedback_items(problem_ref,review_tag,comment,redo_required)))';
 let workflowPage = 0;
+let workflowStudentFilter = '';
 const workflowsRequestGate = createLatestRequestGate();
 
 function workflowQuery(select, from, to) {
-  return supabase.from('assignments').select(select, { count: 'exact' })
+  const effectiveSelect = workflowStudentFilter ? select.replace('profiles!assignments_student_id_fkey(', 'profiles!assignments_student_id_fkey!inner(') : select;
+  let query = supabase.from('assignments').select(effectiveSelect, { count: 'exact' })
     .order('created_at', { ascending: false }).range(from, to);
+  if (workflowStudentFilter) query = filterWorkflowsByStudent(query, workflowStudentFilter);
+  return query;
+}
+function filterWorkflowsByStudent(query, studentName) {
+  return query.eq('profiles.name', studentName);
 }
 async function loadWorkflows() {
   const request = workflowsRequestGate.begin();
@@ -865,8 +887,10 @@ async function loadWorkflows() {
   if (!workflowsRequestGate.isLatest(request) || page !== workflowPage) return;
   if (result.error) throw result.error;
   const { data, count } = result;
-  const rows = normalizeRelation(data);
+  const rows = normalizeRelation(data).filter((row) => !workflowStudentFilter || assignmentStudent(row) === workflowStudentFilter);
   byId('workflows').replaceChildren(...rows.map(workflowCard));
+  byId('workflowFilterStatus').textContent = workflowStudentFilter ? workflowStudentFilter + ' 학생 기록만 표시합니다.' : '전체 학생 기록을 표시합니다.';
+  byId('workflowFilterClear').hidden = !workflowStudentFilter;
   const total = count || 0;
   const last = Math.min(from + rows.length, total);
   byId('workflowPageStatus').textContent = total ? (from + 1) + '–' + last + ' / ' + total : '과제 없음';
