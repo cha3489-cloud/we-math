@@ -888,6 +888,8 @@ function studentStatusCard(entry) {
     itemList.append(hidden);
   }
   const next = document.createElement('p'); next.className = 'action-next'; next.textContent = '다음 조치: ' + entry.nextAction;
+  const actions = document.createElement('div');
+  actions.className = 'student-status-actions';
   const showHistory = document.createElement('button');
   showHistory.type = 'button';
   showHistory.className = 'secondary small';
@@ -905,7 +907,8 @@ function studentStatusCard(entry) {
   showQuestions.textContent = '질문 보기';
   showQuestions.hidden = !entry.counts.questions;
   showQuestions.addEventListener('click', () => openStudentQuestions(entry.name));
-  card.append(heading, label, counts, itemList, next, showHistory, showReview, showQuestions);
+  actions.append(showHistory, showReview, showQuestions);
+  card.append(heading, label, counts, itemList, next, actions);
   return card;
 }
 function renderStudentStatusItems() {
