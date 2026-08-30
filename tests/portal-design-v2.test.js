@@ -31,11 +31,15 @@ describe('portal design v2', () => {
   });
 
   it('surfaces actionable revision and overdue work without making the operator inspect dates', () => {
-    for (const id of ['principalCheckCount', 'revisionCount', 'overdueCount', 'actionSection', 'actionItems', 'actionEmpty']) {
+    for (const id of ['principalCheckCount', 'questionCount', 'revisionCount', 'overdueCount', 'actionSection', 'actionItems', 'actionEmpty']) {
       expect(admin).toContain(`id=${id}`);
     }
     expect(admin).toContain('오늘 후속 확인');
     expect(admin).toContain('원장 확인 필요');
+    expect(admin).toContain('질문 미답변');
+    expect(adminJs).toContain("byId('questionCount').textContent");
+    expect(adminJs).toContain('loadQuestionCount');
+    expect(adminJs).toContain("switchTab('questions')");
     expect(adminJs).toContain("openActionFilter('principal_check')");
     expect(adminJs).toContain('action-reason');
     expect(adminJs).toContain('action-next');

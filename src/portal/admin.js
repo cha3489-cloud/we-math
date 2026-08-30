@@ -59,6 +59,7 @@ byId('statPrincipalCheck').addEventListener('click', () => openActionFilter('pri
 byId('statSubmitted').addEventListener('click', () => switchTab('review').then(() => byId('queue').scrollIntoView({ behavior: 'smooth', block: 'start' })).catch((error) => showError(byId('adminError'), error.message)));
 byId('statRevision').addEventListener('click', () => openActionFilter('needs_revision').catch((error) => showError(byId('adminError'), error.message)));
 byId('statOverdue').addEventListener('click', () => openActionFilter('overdue').catch((error) => showError(byId('adminError'), error.message)));
+byId('statQuestions').addEventListener('click', () => switchTab('questions').catch((error) => showError(byId('adminError'), error.message)));
 byId('actionShowAll').addEventListener('click', () => { actionFilter = 'all'; renderActionItems(); });
 
 // ── 검토 대기열 상태 ─────────────────────────────────────────────────────
@@ -367,6 +368,14 @@ function questionStudentName(entry) {
 function questionAssignmentTitle(entry) {
   return normalizeRelation(entry.assignments)[0]?.title || '';
 }
+async function loadQuestionCount() {
+  const { count, error } = await supabase
+    .from('questions')
+    .select('id', { count: 'exact', head: true })
+    .eq('status', 'open');
+  if (error) { console.warn('질문 개수 조회 실패:', error.message); return; }
+  byId('questionCount').textContent = String(count || 0);
+}
 
 async function loadQuestionInbox() {
   const request = questionsRequestGate.begin();
@@ -380,6 +389,7 @@ async function loadQuestionInbox() {
   if (error) { showError(byId('questionsError'), error.message || '질문 목록을 불러오지 못했습니다.'); return; }
   showError(byId('questionsError'), '');
   questionInbox = data || [];
+  byId('questionCount').textContent = String(questionInbox.length);
   renderQuestionInbox();
 }
 
@@ -923,6 +933,7 @@ async function showAdmin(user) {
   await switchTab('review');
   await loadQueue();
   await loadOperationsSummary();
+  await loadQuestionCount();
   byId('login').hidden = true; byId('logout').hidden = false;
   byId('pinChange').hidden = true; byId('admin').hidden = false;
 }

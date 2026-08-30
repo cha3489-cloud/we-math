@@ -146,7 +146,7 @@ a.file{display:block;margin:8px 0;color:var(--navy);font-weight:800}
 .workspace-header .portal-kicker{color:var(--mint)}
 .workspace-header h1{margin-bottom:9px;font-size:clamp(2rem,3.7vw,3.2rem)}
 .workspace-header>div:first-child>p:last-child{margin-bottom:0;color:rgba(255,255,255,.68)}
-.admin-stats{display:grid;grid-template-columns:repeat(3,minmax(100px,1fr));min-width:min(540px,50vw);border:1px solid rgba(255,255,255,.18);border-radius:14px;background:rgba(255,255,255,.06);overflow:hidden}
+.admin-stats{display:grid;grid-template-columns:repeat(5,minmax(86px,1fr));min-width:min(720px,58vw);border:1px solid rgba(255,255,255,.18);border-radius:14px;background:rgba(255,255,255,.06);overflow:hidden}
 .admin-stat{display:grid;gap:2px;min-height:74px;padding:16px 18px;border:0;border-right:1px solid rgba(255,255,255,.15);border-radius:0;background:transparent;color:#fff;text-align:left}
 .admin-stat:last-child{border-right:0}
 .admin-stat:hover{background:rgba(255,255,255,.1);transform:none}
