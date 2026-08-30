@@ -865,6 +865,13 @@ function studentStatusCard(entry) {
   const label = document.createElement('span'); label.className = 'workflow-status'; label.textContent = entry.label;
   const counts = document.createElement('p'); counts.className = 'meta';
   counts.textContent = '처리할 항목 ' + entry.total + '건 · 원장확인 ' + entry.counts.principal_check + ' · 검토 ' + entry.counts.submitted + ' · 수정 ' + entry.counts.needs_revision + ' · 미제출 ' + entry.counts.overdue + ' · 질문 ' + entry.counts.questions;
+  const itemList = document.createElement('ul');
+  itemList.className = 'student-status-items-list';
+  itemList.replaceChildren(...entry.items.map((text) => {
+    const item = document.createElement('li');
+    item.textContent = text;
+    return item;
+  }));
   const next = document.createElement('p'); next.className = 'action-next'; next.textContent = '다음 조치: ' + entry.nextAction;
   const showHistory = document.createElement('button');
   showHistory.type = 'button';
@@ -883,7 +890,7 @@ function studentStatusCard(entry) {
   showQuestions.textContent = '질문 보기';
   showQuestions.hidden = !entry.counts.questions;
   showQuestions.addEventListener('click', () => openStudentQuestions(entry.name));
-  card.append(heading, label, counts, next, showHistory, showReview, showQuestions);
+  card.append(heading, label, counts, itemList, next, showHistory, showReview, showQuestions);
   return card;
 }
 function renderStudentStatusItems() {

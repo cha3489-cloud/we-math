@@ -136,7 +136,7 @@ export function summarizeStudentOperations(assignments = [], now = new Date(), q
   const byStudent = new Map();
   const ensureRow = (name) => {
     if (!byStudent.has(name)) {
-      byStudent.set(name, { name, total: 0, label: '', priority: Infinity, counts: { principal_check: 0, submitted: 0, needs_revision: 0, overdue: 0, questions: 0 }, nextAction: '' });
+      byStudent.set(name, { name, total: 0, label: '', priority: Infinity, counts: { principal_check: 0, submitted: 0, needs_revision: 0, overdue: 0, questions: 0 }, nextAction: '', items: [] });
     }
     return byStudent.get(name);
   };
@@ -148,6 +148,7 @@ export function summarizeStudentOperations(assignments = [], now = new Date(), q
     const row = ensureRow(name);
     row.total += 1;
     if (Object.hasOwn(row.counts, meta.status)) row.counts[meta.status] += 1;
+    row.items.push(`${meta.label} · ${assignment.title || '과제'}`);
     if (meta.priority < row.priority) {
       row.priority = meta.priority;
       row.label = meta.label;
@@ -167,6 +168,7 @@ export function summarizeStudentOperations(assignments = [], now = new Date(), q
     }
   }
   return [...byStudent.values()]
+    .map((row) => ({ ...row, items: row.counts.questions ? [...row.items, `질문 미답변 · ${row.counts.questions}건`] : row.items }))
     .sort((a, b) => a.priority - b.priority || b.total - a.total || a.name.localeCompare(b.name, 'ko'))
     .map(({ priority, ...row }) => row);
 }

@@ -205,7 +205,7 @@ a.file{display:block;margin:8px 0;color:var(--navy);font-weight:800}
 .action-section{scroll-margin-top:16px;margin-bottom:28px;padding:20px;border:1px solid #d8b063;border-radius:16px;background:var(--gold-soft);outline:none}
 .student-status-section{margin-bottom:28px;padding:20px;border:1px solid var(--line);border-radius:16px;background:var(--paper)}
 .student-status-items{grid-template-columns:repeat(2,minmax(0,1fr))}
-.student-status-card{position:relative}.student-status-card h3{padding-right:120px}
+.student-status-card{position:relative}.student-status-card h3{padding-right:120px}.student-status-items-list{margin:10px 0 0;padding-left:18px;color:var(--ink);font-weight:800}.student-status-items-list li{margin:4px 0}
 .action-section:focus-visible{box-shadow:0 0 0 4px var(--focus-ring)}
 .action-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;margin-bottom:15px}.action-heading h3{margin-bottom:5px;font-size:1.4rem}.action-heading .meta{margin:0}
 .action-items{grid-template-columns:repeat(2,minmax(0,1fr))}
