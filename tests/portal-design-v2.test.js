@@ -42,6 +42,11 @@ describe('portal design v2', () => {
     expect(adminJs).toContain('studentOperationStatusCopy');
     expect(adminJs).toContain('renderStudentStatusItems');
     expect(adminJs).toContain('student-status-card');
+    expect(admin).toContain('student-status-legend');
+    expect(admin).toContain('우선순위 색상 안내');
+    expect(admin).toContain('원장확인 우선');
+    expect(admin).toContain('질문 답변 필요');
+    expect(css).toContain('.student-status-legend');
     expect(adminJs).toContain('const statusKey = String(entry.status');
     expect(adminJs).toContain("card.className = 'card student-status-card student-status-' + statusKey");
     expect(adminJs).toContain("label.className = 'workflow-status status-' + statusKey");
