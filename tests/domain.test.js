@@ -95,6 +95,25 @@ describe('portal domain rules', () => {
     expect(summary.visibleItems).toEqual(['원장 확인 필요 · 오래된 미제출', '수정 필요 · 수정 대기 1', '수정 필요 · 수정 대기 2']);
     expect(summary.hiddenItemCount).toBe(2);
   });
+  it('keeps each student card item preview in triage order even when records arrive unsorted', () => {
+    const now = new Date('2026-07-24T12:00:00Z');
+    const [summary] = summarizeStudentOperations([
+      { title: '검토 대기', profiles: { name: '테스트 A' }, submissions: [{ attempt_no: 1, status: 'submitted' }] },
+      { title: '수정 대기', profiles: { name: '테스트 A' }, submissions: [{ attempt_no: 1, status: 'needs_revision' }] },
+      { title: '오래된 미제출', profiles: { name: '테스트 A' }, due_at: '2026-07-22T10:00:00Z', submissions: [] },
+      { title: '오늘 미제출', profiles: { name: '테스트 A' }, due_at: '2026-07-24T10:00:00Z', submissions: [] },
+    ], now, [{ profiles: { name: '테스트 A' } }]);
+    expect(summary.items).toEqual([
+      '원장 확인 필요 · 오래된 미제출',
+      '마감 지남 · 미제출 · 오늘 미제출',
+      '수정 필요 · 수정 대기',
+      '검토 대기 · 검토 대기',
+      '질문 미답변 · 1건',
+    ]);
+    expect(summary.visibleItems).toEqual(summary.items.slice(0, 3));
+    expect(summary.hiddenItemCount).toBe(2);
+  });
+
   it('formats student status summaries and buttons around nonzero operator actions', () => {
     const copy = studentOperationStatusCopy({
       total: 4,

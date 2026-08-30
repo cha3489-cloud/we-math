@@ -552,6 +552,7 @@ function questionCard(entry) {
 
 function renderQuestionInbox() {
   const copy = filteredAdminListCopy('questions', questionStudentFilter);
+  byId('questionsSection').classList.toggle('question-section-filtered', Boolean(questionStudentFilter));
   byId('questionFilterStatus').textContent = copy.status;
   byId('questionFilterClear').textContent = copy.resetLabel;
   byId('questionFilterClear').setAttribute('aria-label', copy.resetAriaLabel);
