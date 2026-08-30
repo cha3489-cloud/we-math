@@ -47,6 +47,11 @@ describe('portal design v2', () => {
     expect(adminJs).toContain('workflowStudentFilter');
     expect(adminJs).toContain('filterWorkflowsByStudent');
     expect(adminJs).toContain('setWorkflowStudentFilter(entry.name)');
+    expect(adminJs).toContain('openStudentReview(entry.name)');
+    expect(adminJs).toContain('openStudentQuestions(entry.name)');
+    expect(adminJs).toContain('questionStudentFilter');
+    expect(admin).toContain('id=questionFilterStatus');
+    expect(admin).toContain('id=questionFilterClear');
     expect(adminJs).toContain("byId('questionCount').textContent");
     expect(adminJs).toContain('loadQuestionCount');
     expect(adminJs).toContain("switchTab('questions')");

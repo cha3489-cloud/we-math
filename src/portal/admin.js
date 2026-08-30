@@ -59,7 +59,7 @@ byId('statPrincipalCheck').addEventListener('click', () => openActionFilter('pri
 byId('statSubmitted').addEventListener('click', () => switchTab('review').then(() => byId('queue').scrollIntoView({ behavior: 'smooth', block: 'start' })).catch((error) => showError(byId('adminError'), error.message)));
 byId('statRevision').addEventListener('click', () => openActionFilter('needs_revision').catch((error) => showError(byId('adminError'), error.message)));
 byId('statOverdue').addEventListener('click', () => openActionFilter('overdue').catch((error) => showError(byId('adminError'), error.message)));
-byId('statQuestions').addEventListener('click', () => switchTab('questions').catch((error) => showError(byId('adminError'), error.message)));
+byId('statQuestions').addEventListener('click', () => setQuestionStudentFilter(''));
 byId('actionShowAll').addEventListener('click', () => { actionFilter = 'all'; renderActionItems(); });
 
 // ── 검토 대기열 상태 ─────────────────────────────────────────────────────
@@ -351,6 +351,7 @@ const QUESTIONS_SELECT = 'id,category,body,created_at,profiles!questions_student
 const QUESTIONS_LIMIT = 100;
 const questionsRequestGate = createLatestRequestGate();
 let questionInbox = [];
+let questionStudentFilter = '';
 let questionProcessingId = null;
 const questionErrors = new Map();
 const questionDrafts = new Map();
@@ -379,17 +380,19 @@ async function loadQuestionCount() {
 
 async function loadQuestionInbox() {
   const request = questionsRequestGate.begin();
-  const { data, error } = await supabase
+  let query = supabase
     .from('questions')
-    .select(QUESTIONS_SELECT)
+    .select(questionStudentFilter ? QUESTIONS_SELECT.replace('profiles!questions_student_id_fkey(', 'profiles!questions_student_id_fkey!inner(') : QUESTIONS_SELECT)
     .eq('status', 'open')
     .order('created_at', { ascending: true })
     .limit(QUESTIONS_LIMIT);
+  if (questionStudentFilter) query = query.eq('profiles.name', questionStudentFilter);
+  const { data, error } = await query;
   if (!questionsRequestGate.isLatest(request)) return;
   if (error) { showError(byId('questionsError'), error.message || '질문 목록을 불러오지 못했습니다.'); return; }
   showError(byId('questionsError'), '');
   questionInbox = data || [];
-  byId('questionCount').textContent = String(questionInbox.length);
+  if (!questionStudentFilter) byId('questionCount').textContent = String(questionInbox.length);
   renderQuestionInbox();
 }
 
@@ -547,9 +550,18 @@ function questionCard(entry) {
 }
 
 function renderQuestionInbox() {
+  byId('questionFilterStatus').textContent = questionStudentFilter ? questionStudentFilter + ' 학생 질문만 표시합니다.' : '전체 학생 질문을 표시합니다.';
+  byId('questionFilterClear').hidden = !questionStudentFilter;
   byId('questionsEmpty').hidden = Boolean(questionInbox.length);
   byId('questionsList').replaceChildren(...questionInbox.map(questionCard));
 }
+function setQuestionStudentFilter(studentName) {
+  questionStudentFilter = studentName || '';
+  switchTab('questions')
+    .then(() => byId('questionsList').scrollIntoView({ behavior: 'smooth', block: 'start' }))
+    .catch((error) => showError(byId('adminError'), error.message));
+}
+byId('questionFilterClear').addEventListener('click', () => setQuestionStudentFilter(''));
 
 async function answerQuestion(questionId, answerBody, attachments = []) {
   if (questionProcessingId) return;
@@ -817,6 +829,16 @@ function renderActionItems() {
   byId('actionEmpty').hidden = Boolean(rows.length);
   byId('actionItems').replaceChildren(...rows.map(actionCard));
 }
+async function openStudentReview(studentName) {
+  await switchTab('review');
+  await loadQueue();
+  const index = queue.findIndex((entry) => assignmentStudent(entry.assignment) === studentName);
+  if (index >= 0) await openReview(index);
+  byId('queue').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+function openStudentQuestions(studentName) {
+  setQuestionStudentFilter(studentName);
+}
 function studentStatusCard(entry) {
   const card = document.createElement('article');
   card.className = 'card student-status-card';
@@ -830,7 +852,18 @@ function studentStatusCard(entry) {
   showHistory.className = 'secondary small';
   showHistory.textContent = '이 학생 기록 보기';
   showHistory.addEventListener('click', () => setWorkflowStudentFilter(entry.name));
-  card.append(heading, label, counts, next, showHistory);
+  const showReview = document.createElement('button');
+  showReview.type = 'button';
+  showReview.className = 'secondary small';
+  showReview.textContent = '검토 대기 보기';
+  showReview.hidden = !entry.counts.submitted;
+  showReview.addEventListener('click', () => openStudentReview(entry.name).catch((error) => showError(byId('adminError'), error.message)));
+  const showQuestions = document.createElement('button');
+  showQuestions.type = 'button';
+  showQuestions.className = 'secondary small';
+  showQuestions.textContent = '질문 보기';
+  showQuestions.addEventListener('click', () => openStudentQuestions(entry.name));
+  card.append(heading, label, counts, next, showHistory, showReview, showQuestions);
   return card;
 }
 function renderStudentStatusItems() {
