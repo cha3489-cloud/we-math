@@ -64,6 +64,9 @@ describe('portal design v2', () => {
     expect(adminJs).toContain('student-status-actions');
     expect(css).toContain('.student-status-actions');
     expect(adminJs).toContain('showQuestions.hidden = !entry.counts.questions');
+    expect(adminJs).toContain("showHistory.setAttribute('aria-label'");
+    expect(adminJs).toContain("showReview.setAttribute('aria-label'");
+    expect(adminJs).toContain("showQuestions.setAttribute('aria-label'");
     expect(domainJs).toContain('historyLabel');
     expect(domainJs).toContain('questionsLabel');
     expect(adminJs).toContain('fetchQuestionSummary');
