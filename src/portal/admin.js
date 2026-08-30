@@ -838,6 +838,15 @@ function actionCard(entry) {
     next.textContent = '다음 조치: ' + entry.nextAction;
     card.append(next);
   }
+  const actions = document.createElement('div');
+  actions.className = 'action-card-actions';
+  const showHistory = document.createElement('button');
+  showHistory.type = 'button';
+  showHistory.className = 'secondary small';
+  showHistory.textContent = '이 학생 기록 보기';
+  showHistory.addEventListener('click', () => setWorkflowStudentFilter(assignmentStudent(assignment)));
+  actions.append(showHistory);
+  card.append(actions);
   return card;
 }
 function renderActionItems() {

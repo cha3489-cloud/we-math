@@ -63,6 +63,8 @@ describe('portal design v2', () => {
     expect(adminJs).toContain("openActionFilter('principal_check')");
     expect(adminJs).toContain('action-reason');
     expect(adminJs).toContain('action-next');
+    expect(adminJs).toContain('action-card-actions');
+    expect(adminJs).toContain('setWorkflowStudentFilter(assignmentStudent(assignment))');
     expect(adminJs).toContain('entry.reason');
     expect(adminJs).toContain('entry.nextAction');
     expect(adminJs).toContain('summarizeAdminWorkflows');
