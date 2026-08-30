@@ -885,7 +885,7 @@ function studentStatusCard(entry) {
   const statusKey = String(entry.status || 'open').replace(/[^a-z0-9_-]/gi, '_');
   card.className = 'card student-status-card student-status-' + statusKey;
   const heading = document.createElement('h3'); heading.textContent = entry.name;
-  const label = document.createElement('span'); label.className = 'workflow-status'; label.textContent = entry.label;
+  const label = document.createElement('span'); label.className = 'workflow-status status-' + statusKey; label.textContent = entry.label;
   const counts = document.createElement('p'); counts.className = 'meta';
   counts.textContent = copy.summary;
   const itemList = document.createElement('ul');
