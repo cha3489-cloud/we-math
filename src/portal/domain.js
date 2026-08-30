@@ -132,6 +132,29 @@ export function summarizeAdminWorkflows(assignments = [], now = new Date()) {
   });
   return { counts, actionItems };
 }
+export function summarizeStudentOperations(assignments = [], now = new Date()) {
+  const byStudent = new Map();
+  for (const assignment of assignments) {
+    const meta = adminWorkflowMeta(assignment, now);
+    if (!meta.actionRequired && meta.status !== 'submitted') continue;
+    const profile = normalizeRelation(assignment?.profiles)[0];
+    const name = profile?.name || '학생';
+    if (!byStudent.has(name)) {
+      byStudent.set(name, { name, total: 0, label: '', priority: Infinity, counts: { principal_check: 0, submitted: 0, needs_revision: 0, overdue: 0 }, nextAction: '' });
+    }
+    const row = byStudent.get(name);
+    row.total += 1;
+    if (Object.hasOwn(row.counts, meta.status)) row.counts[meta.status] += 1;
+    if (meta.priority < row.priority) {
+      row.priority = meta.priority;
+      row.label = meta.label;
+      row.nextAction = meta.nextAction || (meta.status === 'submitted' ? '제출물을 검토하세요.' : '');
+    }
+  }
+  return [...byStudent.values()]
+    .sort((a, b) => a.priority - b.priority || b.total - a.total || a.name.localeCompare(b.name, 'ko'))
+    .map(({ priority, ...row }) => row);
+}
 
 // ── 관계 데이터 정규화: null / object / array 어떤 형태든 배열로 ──────────
 export function normalizeRelation(value) {

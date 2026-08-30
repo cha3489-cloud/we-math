@@ -6,7 +6,7 @@ import {
   waitingLabel, REVIEW_TAGS, validateProblemRef,
   validateFeedbackItems, checkItemsForStatus, composeFeedbackBody, isAutoComposedFeedback,
   validateInternalNote,
-  authErrorMessage, adminWorkflowMeta, summarizeAdminWorkflows,
+  authErrorMessage, adminWorkflowMeta, summarizeAdminWorkflows, summarizeStudentOperations,
   isActiveStudentAssignment, isActiveProfile, collectKeysetPages, createLatestRequestGate,
   reviewQueue, reconcileQueueSelection,
 } from './domain.js';
@@ -30,7 +30,7 @@ async function cleanup(bucket, paths) { if (paths.length) await supabase.storage
 
 // ── 탭 ──────────────────────────────────────────────────────────────────
 let actionFilter = 'all';
-let operationsSummary = { counts: { principal_check: 0, submitted: 0, needs_revision: 0, overdue: 0 }, actionItems: [] };
+let operationsSummary = { counts: { principal_check: 0, submitted: 0, needs_revision: 0, overdue: 0 }, actionItems: [], studentItems: [] };
 async function switchTab(tab) {
   const review = tab === 'review';
   const manage = tab === 'manage';
@@ -776,6 +776,7 @@ async function loadOperationsSummary() {
   }
   const activeAssignments = assignments.filter(isActiveStudentAssignment);
   const nextSummary = summarizeAdminWorkflows(activeAssignments);
+  nextSummary.studentItems = summarizeStudentOperations(activeAssignments);
   if (!operationsSummaryRequestGate.isLatest(request)) return;
   operationsSummary = nextSummary;
   byId('principalCheckCount').textContent = String(operationsSummary.counts.principal_check);
@@ -783,6 +784,7 @@ async function loadOperationsSummary() {
   byId('revisionCount').textContent = String(operationsSummary.counts.needs_revision);
   byId('overdueCount').textContent = String(operationsSummary.counts.overdue);
   renderActionItems();
+  renderStudentStatusItems();
 }
 function actionCard(entry) {
   const { assignment, status: state, label } = entry;
@@ -814,6 +816,22 @@ function renderActionItems() {
   byId('actionEmpty').querySelector('h3').textContent = actionFilter === 'all' ? '후속 확인이 필요한 과제가 없습니다.' : '선택한 상태의 과제가 없습니다.';
   byId('actionEmpty').hidden = Boolean(rows.length);
   byId('actionItems').replaceChildren(...rows.map(actionCard));
+}
+function studentStatusCard(entry) {
+  const card = document.createElement('article');
+  card.className = 'card student-status-card';
+  const heading = document.createElement('h3'); heading.textContent = entry.name;
+  const label = document.createElement('span'); label.className = 'workflow-status'; label.textContent = entry.label;
+  const counts = document.createElement('p'); counts.className = 'meta';
+  counts.textContent = '처리할 항목 ' + entry.total + '건 · 원장확인 ' + entry.counts.principal_check + ' · 검토 ' + entry.counts.submitted + ' · 수정 ' + entry.counts.needs_revision + ' · 미제출 ' + entry.counts.overdue;
+  const next = document.createElement('p'); next.className = 'action-next'; next.textContent = '다음 조치: ' + entry.nextAction;
+  card.append(heading, label, counts, next);
+  return card;
+}
+function renderStudentStatusItems() {
+  const rows = operationsSummary.studentItems || [];
+  byId('studentStatusEmpty').hidden = Boolean(rows.length);
+  byId('studentStatusItems').replaceChildren(...rows.map(studentStatusCard));
 }
 
 const WORKFLOW_PAGE_SIZE = 50;

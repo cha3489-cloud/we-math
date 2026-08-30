@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { normalizePhone, validatePin, validateLoginInput, validateAccountInput, validateSubmissionInput, assignmentStatus, latestAttempt, canSubmitAttempt, feedbackItems, isAutoComposedFeedback, authErrorMessage, adminWorkflowMeta, summarizeAdminWorkflows, isActiveStudentAssignment, isActiveProfile, collectKeysetPages, createLatestRequestGate, reconcileQueueSelection } from '../src/portal/domain.js';
+import { normalizePhone, validatePin, validateLoginInput, validateAccountInput, validateSubmissionInput, assignmentStatus, latestAttempt, canSubmitAttempt, feedbackItems, isAutoComposedFeedback, authErrorMessage, adminWorkflowMeta, summarizeAdminWorkflows, summarizeStudentOperations, isActiveStudentAssignment, isActiveProfile, collectKeysetPages, createLatestRequestGate, reconcileQueueSelection } from '../src/portal/domain.js';
 describe('portal domain rules', () => {
   it('normalizes Korean mobile numbers', () => { expect(normalizePhone('010-1234-5678')).toBe('01012345678'); expect(() => normalizePhone('02-123-4567')).toThrow(); });
   it('temporarily accepts legacy four-digit or current six-digit login PINs', () => { expect(validateLoginInput('01012345678', '1234').pin).toBe('1234'); expect(validateLoginInput('01012345678', '123456').pin).toBe('123456'); for (const bad of ['12345', '1234567', '12ab']) expect(() => validateLoginInput('01012345678', bad)).toThrow('PIN'); });
@@ -52,6 +52,19 @@ describe('portal domain rules', () => {
     const summary = summarizeAdminWorkflows(assignments, now);
     expect(summary.counts).toEqual({ principal_check: 2, submitted: 1, needs_revision: 1, overdue: 1 });
     expect(summary.actionItems.map((item) => item.assignment.title)).toEqual(['오래된 미제출', '원장 확인 재풀이', '오늘 미제출', '수정 대기']);
+  });
+  it('summarizes current work by student so operators do not scan every assignment', () => {
+    const now = new Date('2026-07-24T12:00:00Z');
+    const assignments = [
+      { title: '오래된 미제출', profiles: { name: '테스트 A' }, due_at: '2026-07-22T10:00:00Z', submissions: [] },
+      { title: '수정 대기', profiles: { name: '테스트 A' }, submissions: [{ attempt_no: 1, status: 'needs_revision', reviewed_at: '2026-07-24T10:00:00Z' }] },
+      { title: '검토 대기', profiles: { name: '테스트 B' }, submissions: [{ attempt_no: 1, status: 'submitted', submitted_at: '2026-07-24T09:00:00Z' }] },
+      { title: '완료', profiles: { name: '테스트 C' }, submissions: [{ attempt_no: 1, status: 'completed' }] },
+    ];
+    expect(summarizeStudentOperations(assignments, now)).toEqual([
+      { name: '테스트 A', total: 2, label: '원장 확인 필요', counts: { principal_check: 1, submitted: 0, needs_revision: 1, overdue: 0 }, nextAction: '오늘 수업 전 과제량과 난이도 조정을 확인하세요.' },
+      { name: '테스트 B', total: 1, label: '검토 대기', counts: { principal_check: 0, submitted: 1, needs_revision: 0, overdue: 0 }, nextAction: '제출물을 검토하세요.' },
+    ]);
   });
   it('includes only assignments whose student profile exists and is active', () => {
     expect(isActiveProfile({ suspended_at: null })).toBe(true);

@@ -31,12 +31,17 @@ describe('portal design v2', () => {
   });
 
   it('surfaces actionable revision and overdue work without making the operator inspect dates', () => {
-    for (const id of ['principalCheckCount', 'questionCount', 'revisionCount', 'overdueCount', 'actionSection', 'actionItems', 'actionEmpty']) {
+    for (const id of ['principalCheckCount', 'questionCount', 'revisionCount', 'overdueCount', 'actionSection', 'actionItems', 'actionEmpty', 'studentStatusSection', 'studentStatusItems']) {
       expect(admin).toContain(`id=${id}`);
     }
     expect(admin).toContain('오늘 후속 확인');
     expect(admin).toContain('원장 확인 필요');
     expect(admin).toContain('질문 미답변');
+    expect(admin).toContain('학생별 현재 상태');
+    expect(adminJs).toContain('summarizeStudentOperations');
+    expect(adminJs).toContain('renderStudentStatusItems');
+    expect(adminJs).toContain('student-status-card');
+    expect(adminJs).toContain("byId('studentStatusItems')");
     expect(adminJs).toContain("byId('questionCount').textContent");
     expect(adminJs).toContain('loadQuestionCount');
     expect(adminJs).toContain("switchTab('questions')");
