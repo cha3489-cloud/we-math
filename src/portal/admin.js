@@ -768,6 +768,7 @@ function workflowCard(item) {
 }
 
 const OPERATIONS_SUMMARY_SELECT = 'id,title,due_at,profiles!assignments_student_id_fkey(name,suspended_at),submissions(attempt_no,status,submitted_at,reviewed_at)';
+const QUESTION_SUMMARY_SELECT = 'id,profiles!questions_student_id_fkey(name,suspended_at)';
 const operationsSummaryRequestGate = createLatestRequestGate();
 async function fetchOperationsSummaryPage(cursor, pageSize) {
   let query = supabase.from('assignments').select(OPERATIONS_SUMMARY_SELECT)
@@ -777,18 +778,36 @@ async function fetchOperationsSummaryPage(cursor, pageSize) {
   if (error) throw error;
   return data;
 }
+async function fetchQuestionSummaryPage(cursor, pageSize) {
+  let query = supabase.from('questions')
+    .select(QUESTION_SUMMARY_SELECT)
+    .eq('status', 'open')
+    .order('id').limit(pageSize);
+  if (cursor !== null) query = query.gt('id', cursor);
+  const { data, error } = await query;
+  if (error) throw error;
+  return data;
+}
+async function fetchQuestionSummary() {
+  const rows = await collectKeysetPages(fetchQuestionSummaryPage, REMOTE_PAGE_SIZE);
+  return rows.filter((question) => isActiveProfile(normalizeRelation(question.profiles)[0]));
+}
 async function loadOperationsSummary() {
   const request = operationsSummaryRequestGate.begin();
   let assignments;
+  let questions;
   try {
-    assignments = await collectKeysetPages(fetchOperationsSummaryPage, REMOTE_PAGE_SIZE);
+    [assignments, questions] = await Promise.all([
+      collectKeysetPages(fetchOperationsSummaryPage, REMOTE_PAGE_SIZE),
+      fetchQuestionSummary(),
+    ]);
   } catch (error) {
     if (operationsSummaryRequestGate.isLatest(request)) throw error;
     return;
   }
   const activeAssignments = assignments.filter(isActiveStudentAssignment);
   const nextSummary = summarizeAdminWorkflows(activeAssignments);
-  nextSummary.studentItems = summarizeStudentOperations(activeAssignments);
+  nextSummary.studentItems = summarizeStudentOperations(activeAssignments, new Date(), questions);
   if (!operationsSummaryRequestGate.isLatest(request)) return;
   operationsSummary = nextSummary;
   byId('principalCheckCount').textContent = String(operationsSummary.counts.principal_check);
@@ -845,7 +864,7 @@ function studentStatusCard(entry) {
   const heading = document.createElement('h3'); heading.textContent = entry.name;
   const label = document.createElement('span'); label.className = 'workflow-status'; label.textContent = entry.label;
   const counts = document.createElement('p'); counts.className = 'meta';
-  counts.textContent = '처리할 항목 ' + entry.total + '건 · 원장확인 ' + entry.counts.principal_check + ' · 검토 ' + entry.counts.submitted + ' · 수정 ' + entry.counts.needs_revision + ' · 미제출 ' + entry.counts.overdue;
+  counts.textContent = '처리할 항목 ' + entry.total + '건 · 원장확인 ' + entry.counts.principal_check + ' · 검토 ' + entry.counts.submitted + ' · 수정 ' + entry.counts.needs_revision + ' · 미제출 ' + entry.counts.overdue + ' · 질문 ' + entry.counts.questions;
   const next = document.createElement('p'); next.className = 'action-next'; next.textContent = '다음 조치: ' + entry.nextAction;
   const showHistory = document.createElement('button');
   showHistory.type = 'button';
@@ -862,6 +881,7 @@ function studentStatusCard(entry) {
   showQuestions.type = 'button';
   showQuestions.className = 'secondary small';
   showQuestions.textContent = '질문 보기';
+  showQuestions.hidden = !entry.counts.questions;
   showQuestions.addEventListener('click', () => openStudentQuestions(entry.name));
   card.append(heading, label, counts, next, showHistory, showReview, showQuestions);
   return card;

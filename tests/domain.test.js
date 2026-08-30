@@ -61,9 +61,15 @@ describe('portal domain rules', () => {
       { title: '검토 대기', profiles: { name: '테스트 B' }, submissions: [{ attempt_no: 1, status: 'submitted', submitted_at: '2026-07-24T09:00:00Z' }] },
       { title: '완료', profiles: { name: '테스트 C' }, submissions: [{ attempt_no: 1, status: 'completed' }] },
     ];
-    expect(summarizeStudentOperations(assignments, now)).toEqual([
-      { name: '테스트 A', total: 2, label: '원장 확인 필요', counts: { principal_check: 1, submitted: 0, needs_revision: 1, overdue: 0 }, nextAction: '오늘 수업 전 과제량과 난이도 조정을 확인하세요.' },
-      { name: '테스트 B', total: 1, label: '검토 대기', counts: { principal_check: 0, submitted: 1, needs_revision: 0, overdue: 0 }, nextAction: '제출물을 검토하세요.' },
+    const questions = [
+      { profiles: { name: '테스트 A' } },
+      { profiles: { name: '테스트 A' } },
+      { profiles: { name: '테스트 D' } },
+    ];
+    expect(summarizeStudentOperations(assignments, now, questions)).toEqual([
+      { name: '테스트 A', total: 4, label: '원장 확인 필요', counts: { principal_check: 1, submitted: 0, needs_revision: 1, overdue: 0, questions: 2 }, nextAction: '오늘 수업 전 과제량과 난이도 조정을 확인하세요.' },
+      { name: '테스트 B', total: 1, label: '검토 대기', counts: { principal_check: 0, submitted: 1, needs_revision: 0, overdue: 0, questions: 0 }, nextAction: '제출물을 검토하세요.' },
+      { name: '테스트 D', total: 1, label: '질문 미답변', counts: { principal_check: 0, submitted: 0, needs_revision: 0, overdue: 0, questions: 1 }, nextAction: '질문에 답변하세요.' },
     ]);
   });
   it('includes only assignments whose student profile exists and is active', () => {

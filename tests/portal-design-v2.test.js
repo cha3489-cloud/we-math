@@ -50,6 +50,9 @@ describe('portal design v2', () => {
     expect(adminJs).toContain('openStudentReview(entry.name)');
     expect(adminJs).toContain('openStudentQuestions(entry.name)');
     expect(adminJs).toContain('questionStudentFilter');
+    expect(adminJs).toContain('counts.questions');
+    expect(adminJs).toContain('showQuestions.hidden = !entry.counts.questions');
+    expect(adminJs).toContain('fetchQuestionSummary');
     expect(admin).toContain('id=questionFilterStatus');
     expect(admin).toContain('id=questionFilterClear');
     expect(adminJs).toContain("byId('questionCount').textContent");

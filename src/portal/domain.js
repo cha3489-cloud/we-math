@@ -132,23 +132,38 @@ export function summarizeAdminWorkflows(assignments = [], now = new Date()) {
   });
   return { counts, actionItems };
 }
-export function summarizeStudentOperations(assignments = [], now = new Date()) {
+export function summarizeStudentOperations(assignments = [], now = new Date(), questions = []) {
   const byStudent = new Map();
+  const ensureRow = (name) => {
+    if (!byStudent.has(name)) {
+      byStudent.set(name, { name, total: 0, label: '', priority: Infinity, counts: { principal_check: 0, submitted: 0, needs_revision: 0, overdue: 0, questions: 0 }, nextAction: '' });
+    }
+    return byStudent.get(name);
+  };
   for (const assignment of assignments) {
     const meta = adminWorkflowMeta(assignment, now);
     if (!meta.actionRequired && meta.status !== 'submitted') continue;
     const profile = normalizeRelation(assignment?.profiles)[0];
     const name = profile?.name || '학생';
-    if (!byStudent.has(name)) {
-      byStudent.set(name, { name, total: 0, label: '', priority: Infinity, counts: { principal_check: 0, submitted: 0, needs_revision: 0, overdue: 0 }, nextAction: '' });
-    }
-    const row = byStudent.get(name);
+    const row = ensureRow(name);
     row.total += 1;
     if (Object.hasOwn(row.counts, meta.status)) row.counts[meta.status] += 1;
     if (meta.priority < row.priority) {
       row.priority = meta.priority;
       row.label = meta.label;
       row.nextAction = meta.nextAction || (meta.status === 'submitted' ? '제출물을 검토하세요.' : '');
+    }
+  }
+  for (const question of normalizeRelation(questions)) {
+    const profile = normalizeRelation(question?.profiles)[0];
+    const name = profile?.name || '학생';
+    const row = ensureRow(name);
+    row.total += 1;
+    row.counts.questions += 1;
+    if (6 < row.priority) {
+      row.priority = 6;
+      row.label = '질문 미답변';
+      row.nextAction = '질문에 답변하세요.';
     }
   }
   return [...byStudent.values()]
