@@ -48,8 +48,8 @@ export function assignmentStatus(assignment, now = new Date()) {
 
 const ADMIN_WORKFLOW_META = {
   principal_check: { label: '원장 확인 필요', actionRequired: true, priority: 0 },
-  overdue: { label: '마감 지남 · 미제출', actionRequired: true, priority: 1 },
-  needs_revision: { label: '수정 필요', actionRequired: true, priority: 2 },
+  overdue: { label: '마감 지남 · 미제출', actionRequired: true, priority: 1, nextAction: '학생에게 제출 가능 여부를 확인하세요.' },
+  needs_revision: { label: '수정 필요', actionRequired: true, priority: 2, nextAction: '재풀이 제출 여부를 확인하세요.' },
   submitted: { label: '검토 대기', actionRequired: false, priority: 3 },
   open: { label: '미제출', actionRequired: false, priority: 4 },
   completed: { label: '완료', actionRequired: false, priority: 5 },
@@ -64,10 +64,17 @@ function principalCheckReason(assignment, now = new Date()) {
   }
   return '';
 }
+function principalCheckNextAction(reason) {
+  if (reason === '마감 2일 이상 미제출') return '오늘 수업 전 과제량과 난이도 조정을 확인하세요.';
+  if (/차 수정 필요$/.test(reason)) return '재풀이 실패 원인을 확인하고 다음 과제 분량을 조정하세요.';
+  return '';
+}
 export function adminWorkflowMeta(assignment, now = new Date()) {
   const reason = principalCheckReason(assignment, now);
   const status = reason ? 'principal_check' : assignmentStatus(assignment, now);
-  return { status, ...ADMIN_WORKFLOW_META[status], ...(reason ? { reason } : {}) };
+  const meta = { status, ...ADMIN_WORKFLOW_META[status], ...(reason ? { reason } : {}) };
+  const nextAction = reason ? principalCheckNextAction(reason) : meta.nextAction;
+  return nextAction ? { ...meta, nextAction } : meta;
 }
 export function isActiveProfile(profile) {
   return Boolean(profile) && !profile.suspended_at;

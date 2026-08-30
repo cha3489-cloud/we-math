@@ -789,6 +789,12 @@ function actionCard(entry) {
     reason.textContent = '사유: ' + entry.reason;
     card.append(reason);
   }
+  if (entry.nextAction) {
+    const next = document.createElement('p');
+    next.className = 'action-next';
+    next.textContent = '다음 조치: ' + entry.nextAction;
+    card.append(next);
+  }
   return card;
 }
 function renderActionItems() {
