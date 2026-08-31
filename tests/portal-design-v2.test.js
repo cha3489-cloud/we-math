@@ -158,6 +158,9 @@ describe('portal design v2', () => {
     expect(css).toContain('.compact-admin-cards');
     expect(css).toContain('.compact-admin-cards .card');
     expect(css).toContain('.workflow-history-cards .workflow-card');
+    expect(css).toContain('.workflow-history-cards .workflow-card h3{font-size:1.02rem;line-height:1.2}');
+    expect(css).toContain('.workflow-history-cards .workflow-card .meta{margin-bottom:4px;font-size:.82rem}');
+    expect(css).toContain('.workflow-history-cards .workflow-card>p:not(.workflow-title):not(.meta){margin-bottom:6px;font-size:.86rem;line-height:1.35}');
     expect(css).toContain('.workflow-history-cards .attempt-history');
     expect(css).toContain('@media(max-width:640px)');
     expect(css).toContain('.admin-long-list summary{display:grid');
