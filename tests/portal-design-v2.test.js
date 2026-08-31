@@ -162,6 +162,13 @@ describe('portal design v2', () => {
     expect(css).toContain('.workflow-history-cards .workflow-card .meta{margin-bottom:4px;font-size:.82rem}');
     expect(css).toContain('.workflow-history-cards .workflow-card>p:not(.workflow-title):not(.meta){margin-bottom:6px;font-size:.86rem;line-height:1.35}');
     expect(css).toContain('.workflow-history-cards .attempt-history');
+    expect(adminJs).toContain("card.className = 'card admin-user-card user-role-' + roleKey");
+    expect(adminJs).toContain("roleBadge.className = 'account-status user-role-badge role-' + roleKey");
+    expect(adminJs).toContain("statusBadge.textContent = user.suspended_at ? '정지' : '활성'");
+    expect(css).toContain('.user-list-cards .admin-user-card');
+    expect(css).toContain('.user-list-cards .user-role-badge');
+    expect(css).toContain('.user-list-cards .account-status');
+    expect(css).toContain('.role-admin');
     expect(css).toContain('@media(max-width:640px)');
     expect(css).toContain('.admin-long-list summary{display:grid');
   });

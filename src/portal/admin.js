@@ -677,10 +677,20 @@ async function loadUsers() {
     const option = document.createElement('option'); option.value = student.id; option.textContent = student.name; return option;
   }));
   const cards = normalizeRelation(profilesResult.data).map((user) => {
-    const card = document.createElement('article'); card.className = 'card';
-    const name = document.createElement('h3'); name.textContent = user.name;
     const role = roles.get(user.id) ?? '역할 없음';
-    const meta = document.createElement('p'); meta.textContent = user.phone + ' · ' + role; card.append(name, meta);
+    const roleKey = String(role || 'none').replace(/[^a-z0-9_-]/gi, '_');
+    const card = document.createElement('article'); card.className = 'card admin-user-card user-role-' + roleKey;
+    const name = document.createElement('h3'); name.textContent = user.name;
+    const badgeLine = document.createElement('p');
+    badgeLine.className = 'user-badge-line';
+    const roleBadge = document.createElement('span');
+    roleBadge.className = 'account-status user-role-badge role-' + roleKey;
+    roleBadge.textContent = role === 'student' ? '학생' : role === 'admin' ? '관리자' : role;
+    const statusBadge = document.createElement('span');
+    statusBadge.className = 'account-status ' + (user.suspended_at ? 'status-suspended' : 'status-open');
+    statusBadge.textContent = user.suspended_at ? '정지' : '활성';
+    badgeLine.append(roleBadge, statusBadge);
+    const meta = document.createElement('p'); meta.className = 'meta'; meta.textContent = user.phone; card.append(name, badgeLine, meta);
     const actions = [[user.suspended_at ? 'reactivate' : 'suspend', user.suspended_at ? '재활성화' : '정지']];
     if (role === 'student') actions.unshift(['reset', 'PIN 재설정']);
     for (const [action, label] of actions) {
