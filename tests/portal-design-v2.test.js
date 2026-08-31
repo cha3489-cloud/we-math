@@ -163,6 +163,17 @@ describe('portal design v2', () => {
     expect(css).toContain('.admin-long-list summary{display:grid');
   });
 
+  it('shows live count chips on collapsed admin inventory panels', () => {
+    expect(admin).toContain('id=userListSummaryCount');
+    expect(admin).toContain('id=workflowHistorySummaryCount');
+    expect(admin).toContain('사용자 불러오는 중');
+    expect(admin).toContain('기록 불러오는 중');
+    expect(adminJs).toContain("byId('userListSummaryCount').textContent = cards.length ? '사용자 ' + cards.length + '명' : '사용자 없음'");
+    expect(adminJs).toContain("byId('workflowHistorySummaryCount').textContent = total ? '과제 ' + total + '건' : '과제 없음'");
+    expect(css).toContain('.admin-long-list summary strong');
+    expect(css).toContain('.admin-long-list[open] summary strong');
+  });
+
   it('uses sanitized Claude illustrations with the portal brand palette', () => {
     expect(student).toContain('/portal/login-progress.svg');
     expect(student).toContain('/portal/empty-state.svg');

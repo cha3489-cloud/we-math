@@ -704,6 +704,7 @@ async function loadUsers() {
     return card;
   });
   byId('users').replaceChildren(...cards);
+  byId('userListSummaryCount').textContent = cards.length ? '사용자 ' + cards.length + '명' : '사용자 없음';
 }
 
 async function download(bucket, path) {
@@ -998,6 +999,7 @@ async function loadWorkflows() {
   const total = count || 0;
   const last = Math.min(from + rows.length, total);
   byId('workflowPageStatus').textContent = total ? (from + 1) + '–' + last + ' / ' + total : '과제 없음';
+  byId('workflowHistorySummaryCount').textContent = total ? '과제 ' + total + '건' : '과제 없음';
   byId('workflowPrev').disabled = page === 0;
   byId('workflowNext').disabled = to + 1 >= total;
 }
