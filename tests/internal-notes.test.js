@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { validateInternalNote } from '../src/portal/domain.js';
+import { validateInternalNote } from '../src/portal/admin-internal-notes.js';
 
 const root = resolve(import.meta.dirname, '..');
 const read = (path) => readFileSync(resolve(root, path), 'utf8');
@@ -37,6 +37,13 @@ describe('internal notes — never reach the student surface', () => {
     const selects = student.match(/^const \w*SELECT = '.*';$/gm) || [];
     expect(selects.length).toBeGreaterThanOrEqual(2);
     for (const line of selects) expect(line).not.toMatch(/internal/i);
+  });
+
+  it('keeps admin-only internal note vocabulary out of the student source graph', () => {
+    // student.js 가 직접 import 하는 공유 모듈에도 원장 전용 메모 용어를 싣지 않는다.
+    for (const path of ['src/portal/student.js', 'src/portal/domain.js', 'src/portal/client.js', 'src/auth.js']) {
+      expect(read(path), path).not.toMatch(/review_internal_notes|upsert_review_internal_note|internal_note|internalNote|내부 메모|원장 전용/i);
+    }
   });
 
   it('does not put the note on a table students can read', () => {

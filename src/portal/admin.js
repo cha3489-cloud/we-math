@@ -5,7 +5,6 @@ import {
   validatePin, validateLoginInput, validateAccountInput, normalizeRelation,
   waitingLabel, REVIEW_TAGS, validateProblemRef,
   validateFeedbackItems, checkItemsForStatus, composeFeedbackBody, isAutoComposedFeedback,
-  validateInternalNote,
   authErrorMessage, adminWorkflowMeta, summarizeAdminWorkflows, summarizeStudentOperations,
   studentOperationStatusCopy,
   isActiveStudentAssignment, isActiveProfile, collectKeysetPages, createLatestRequestGate,
@@ -16,6 +15,7 @@ import {
   acceptAnswerImages, answerImagesPreviewModel, extractPastedImageFiles,
   buildAnswerFilePath, isAnswerFilePathValid, canSubmitAnswer, answerErrorMessage,
 } from './answer-attachments.js';
+import { validateInternalNote } from './admin-internal-notes.js';
 
 const byId = (id) => document.getElementById(id);
 const showError = (el, message) => { el.textContent = message || ''; };
