@@ -149,6 +149,20 @@ describe('portal design v2', () => {
     expect(css).toContain('.admin-tools summary');
   });
 
+  it('makes collapsed admin long lists scannable when opened', () => {
+    expect(admin).toContain('<small>이름·역할·상태만 빠르게 확인할 때 펼칩니다.</small>');
+    expect(admin).toContain('<div id=users class="cards compact-admin-cards user-list-cards"></div>');
+    expect(admin).toContain('<small>최근 50개씩, 상태 배지와 제출 차수 중심으로 확인합니다.</small>');
+    expect(admin).toContain('<div id=workflows class="cards compact-admin-cards workflow-history-cards"></div>');
+    expect(css).toContain('.admin-long-list[open] summary');
+    expect(css).toContain('.compact-admin-cards');
+    expect(css).toContain('.compact-admin-cards .card');
+    expect(css).toContain('.workflow-history-cards .workflow-card');
+    expect(css).toContain('.workflow-history-cards .attempt-history');
+    expect(css).toContain('@media(max-width:640px)');
+    expect(css).toContain('.admin-long-list summary{display:grid');
+  });
+
   it('uses sanitized Claude illustrations with the portal brand palette', () => {
     expect(student).toContain('/portal/login-progress.svg');
     expect(student).toContain('/portal/empty-state.svg');
