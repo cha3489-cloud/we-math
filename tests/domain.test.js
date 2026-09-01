@@ -140,6 +140,16 @@ describe('portal domain rules', () => {
       .toBe('처리할 항목 3건 · 검토 2 · 질문 1');
   });
 
+  it('ignores non-numeric student status counts when building fallback copy', () => {
+    const copy = studentOperationStatusCopy({
+      total: '미집계',
+      counts: { submitted: 1, questions: '미확인' },
+    });
+
+    expect(copy.summary).toBe('처리할 항목 1건 · 검토 1');
+    expect(copy.questionsLabel).toBe('질문 보기');
+  });
+
   it('formats admin summary count chips from the rendered rows', () => {
     expect(adminSummaryCountCopy('actions', [{}, {}, {}])).toBe('후속 확인 3건');
     expect(adminSummaryCountCopy('actions', [])).toBe('후속 확인 없음');

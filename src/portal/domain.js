@@ -219,6 +219,10 @@ export function summarizeStudentOperations(assignments = [], now = new Date(), q
 
 export function studentOperationStatusCopy(entry = {}) {
   const counts = entry.counts || {};
+  const safeCount = (value) => {
+    const parsed = Number(value || 0);
+    return Number.isFinite(parsed) ? parsed : 0;
+  };
   const parts = [
     ['principal_check', '원장확인'],
     ['submitted', '검토'],
@@ -226,15 +230,15 @@ export function studentOperationStatusCopy(entry = {}) {
     ['overdue', '미제출'],
     ['questions', '질문'],
   ]
-    .map(([key, label]) => ({ label, count: Number(counts[key] || 0) }))
+    .map(([key, label]) => ({ label, count: safeCount(counts[key]) }))
     .filter((item) => item.count > 0)
     .map((item) => item.label + ' ' + item.count);
-  const fallbackTotal = Object.values(counts).reduce((sum, count) => sum + Number(count || 0), 0);
+  const fallbackTotal = Object.values(counts).reduce((sum, count) => sum + safeCount(count), 0);
   const hasExplicitTotal = entry.total !== undefined && entry.total !== null && entry.total !== '';
   const parsedTotal = Number(entry.total);
   const total = hasExplicitTotal && Number.isFinite(parsedTotal) ? parsedTotal : fallbackTotal;
-  const submittedCount = Number(counts.submitted || 0);
-  const questionCount = Number(counts.questions || 0);
+  const submittedCount = safeCount(counts.submitted);
+  const questionCount = safeCount(counts.questions);
   return {
     summary: ['처리할 항목 ' + total + '건', ...parts].join(' · '),
     historyLabel: '과제 이력 보기',
