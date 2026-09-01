@@ -5,6 +5,32 @@ import { validateInternalNote } from '../src/portal/admin-internal-notes.js';
 
 const root = resolve(import.meta.dirname, '..');
 const read = (path) => readFileSync(resolve(root, path), 'utf8');
+const normalizeLocalModulePath = (fromPath, specifier) => {
+  const [withoutQuery] = specifier.split('?');
+  const normalized = resolve(root, fromPath, '..', withoutQuery);
+  return normalized.startsWith(root) ? normalized.slice(root.length + 1) : null;
+};
+const localImportsFrom = (path) => {
+  const source = read(path);
+  const imports = [...source.matchAll(/import\s+(?:[^'";]+\s+from\s+)?['"]([^'"]+)['"]/g)];
+  return imports
+    .map(([, specifier]) => specifier)
+    .filter((specifier) => specifier.startsWith('.'))
+    .map((specifier) => normalizeLocalModulePath(path, specifier))
+    .filter(Boolean);
+};
+const collectImportGraph = (entryPath) => {
+  const pending = [entryPath];
+  const seen = new Set();
+  while (pending.length) {
+    const path = pending.pop();
+    if (seen.has(path)) continue;
+    seen.add(path);
+    if (!path.endsWith('.js')) continue;
+    for (const importedPath of localImportsFrom(path)) pending.push(importedPath);
+  }
+  return [...seen].sort();
+};
 
 const MIGRATION = 'supabase/migrations/20260829000000_review_internal_notes.sql';
 const migration = read(MIGRATION);
@@ -44,6 +70,19 @@ describe('internal notes — never reach the student surface', () => {
     for (const path of ['src/portal/student.js', 'src/portal/domain.js', 'src/portal/client.js', 'src/auth.js']) {
       expect(read(path), path).not.toMatch(/review_internal_notes|upsert_review_internal_note|internal_note|internalNote|내부 메모|원장 전용/i);
     }
+  });
+
+  it('keeps the student import graph away from admin-only modules and database names', () => {
+    const graph = collectImportGraph('src/portal/student.js');
+    expect(graph).not.toContain('src/portal/admin-internal-notes.js');
+    for (const path of graph) {
+      expect(read(path), path).not.toMatch(/review_internal_notes|upsert_review_internal_note|internal_note|internalNote/i);
+    }
+  });
+
+  it('marks the internal-note module itself as admin-only', () => {
+    expect(read('src/portal/admin-internal-notes.js')).toMatch(/ADMIN-ONLY/);
+    expect(collectImportGraph('src/portal/admin.js')).toContain('src/portal/admin-internal-notes.js');
   });
 
   it('does not put the note on a table students can read', () => {
