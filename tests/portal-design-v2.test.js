@@ -53,6 +53,8 @@ describe('portal design v2', () => {
     expect(css).toContain('.student-status-principal_check');
     expect(css).toContain('.student-status-questions');
     expect(adminJs).toContain("byId('studentStatusItems')");
+    expect(admin).toContain('id=actionItems class="cards action-items" aria-live=polite');
+    expect(admin).toContain('id=studentStatusItems class="cards student-status-items" aria-live=polite');
     expect(admin).toContain('id=studentStatusSummaryCount');
     expect(admin).toContain('조치 학생 집계 중');
     expect(adminJs).toContain("byId('studentStatusSummaryCount').textContent = rows.length ? '조치 학생 ' + rows.length + '명' : '조치 학생 없음'");
