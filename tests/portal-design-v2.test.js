@@ -30,6 +30,15 @@ describe('portal design v2', () => {
     expect(admin).toContain('확정 후 다음 제출로 이동');
   });
 
+  it('links admin work lists to the count chips generated from their rendered rows', () => {
+    expect(admin).toContain('id=actionItems class="cards action-items" aria-live=polite aria-describedby=actionSummaryCount');
+    expect(admin).toContain('id=studentStatusItems class="cards student-status-items" aria-live=polite aria-describedby=studentStatusSummaryCount');
+    expect(adminJs).toContain("byId('actionSummaryCount').textContent = adminSummaryCountCopy('actions', rows)");
+    expect(adminJs).toContain("byId('actionItems').replaceChildren(...rows.map(actionCard))");
+    expect(adminJs).toContain("byId('studentStatusSummaryCount').textContent = adminSummaryCountCopy('students', rows)");
+    expect(adminJs).toContain("byId('studentStatusItems').replaceChildren(...rows.map(studentStatusCard))");
+  });
+
   it('surfaces actionable revision and overdue work without making the operator inspect dates', () => {
     for (const id of ['principalCheckCount', 'questionCount', 'revisionCount', 'overdueCount', 'actionSection', 'actionItems', 'actionEmpty', 'studentStatusSection', 'studentStatusItems']) {
       expect(admin).toContain(`id=${id}`);
