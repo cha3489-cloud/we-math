@@ -875,6 +875,7 @@ function renderActionItems() {
   byId('actionShowAll').textContent = copy.resetLabel;
   byId('actionShowAll').setAttribute('aria-label', copy.resetAriaLabel);
   byId('actionShowAll').hidden = copy.clearHidden;
+  byId('actionSummaryCount').textContent = rows.length ? '후속 확인 ' + rows.length + '건' : '후속 확인 없음';
   byId('actionEmpty').querySelector('h3').textContent = copy.emptyTitle;
   byId('actionEmpty').querySelector('p').textContent = copy.emptyBody;
   byId('actionEmpty').hidden = Boolean(rows.length);

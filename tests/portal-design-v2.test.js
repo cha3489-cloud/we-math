@@ -90,6 +90,10 @@ describe('portal design v2', () => {
     expect(adminJs).toContain('loadQuestionCount');
     expect(adminJs).toContain("switchTab('questions')");
     expect(adminJs).toContain("openActionFilter('principal_check')");
+    expect(admin).toContain('id=actionSummaryCount');
+    expect(admin).toContain('후속 확인 집계 중');
+    expect(adminJs).toContain("byId('actionSummaryCount').textContent = rows.length ? '후속 확인 ' + rows.length + '건' : '후속 확인 없음'");
+    expect(css).toContain('.action-summary-count');
     expect(adminJs).toContain('action-reason');
     expect(adminJs).toContain('action-next');
     expect(adminJs).toContain('action-card-actions');
