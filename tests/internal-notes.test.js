@@ -31,6 +31,20 @@ const collectImportGraph = (entryPath) => {
   }
   return [...seen].sort();
 };
+const NON_ADMIN_SURFACE_ENTRIES = [
+  'src/portal/student.js',
+  'src/tablet/main.js',
+  'src/main.js',
+  'src/analytics.js',
+];
+const INTERNAL_NOTE_MARKERS = /review_internal_notes|upsert_review_internal_note|internal_note|internalNote/i;
+const expectNoInternalNoteMarkersInImportGraph = (entryPath) => {
+  const graph = collectImportGraph(entryPath);
+  expect(graph).not.toContain('src/portal/admin-internal-notes.js');
+  for (const path of graph) {
+    expect(read(path), `${entryPath} imports ${path}`).not.toMatch(INTERNAL_NOTE_MARKERS);
+  }
+};
 
 const MIGRATION = 'supabase/migrations/20260829000000_review_internal_notes.sql';
 const migration = read(MIGRATION);
@@ -72,11 +86,18 @@ describe('internal notes — never reach the student surface', () => {
     }
   });
 
-  it('keeps the student import graph away from admin-only modules and database names', () => {
-    const graph = collectImportGraph('src/portal/student.js');
-    expect(graph).not.toContain('src/portal/admin-internal-notes.js');
-    for (const path of graph) {
-      expect(read(path), path).not.toMatch(/review_internal_notes|upsert_review_internal_note|internal_note|internalNote/i);
+  it('covers every non-admin browser entry in the internal-note source graph guard', () => {
+    expect(NON_ADMIN_SURFACE_ENTRIES).toEqual(expect.arrayContaining([
+      'src/portal/student.js',
+      'src/tablet/main.js',
+      'src/main.js',
+      'src/analytics.js',
+    ]));
+  });
+
+  it('keeps every non-admin import graph away from admin-only modules and database names', () => {
+    for (const entryPath of NON_ADMIN_SURFACE_ENTRIES) {
+      expectNoInternalNoteMarkersInImportGraph(entryPath);
     }
   });
 
