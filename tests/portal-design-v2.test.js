@@ -103,6 +103,9 @@ describe('portal design v2', () => {
     expect(adminJs).toContain("byId('actionSection').classList.toggle('action-section-filtered'");
     expect(adminJs).toContain("byId('actionShowAll').setAttribute('aria-label', copy.resetAriaLabel)");
     expect(css).toContain('.action-section-filtered');
+    expect(css).toMatch(/@media\(max-width:640px\)[\s\S]*[.]action-section,[.]student-status-section\{padding:14px/);
+    expect(css).toMatch(/@media\(max-width:640px\)[\s\S]*[.]action-card-actions,[.]student-status-actions\{display:grid;grid-template-columns:repeat\(2,minmax\(0,1fr\)\)/);
+    expect(css).toMatch(/@media\(max-width:640px\)[\s\S]*[.]action-card-actions button,[.]student-status-actions button\{width:100%;min-width:0/);
     expect(adminJs).toContain("byId('questionsSection').classList.toggle('question-section-filtered'");
     expect(css).toContain('.question-section-filtered');
     expect(adminJs).toContain('setWorkflowStudentFilter(assignmentStudent(assignment))');
