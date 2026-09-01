@@ -862,6 +862,7 @@ function actionCard(entry) {
   showHistory.type = 'button';
   showHistory.className = 'secondary small';
   showHistory.textContent = '이 학생 기록 보기';
+  showHistory.setAttribute('aria-label', assignmentStudent(assignment) + ' 학생 ' + assignment.title + ' 기록 보기');
   showHistory.addEventListener('click', () => setWorkflowStudentFilter(assignmentStudent(assignment)));
   actions.append(showHistory);
   card.append(actions);

@@ -97,6 +97,7 @@ describe('portal design v2', () => {
     expect(adminJs).toContain('action-reason');
     expect(adminJs).toContain('action-next');
     expect(adminJs).toContain('action-card-actions');
+    expect(adminJs).toContain("showHistory.setAttribute('aria-label', assignmentStudent(assignment) + ' 학생 ' + assignment.title + ' 기록 보기')");
     expect(adminJs).toContain("byId('actionSection').classList.toggle('action-section-filtered'");
     expect(adminJs).toContain("byId('actionShowAll').setAttribute('aria-label', copy.resetAriaLabel)");
     expect(css).toContain('.action-section-filtered');
