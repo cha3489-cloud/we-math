@@ -6,7 +6,7 @@ import {
   waitingLabel, REVIEW_TAGS, validateProblemRef,
   validateFeedbackItems, checkItemsForStatus, composeFeedbackBody, isAutoComposedFeedback,
   authErrorMessage, adminWorkflowMeta, summarizeAdminWorkflows, summarizeStudentOperations,
-  studentOperationStatusCopy,
+  studentOperationStatusCopy, adminSummaryCountCopy,
   isActiveStudentAssignment, isActiveProfile, collectKeysetPages, createLatestRequestGate,
   reviewQueue, reconcileQueueSelection, filteredAdminListCopy, adminActionFilterCopy,
 } from './domain.js';
@@ -876,7 +876,7 @@ function renderActionItems() {
   byId('actionShowAll').textContent = copy.resetLabel;
   byId('actionShowAll').setAttribute('aria-label', copy.resetAriaLabel);
   byId('actionShowAll').hidden = copy.clearHidden;
-  byId('actionSummaryCount').textContent = rows.length ? '후속 확인 ' + rows.length + '건' : '후속 확인 없음';
+  byId('actionSummaryCount').textContent = adminSummaryCountCopy('actions', rows);
   byId('actionEmpty').querySelector('h3').textContent = copy.emptyTitle;
   byId('actionEmpty').querySelector('p').textContent = copy.emptyBody;
   byId('actionEmpty').hidden = Boolean(rows.length);
@@ -943,7 +943,7 @@ function studentStatusCard(entry) {
 }
 function renderStudentStatusItems() {
   const rows = operationsSummary.studentItems || [];
-  byId('studentStatusSummaryCount').textContent = rows.length ? '조치 학생 ' + rows.length + '명' : '조치 학생 없음';
+  byId('studentStatusSummaryCount').textContent = adminSummaryCountCopy('students', rows);
   byId('studentStatusEmpty').hidden = Boolean(rows.length);
   byId('studentStatusItems').replaceChildren(...rows.map(studentStatusCard));
 }

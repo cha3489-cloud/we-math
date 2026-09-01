@@ -240,6 +240,11 @@ export function studentOperationStatusCopy(entry = {}) {
     questionsLabel: questionCount > 1 ? '질문 ' + questionCount + '건 보기' : '질문 보기',
   };
 }
+export function adminSummaryCountCopy(kind, rows = []) {
+  const count = normalizeRelation(rows).length;
+  if (kind === 'students') return count ? '조치 학생 ' + count + '명' : '조치 학생 없음';
+  return count ? '후속 확인 ' + count + '건' : '후속 확인 없음';
+}
 
 const ADMIN_ACTION_FILTER_COPY = {
   all: {

@@ -57,7 +57,7 @@ describe('portal design v2', () => {
     expect(admin).toContain('id=studentStatusItems class="cards student-status-items" aria-live=polite');
     expect(admin).toContain('id=studentStatusSummaryCount');
     expect(admin).toContain('조치 학생 집계 중');
-    expect(adminJs).toContain("byId('studentStatusSummaryCount').textContent = rows.length ? '조치 학생 ' + rows.length + '명' : '조치 학생 없음'");
+    expect(adminJs).toContain("byId('studentStatusSummaryCount').textContent = adminSummaryCountCopy('students', rows)");
     expect(css).toContain('.student-status-count');
     expect(admin).toContain('id=userListPanel');
     expect(admin).toContain('id=workflowHistoryPanel');
@@ -94,7 +94,7 @@ describe('portal design v2', () => {
     expect(adminJs).toContain("openActionFilter('principal_check')");
     expect(admin).toContain('id=actionSummaryCount');
     expect(admin).toContain('후속 확인 집계 중');
-    expect(adminJs).toContain("byId('actionSummaryCount').textContent = rows.length ? '후속 확인 ' + rows.length + '건' : '후속 확인 없음'");
+    expect(adminJs).toContain("byId('actionSummaryCount').textContent = adminSummaryCountCopy('actions', rows)");
     expect(css).toContain('.action-summary-count');
     expect(adminJs).toContain('action-reason');
     expect(adminJs).toContain('action-next');
