@@ -134,6 +134,12 @@ describe('portal domain rules', () => {
     expect(studentOperationStatusCopy({ total: 1, counts: { principal_check: 0, submitted: 1, needs_revision: 0, overdue: 0, questions: 0 } }).summary)
       .toBe('처리할 항목 1건 · 검토 1');
   });
+
+  it('falls back to stable student status totals when the explicit total is invalid', () => {
+    expect(studentOperationStatusCopy({ total: '미집계', counts: { submitted: 2, questions: 1 } }).summary)
+      .toBe('처리할 항목 3건 · 검토 2 · 질문 1');
+  });
+
   it('formats admin summary count chips from the rendered rows', () => {
     expect(adminSummaryCountCopy('actions', [{}, {}, {}])).toBe('후속 확인 3건');
     expect(adminSummaryCountCopy('actions', [])).toBe('후속 확인 없음');
