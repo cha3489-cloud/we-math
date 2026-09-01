@@ -941,6 +941,7 @@ function studentStatusCard(entry) {
 }
 function renderStudentStatusItems() {
   const rows = operationsSummary.studentItems || [];
+  byId('studentStatusSummaryCount').textContent = rows.length ? '조치 학생 ' + rows.length + '명' : '조치 학생 없음';
   byId('studentStatusEmpty').hidden = Boolean(rows.length);
   byId('studentStatusItems').replaceChildren(...rows.map(studentStatusCard));
 }

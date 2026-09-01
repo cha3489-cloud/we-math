@@ -53,6 +53,10 @@ describe('portal design v2', () => {
     expect(css).toContain('.student-status-principal_check');
     expect(css).toContain('.student-status-questions');
     expect(adminJs).toContain("byId('studentStatusItems')");
+    expect(admin).toContain('id=studentStatusSummaryCount');
+    expect(admin).toContain('조치 학생 집계 중');
+    expect(adminJs).toContain("byId('studentStatusSummaryCount').textContent = rows.length ? '조치 학생 ' + rows.length + '명' : '조치 학생 없음'");
+    expect(css).toContain('.student-status-count');
     expect(admin).toContain('id=userListPanel');
     expect(admin).toContain('id=workflowHistoryPanel');
     expect(admin).toContain('전체 사용자 목록');
