@@ -200,7 +200,7 @@ describe('portal design v2', () => {
 
   it('falls back for malformed student status card strings', () => {
     const source = adminJs.match(/function studentStatusCard[\s\S]*?\n}/)?.[0] || '';
-    const render = (entry) => {
+    const render = (entry, statusCopy = {}) => {
       const dom = new JSDOM('<div id=adminError></div>');
       const byId = (id) => dom.window.document.getElementById(id);
       const showError = (el, message) => { el.textContent = message || ''; };
@@ -221,8 +221,9 @@ describe('portal design v2', () => {
         historyLabel: '과제 이력 보기',
         reviewLabel: '검토 대기 열기',
         questionsLabel: '질문 보기',
+        ...statusCopy,
       });
-      const studentOperationSafeCounts = () => ({ submitted: 0, questions: 0 });
+      const studentOperationSafeCounts = () => ({ submitted: 1, questions: 1 });
       return cardFactory(
         dom.window.document,
         studentOperationStatusCopy,
@@ -242,10 +243,17 @@ describe('portal design v2', () => {
       nextAction: () => '제출물을 검토하세요.',
       visibleItems: ['검토 대기 · A', { text: '객체 항목' }, undefined],
       hiddenItemCount: 0,
+    }, {
+      summary: { text: '처리할 항목 1건' },
+      historyLabel: undefined,
+      reviewLabel: ['검토 대기 열기'],
+      questionsLabel: () => '질문 보기',
     });
 
     expect(card.querySelector('h3')?.textContent).toBe('학생');
     expect(card.querySelector('.workflow-status')?.textContent).toBe('상태 확인 필요');
+    expect(card.querySelector('.meta')?.textContent).toBe('처리할 항목 0건');
+    expect([...card.querySelectorAll('button')].map((button) => button.textContent)).toEqual(['과제 이력 보기', '검토 대기 열기', '질문 보기']);
     expect(card.querySelector('.action-next')?.textContent).toBe('다음 조치: 담당자가 상태를 확인하세요.');
     expect(card.textContent).not.toContain('[object Object]');
     expect(card.textContent).not.toContain('undefined');

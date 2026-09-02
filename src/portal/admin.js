@@ -895,6 +895,7 @@ function openStudentQuestions(studentName) {
 function studentStatusCard(entry) {
   const copy = studentOperationStatusCopy(entry);
   const actionCounts = studentOperationSafeCounts(entry);
+  const safeCopyString = (value, fallback) => typeof value === 'string' && value.trim() ? value.trim() : fallback;
   const safeStudentName = typeof entry.name === 'string' && entry.name.trim() ? entry.name.trim() : '학생';
   const safeLabel = typeof entry.label === 'string' && entry.label.trim() ? entry.label.trim() : '상태 확인 필요';
   const safeNextAction = typeof entry.nextAction === 'string' && entry.nextAction.trim() ? entry.nextAction.trim() : '담당자가 상태를 확인하세요.';
@@ -904,7 +905,7 @@ function studentStatusCard(entry) {
   const heading = document.createElement('h3'); heading.textContent = safeStudentName;
   const label = document.createElement('span'); label.className = 'workflow-status status-' + statusKey; label.textContent = safeLabel;
   const counts = document.createElement('p'); counts.className = 'meta';
-  counts.textContent = copy.summary;
+  counts.textContent = safeCopyString(copy.summary, '처리할 항목 0건');
   const itemList = document.createElement('ul');
   itemList.className = 'student-status-items-list';
   const visibleItems = Array.isArray(entry.visibleItems) ? entry.visibleItems : [];
@@ -926,20 +927,20 @@ function studentStatusCard(entry) {
   const showHistory = document.createElement('button');
   showHistory.type = 'button';
   showHistory.className = 'secondary small';
-  showHistory.textContent = copy.historyLabel;
+  showHistory.textContent = safeCopyString(copy.historyLabel, '과제 이력 보기');
   showHistory.setAttribute('aria-label', safeStudentName + ' 학생 과제 이력 보기');
   showHistory.addEventListener('click', () => setWorkflowStudentFilter(safeStudentName));
   const showReview = document.createElement('button');
   showReview.type = 'button';
   showReview.className = 'secondary small';
-  showReview.textContent = copy.reviewLabel;
+  showReview.textContent = safeCopyString(copy.reviewLabel, '검토 대기 열기');
   showReview.setAttribute('aria-label', safeStudentName + ' 학생 검토 대기 ' + actionCounts.submitted + '건 열기');
   showReview.hidden = !actionCounts.submitted;
   showReview.addEventListener('click', () => openStudentReview(safeStudentName).catch((error) => showError(byId('adminError'), error.message)));
   const showQuestions = document.createElement('button');
   showQuestions.type = 'button';
   showQuestions.className = 'secondary small';
-  showQuestions.textContent = copy.questionsLabel;
+  showQuestions.textContent = safeCopyString(copy.questionsLabel, '질문 보기');
   showQuestions.setAttribute('aria-label', safeStudentName + ' 학생 질문 ' + actionCounts.questions + '건 보기');
   showQuestions.hidden = !actionCounts.questions;
   showQuestions.addEventListener('click', () => openStudentQuestions(safeStudentName));
