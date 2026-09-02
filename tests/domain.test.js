@@ -178,6 +178,17 @@ describe('portal domain rules', () => {
     expect(copy.questionsLabel).toBe('질문 보기');
   });
 
+  it('ignores array and object student status counts instead of coercing them', () => {
+    const copy = studentOperationStatusCopy({
+      total: '미집계',
+      counts: { submitted: [2], overdue: ['3'], needs_revision: { valueOf: () => 4 }, questions: 2 },
+    });
+
+    expect(copy.summary).toBe('처리할 항목 2건 · 질문 2');
+    expect(copy.reviewLabel).toBe('검토 대기 열기');
+    expect(copy.questionsLabel).toBe('질문 2건 보기');
+  });
+
   it('falls back to counted student status totals for implicit-conversion explicit totals', () => {
     for (const total of [undefined, null, '', true, false, [], [2], {}]) {
       expect(studentOperationStatusCopy({ total, counts: { submitted: 2, questions: 1 } }).summary)
