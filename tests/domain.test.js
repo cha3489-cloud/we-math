@@ -178,6 +178,13 @@ describe('portal domain rules', () => {
     expect(copy.questionsLabel).toBe('질문 보기');
   });
 
+  it('falls back to counted student status totals for implicit-conversion explicit totals', () => {
+    for (const total of [undefined, null, '', true, false, [], [2], {}]) {
+      expect(studentOperationStatusCopy({ total, counts: { submitted: 2, questions: 1 } }).summary)
+        .toBe('처리할 항목 3건 · 검토 2 · 질문 1');
+    }
+  });
+
   it('formats admin summary count chips from the rendered rows', () => {
     expect(adminSummaryCountCopy('actions', [{}, {}, {}])).toBe('후속 확인 3건');
     expect(adminSummaryCountCopy('actions', [])).toBe('후속 확인 없음');

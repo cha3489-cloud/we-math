@@ -235,9 +235,15 @@ export function studentOperationStatusCopy(entry = {}) {
     .filter((item) => item.count > 0)
     .map((item) => item.label + ' ' + item.count);
   const fallbackTotal = Object.values(counts).reduce((sum, count) => sum + safeCount(count), 0);
-  const hasExplicitTotal = entry.total !== undefined && entry.total !== null && entry.total !== '';
-  const parsedTotal = Number(entry.total);
-  const total = hasExplicitTotal && Number.isInteger(parsedTotal) && parsedTotal >= 0 ? parsedTotal : fallbackTotal;
+  const safeTotal = (value) => {
+    if (typeof value === 'number') return Number.isInteger(value) && value >= 0 ? value : null;
+    if (typeof value === 'string' && value !== '') {
+      const parsed = Number(value);
+      return Number.isInteger(parsed) && parsed >= 0 ? parsed : null;
+    }
+    return null;
+  };
+  const total = safeTotal(entry.total) ?? fallbackTotal;
   const submittedCount = safeCount(counts.submitted);
   const questionCount = safeCount(counts.questions);
   return {
