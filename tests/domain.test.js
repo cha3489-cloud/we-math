@@ -140,6 +140,13 @@ describe('portal domain rules', () => {
       .toBe('처리할 항목 3건 · 검토 2 · 질문 1');
   });
 
+  it('falls back to counted student status totals for impossible explicit totals', () => {
+    for (const total of [-1, 1.5, Infinity]) {
+      expect(studentOperationStatusCopy({ total, counts: { submitted: 2 } }).summary)
+        .toBe('처리할 항목 2건 · 검토 2');
+    }
+  });
+
   it('ignores non-numeric student status counts when building fallback copy', () => {
     const copy = studentOperationStatusCopy({
       total: '미집계',
