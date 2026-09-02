@@ -220,7 +220,8 @@ export function summarizeStudentOperations(assignments = [], now = new Date(), q
 export function studentOperationStatusCopy(entry = {}) {
   const counts = entry.counts || {};
   const safeCount = (value) => {
-    const parsed = Number(value || 0);
+    if (value === undefined || value === null || value === '' || typeof value === 'boolean') return 0;
+    const parsed = Number(value);
     return Number.isInteger(parsed) && parsed >= 0 ? parsed : 0;
   };
   const parts = [

@@ -168,6 +168,16 @@ describe('portal domain rules', () => {
     expect(copy.questionsLabel).toBe('질문 보기');
   });
 
+  it('ignores implicit-conversion student status counts when building fallback copy', () => {
+    const copy = studentOperationStatusCopy({
+      counts: { principal_check: undefined, submitted: true, needs_revision: null, overdue: '', questions: false },
+    });
+
+    expect(copy.summary).toBe('처리할 항목 0건');
+    expect(copy.reviewLabel).toBe('검토 대기 열기');
+    expect(copy.questionsLabel).toBe('질문 보기');
+  });
+
   it('formats admin summary count chips from the rendered rows', () => {
     expect(adminSummaryCountCopy('actions', [{}, {}, {}])).toBe('후속 확인 3건');
     expect(adminSummaryCountCopy('actions', [])).toBe('후속 확인 없음');
