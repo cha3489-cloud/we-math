@@ -78,9 +78,9 @@ describe('portal design v2', () => {
     expect(admin).toContain('id=workflowFilterClear');
     expect(adminJs).toContain('workflowStudentFilter');
     expect(adminJs).toContain('filterWorkflowsByStudent');
-    expect(adminJs).toContain('setWorkflowStudentFilter(entry.name)');
-    expect(adminJs).toContain('openStudentReview(entry.name)');
-    expect(adminJs).toContain('openStudentQuestions(entry.name)');
+    expect(adminJs).toContain('setWorkflowStudentFilter(safeStudentName)');
+    expect(adminJs).toContain('openStudentReview(safeStudentName)');
+    expect(adminJs).toContain('openStudentQuestions(safeStudentName)');
     expect(adminJs).toContain('questionStudentFilter');
     expect(adminJs).toContain('studentOperationSafeCounts');
     const studentStatusCardSource = adminJs.match(/function studentStatusCard[\s\S]*?\n}/)?.[0] || '';
@@ -196,6 +196,60 @@ describe('portal design v2', () => {
 
     const card = render({ name: '테스트 A', label: '검토 대기', status: 'submitted', visibleItems: ['검토 대기 · A'], hiddenItemCount: 2 });
     expect(card.textContent).toContain('외 2건은 이 학생 기록에서 확인');
+  });
+
+  it('falls back for malformed student status card strings', () => {
+    const source = adminJs.match(/function studentStatusCard[\s\S]*?\n}/)?.[0] || '';
+    const render = (entry) => {
+      const dom = new JSDOM('<div id=adminError></div>');
+      const byId = (id) => dom.window.document.getElementById(id);
+      const showError = (el, message) => { el.textContent = message || ''; };
+      const noop = () => {};
+      const cardFactory = new Function(
+        'document',
+        'studentOperationStatusCopy',
+        'studentOperationSafeCounts',
+        'setWorkflowStudentFilter',
+        'openStudentReview',
+        'openStudentQuestions',
+        'showError',
+        'byId',
+        source + '; return studentStatusCard;',
+      );
+      const studentOperationStatusCopy = () => ({
+        summary: '처리할 항목 0건',
+        historyLabel: '과제 이력 보기',
+        reviewLabel: '검토 대기 열기',
+        questionsLabel: '질문 보기',
+      });
+      const studentOperationSafeCounts = () => ({ submitted: 0, questions: 0 });
+      return cardFactory(
+        dom.window.document,
+        studentOperationStatusCopy,
+        studentOperationSafeCounts,
+        noop,
+        async () => {},
+        noop,
+        showError,
+        byId,
+      )(entry);
+    };
+
+    const card = render({
+      name: { raw: '테스트 A' },
+      label: ['검토 대기'],
+      status: 'submitted',
+      nextAction: () => '제출물을 검토하세요.',
+      visibleItems: ['검토 대기 · A', { text: '객체 항목' }, undefined],
+      hiddenItemCount: 0,
+    });
+
+    expect(card.querySelector('h3')?.textContent).toBe('학생');
+    expect(card.querySelector('.workflow-status')?.textContent).toBe('상태 확인 필요');
+    expect(card.querySelector('.action-next')?.textContent).toBe('다음 조치: 담당자가 상태를 확인하세요.');
+    expect(card.textContent).not.toContain('[object Object]');
+    expect(card.textContent).not.toContain('undefined');
+    expect(card.textContent).not.toContain('() =>');
   });
 
   it('keeps filtered history and question empty states specific to the selected student', () => {

@@ -895,11 +895,14 @@ function openStudentQuestions(studentName) {
 function studentStatusCard(entry) {
   const copy = studentOperationStatusCopy(entry);
   const actionCounts = studentOperationSafeCounts(entry);
+  const safeStudentName = typeof entry.name === 'string' && entry.name.trim() ? entry.name.trim() : '학생';
+  const safeLabel = typeof entry.label === 'string' && entry.label.trim() ? entry.label.trim() : '상태 확인 필요';
+  const safeNextAction = typeof entry.nextAction === 'string' && entry.nextAction.trim() ? entry.nextAction.trim() : '담당자가 상태를 확인하세요.';
   const card = document.createElement('article');
   const statusKey = String(entry.status || 'open').replace(/[^a-z0-9_-]/gi, '_');
   card.className = 'card student-status-card student-status-' + statusKey;
-  const heading = document.createElement('h3'); heading.textContent = entry.name;
-  const label = document.createElement('span'); label.className = 'workflow-status status-' + statusKey; label.textContent = entry.label;
+  const heading = document.createElement('h3'); heading.textContent = safeStudentName;
+  const label = document.createElement('span'); label.className = 'workflow-status status-' + statusKey; label.textContent = safeLabel;
   const counts = document.createElement('p'); counts.className = 'meta';
   counts.textContent = copy.summary;
   const itemList = document.createElement('ul');
@@ -908,7 +911,7 @@ function studentStatusCard(entry) {
   const hiddenItemCount = Number.isInteger(entry.hiddenItemCount) && entry.hiddenItemCount > 0 ? entry.hiddenItemCount : 0;
   itemList.replaceChildren(...visibleItems.map((text) => {
     const item = document.createElement('li');
-    item.textContent = text;
+    item.textContent = typeof text === 'string' && text.trim() ? text.trim() : '상태 세부 항목 확인 필요';
     return item;
   }));
   if (hiddenItemCount) {
@@ -917,29 +920,29 @@ function studentStatusCard(entry) {
     hidden.textContent = '외 ' + hiddenItemCount + '건은 이 학생 기록에서 확인';
     itemList.append(hidden);
   }
-  const next = document.createElement('p'); next.className = 'action-next'; next.textContent = '다음 조치: ' + entry.nextAction;
+  const next = document.createElement('p'); next.className = 'action-next'; next.textContent = '다음 조치: ' + safeNextAction;
   const actions = document.createElement('div');
   actions.className = 'student-status-actions';
   const showHistory = document.createElement('button');
   showHistory.type = 'button';
   showHistory.className = 'secondary small';
   showHistory.textContent = copy.historyLabel;
-  showHistory.setAttribute('aria-label', entry.name + ' 학생 과제 이력 보기');
-  showHistory.addEventListener('click', () => setWorkflowStudentFilter(entry.name));
+  showHistory.setAttribute('aria-label', safeStudentName + ' 학생 과제 이력 보기');
+  showHistory.addEventListener('click', () => setWorkflowStudentFilter(safeStudentName));
   const showReview = document.createElement('button');
   showReview.type = 'button';
   showReview.className = 'secondary small';
   showReview.textContent = copy.reviewLabel;
-  showReview.setAttribute('aria-label', entry.name + ' 학생 검토 대기 ' + actionCounts.submitted + '건 열기');
+  showReview.setAttribute('aria-label', safeStudentName + ' 학생 검토 대기 ' + actionCounts.submitted + '건 열기');
   showReview.hidden = !actionCounts.submitted;
-  showReview.addEventListener('click', () => openStudentReview(entry.name).catch((error) => showError(byId('adminError'), error.message)));
+  showReview.addEventListener('click', () => openStudentReview(safeStudentName).catch((error) => showError(byId('adminError'), error.message)));
   const showQuestions = document.createElement('button');
   showQuestions.type = 'button';
   showQuestions.className = 'secondary small';
   showQuestions.textContent = copy.questionsLabel;
-  showQuestions.setAttribute('aria-label', entry.name + ' 학생 질문 ' + actionCounts.questions + '건 보기');
+  showQuestions.setAttribute('aria-label', safeStudentName + ' 학생 질문 ' + actionCounts.questions + '건 보기');
   showQuestions.hidden = !actionCounts.questions;
-  showQuestions.addEventListener('click', () => openStudentQuestions(entry.name));
+  showQuestions.addEventListener('click', () => openStudentQuestions(safeStudentName));
   actions.append(showHistory, showReview, showQuestions);
   card.append(heading, label, counts, itemList, next, actions);
   return card;
