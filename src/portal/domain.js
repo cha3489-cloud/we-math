@@ -218,7 +218,12 @@ export function summarizeStudentOperations(assignments = [], now = new Date(), q
 }
 
 export function studentOperationStatusCopy(entry = {}) {
-  const counts = entry.counts || {};
+  const isPlainObject = (value) => {
+    if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
+    const prototype = Object.getPrototypeOf(value);
+    return prototype === Object.prototype || prototype === null;
+  };
+  const counts = isPlainObject(entry.counts) ? entry.counts : {};
   const safeCount = (value) => {
     if (typeof value === 'number') return Number.isInteger(value) && value >= 0 ? value : 0;
     if (typeof value === 'string' && value !== '') {

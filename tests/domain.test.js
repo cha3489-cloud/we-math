@@ -189,6 +189,16 @@ describe('portal domain rules', () => {
     expect(copy.questionsLabel).toBe('질문 2건 보기');
   });
 
+  it('ignores non-object student status count containers', () => {
+    for (const counts of [null, [2, 3], '23', 7, () => ({ submitted: 2 })]) {
+      const copy = studentOperationStatusCopy({ total: '미집계', counts });
+
+      expect(copy.summary).toBe('처리할 항목 0건');
+      expect(copy.reviewLabel).toBe('검토 대기 열기');
+      expect(copy.questionsLabel).toBe('질문 보기');
+    }
+  });
+
   it('falls back to counted student status totals for implicit-conversion explicit totals', () => {
     for (const total of [undefined, null, '', true, false, [], [2], {}]) {
       expect(studentOperationStatusCopy({ total, counts: { submitted: 2, questions: 1 } }).summary)
