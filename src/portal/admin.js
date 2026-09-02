@@ -904,15 +904,17 @@ function studentStatusCard(entry) {
   counts.textContent = copy.summary;
   const itemList = document.createElement('ul');
   itemList.className = 'student-status-items-list';
-  itemList.replaceChildren(...entry.visibleItems.map((text) => {
+  const visibleItems = Array.isArray(entry.visibleItems) ? entry.visibleItems : [];
+  const hiddenItemCount = Number.isInteger(entry.hiddenItemCount) && entry.hiddenItemCount > 0 ? entry.hiddenItemCount : 0;
+  itemList.replaceChildren(...visibleItems.map((text) => {
     const item = document.createElement('li');
     item.textContent = text;
     return item;
   }));
-  if (entry.hiddenItemCount) {
+  if (hiddenItemCount) {
     const hidden = document.createElement('li');
     hidden.className = 'student-status-more';
-    hidden.textContent = '외 ' + entry.hiddenItemCount + '건은 이 학생 기록에서 확인';
+    hidden.textContent = '외 ' + hiddenItemCount + '건은 이 학생 기록에서 확인';
     itemList.append(hidden);
   }
   const next = document.createElement('p'); next.className = 'action-next'; next.textContent = '다음 조치: ' + entry.nextAction;

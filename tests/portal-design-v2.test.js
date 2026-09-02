@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
+import { JSDOM } from 'jsdom';
 
 const root = resolve(import.meta.dirname, '..');
 const read = (path) => readFileSync(resolve(root, path), 'utf8');
@@ -85,8 +86,8 @@ describe('portal design v2', () => {
     const studentStatusCardSource = adminJs.match(/function studentStatusCard[\s\S]*?\n}/)?.[0] || '';
     expect(studentStatusCardSource).not.toContain('entry.counts.');
     expect(adminJs).toContain('student-status-items-list');
-    expect(adminJs).toContain('entry.visibleItems.map');
-    expect(adminJs).toContain('entry.hiddenItemCount');
+    expect(adminJs).toContain('const visibleItems = Array.isArray(entry.visibleItems) ? entry.visibleItems : []');
+    expect(adminJs).toContain('const hiddenItemCount = Number.isInteger(entry.hiddenItemCount) && entry.hiddenItemCount > 0 ? entry.hiddenItemCount : 0');
     expect(css).toContain('.student-status-more');
     expect(adminJs).toContain('student-status-actions');
     expect(css).toContain('.student-status-actions');
@@ -146,6 +147,55 @@ describe('portal design v2', () => {
     expect(adminJs).toMatch(/card[.]append\(heading, status, title, metaLine\)/);
     expect(css).toContain('.workflow-overdue');
     expect(css).toContain('.workflow-status');
+  });
+
+  it('keeps malformed student status item previews from breaking card rendering', () => {
+    const source = adminJs.match(/function studentStatusCard[\s\S]*?\n}/)?.[0] || '';
+    const render = (entry) => {
+      const dom = new JSDOM('<div id=adminError></div>');
+      const byId = (id) => dom.window.document.getElementById(id);
+      const showError = (el, message) => { el.textContent = message || ''; };
+      const noop = () => {};
+      const cardFactory = new Function(
+        'document',
+        'studentOperationStatusCopy',
+        'studentOperationSafeCounts',
+        'setWorkflowStudentFilter',
+        'openStudentReview',
+        'openStudentQuestions',
+        'showError',
+        'byId',
+        source + '; return studentStatusCard;',
+      );
+      const studentOperationStatusCopy = () => ({
+        summary: '처리할 항목 0건',
+        historyLabel: '과제 이력 보기',
+        reviewLabel: '검토 대기 열기',
+        questionsLabel: '질문 보기',
+      });
+      const studentOperationSafeCounts = () => ({ submitted: 0, questions: 0 });
+      return cardFactory(
+        dom.window.document,
+        studentOperationStatusCopy,
+        studentOperationSafeCounts,
+        noop,
+        async () => {},
+        noop,
+        showError,
+        byId,
+      )(entry);
+    };
+
+    for (const visibleItems of [null, '검토 대기 · 문자열', { 0: '검토 대기 · 객체' }, undefined]) {
+      expect(() => render({ name: '테스트 A', label: '검토 대기', status: 'submitted', visibleItems, hiddenItemCount: 0 })).not.toThrow();
+    }
+    for (const hiddenItemCount of [-1, 1.5, true, '2', Infinity]) {
+      const card = render({ name: '테스트 A', label: '검토 대기', status: 'submitted', visibleItems: ['검토 대기 · A'], hiddenItemCount });
+      expect(card.textContent).not.toContain('외 ');
+    }
+
+    const card = render({ name: '테스트 A', label: '검토 대기', status: 'submitted', visibleItems: ['검토 대기 · A'], hiddenItemCount: 2 });
+    expect(card.textContent).toContain('외 2건은 이 학생 기록에서 확인');
   });
 
   it('keeps filtered history and question empty states specific to the selected student', () => {
