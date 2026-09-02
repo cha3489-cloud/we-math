@@ -221,7 +221,7 @@ export function studentOperationStatusCopy(entry = {}) {
   const counts = entry.counts || {};
   const safeCount = (value) => {
     const parsed = Number(value || 0);
-    return Number.isFinite(parsed) ? parsed : 0;
+    return Number.isInteger(parsed) && parsed >= 0 ? parsed : 0;
   };
   const parts = [
     ['principal_check', '원장확인'],

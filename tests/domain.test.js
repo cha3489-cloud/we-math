@@ -157,6 +157,17 @@ describe('portal domain rules', () => {
     expect(copy.questionsLabel).toBe('질문 보기');
   });
 
+  it('ignores impossible student status counts when building fallback labels', () => {
+    const copy = studentOperationStatusCopy({
+      total: '미집계',
+      counts: { principal_check: -1, submitted: 2.5, needs_revision: Infinity, overdue: '3', questions: 1 },
+    });
+
+    expect(copy.summary).toBe('처리할 항목 4건 · 미제출 3 · 질문 1');
+    expect(copy.reviewLabel).toBe('검토 대기 열기');
+    expect(copy.questionsLabel).toBe('질문 보기');
+  });
+
   it('formats admin summary count chips from the rendered rows', () => {
     expect(adminSummaryCountCopy('actions', [{}, {}, {}])).toBe('후속 확인 3건');
     expect(adminSummaryCountCopy('actions', [])).toBe('후속 확인 없음');
