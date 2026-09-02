@@ -81,14 +81,16 @@ describe('portal design v2', () => {
     expect(adminJs).toContain('openStudentReview(entry.name)');
     expect(adminJs).toContain('openStudentQuestions(entry.name)');
     expect(adminJs).toContain('questionStudentFilter');
-    expect(adminJs).toContain('counts.questions');
+    expect(adminJs).toContain('studentOperationSafeCounts');
+    const studentStatusCardSource = adminJs.match(/function studentStatusCard[\s\S]*?\n}/)?.[0] || '';
+    expect(studentStatusCardSource).not.toContain('entry.counts.');
     expect(adminJs).toContain('student-status-items-list');
     expect(adminJs).toContain('entry.visibleItems.map');
     expect(adminJs).toContain('entry.hiddenItemCount');
     expect(css).toContain('.student-status-more');
     expect(adminJs).toContain('student-status-actions');
     expect(css).toContain('.student-status-actions');
-    expect(adminJs).toContain('showQuestions.hidden = !entry.counts.questions');
+    expect(adminJs).toContain('showQuestions.hidden = !actionCounts.questions');
     expect(adminJs).toContain("showHistory.setAttribute('aria-label'");
     expect(adminJs).toContain("showReview.setAttribute('aria-label'");
     expect(adminJs).toContain("showQuestions.setAttribute('aria-label'");

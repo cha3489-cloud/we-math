@@ -46,6 +46,20 @@ export function assignmentStatus(assignment, now = new Date()) {
   return 'open';
 }
 
+function isPlainObject(value) {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
+  const prototype = Object.getPrototypeOf(value);
+  return prototype === Object.prototype || prototype === null;
+}
+function safeCount(value) {
+  if (typeof value === 'number') return Number.isInteger(value) && value >= 0 ? value : 0;
+  if (typeof value === 'string' && value !== '') {
+    const parsed = Number(value);
+    return Number.isInteger(parsed) && parsed >= 0 ? parsed : 0;
+  }
+  return 0;
+}
+
 const ADMIN_WORKFLOW_META = {
   principal_check: { label: '원장 확인 필요', actionRequired: true, priority: 0 },
   overdue: { label: '마감 지남 · 미제출', actionRequired: true, priority: 1, nextAction: '학생에게 제출 가능 여부를 확인하세요.' },
@@ -217,21 +231,18 @@ export function summarizeStudentOperations(assignments = [], now = new Date(), q
     .map(({ priority, ...row }) => row);
 }
 
-export function studentOperationStatusCopy(entry = {}) {
-  const isPlainObject = (value) => {
-    if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
-    const prototype = Object.getPrototypeOf(value);
-    return prototype === Object.prototype || prototype === null;
-  };
+export function studentOperationSafeCounts(entry = {}) {
   const counts = isPlainObject(entry.counts) ? entry.counts : {};
-  const safeCount = (value) => {
-    if (typeof value === 'number') return Number.isInteger(value) && value >= 0 ? value : 0;
-    if (typeof value === 'string' && value !== '') {
-      const parsed = Number(value);
-      return Number.isInteger(parsed) && parsed >= 0 ? parsed : 0;
-    }
-    return 0;
+  return {
+    principal_check: safeCount(counts.principal_check),
+    submitted: safeCount(counts.submitted),
+    needs_revision: safeCount(counts.needs_revision),
+    overdue: safeCount(counts.overdue),
+    questions: safeCount(counts.questions),
   };
+}
+export function studentOperationStatusCopy(entry = {}) {
+  const counts = studentOperationSafeCounts(entry);
   const parts = [
     ['principal_check', '원장확인'],
     ['submitted', '검토'],

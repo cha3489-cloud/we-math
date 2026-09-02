@@ -6,7 +6,7 @@ import {
   waitingLabel, REVIEW_TAGS, validateProblemRef,
   validateFeedbackItems, checkItemsForStatus, composeFeedbackBody, isAutoComposedFeedback,
   authErrorMessage, adminWorkflowMeta, summarizeAdminWorkflows, summarizeStudentOperations,
-  studentOperationStatusCopy, adminSummaryCountCopy,
+  studentOperationStatusCopy, studentOperationSafeCounts, adminSummaryCountCopy,
   isActiveStudentAssignment, isActiveProfile, collectKeysetPages, createLatestRequestGate,
   reviewQueue, reconcileQueueSelection, filteredAdminListCopy, adminActionFilterCopy,
 } from './domain.js';
@@ -894,6 +894,7 @@ function openStudentQuestions(studentName) {
 }
 function studentStatusCard(entry) {
   const copy = studentOperationStatusCopy(entry);
+  const actionCounts = studentOperationSafeCounts(entry);
   const card = document.createElement('article');
   const statusKey = String(entry.status || 'open').replace(/[^a-z0-9_-]/gi, '_');
   card.className = 'card student-status-card student-status-' + statusKey;
@@ -927,15 +928,15 @@ function studentStatusCard(entry) {
   showReview.type = 'button';
   showReview.className = 'secondary small';
   showReview.textContent = copy.reviewLabel;
-  showReview.setAttribute('aria-label', entry.name + ' 학생 검토 대기 ' + Number(entry.counts.submitted || 0) + '건 열기');
-  showReview.hidden = !entry.counts.submitted;
+  showReview.setAttribute('aria-label', entry.name + ' 학생 검토 대기 ' + actionCounts.submitted + '건 열기');
+  showReview.hidden = !actionCounts.submitted;
   showReview.addEventListener('click', () => openStudentReview(entry.name).catch((error) => showError(byId('adminError'), error.message)));
   const showQuestions = document.createElement('button');
   showQuestions.type = 'button';
   showQuestions.className = 'secondary small';
   showQuestions.textContent = copy.questionsLabel;
-  showQuestions.setAttribute('aria-label', entry.name + ' 학생 질문 ' + Number(entry.counts.questions || 0) + '건 보기');
-  showQuestions.hidden = !entry.counts.questions;
+  showQuestions.setAttribute('aria-label', entry.name + ' 학생 질문 ' + actionCounts.questions + '건 보기');
+  showQuestions.hidden = !actionCounts.questions;
   showQuestions.addEventListener('click', () => openStudentQuestions(entry.name));
   actions.append(showHistory, showReview, showQuestions);
   card.append(heading, label, counts, itemList, next, actions);
