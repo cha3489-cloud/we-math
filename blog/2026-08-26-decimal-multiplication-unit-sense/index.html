@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>소수 곱셈, 자리보다 먼저 보는 단위 감각 | 시퀀스 수학</title>
+  <meta name="description" content="소수 곱셈을 자리 옮기기 규칙으로만 외우기 전에 단위 감각, 첫 줄 시작, 어림, 풀이 시간, 오답 원인, 재풀이 성공, 자기 말로 설명을 함께 확인하는 방법을 차분히 정리합니다." />
+  <meta name="robots" content="index, follow" />
+  <link rel="canonical" href="https://sequencemath.co.kr/blog/2026-08-26-decimal-multiplication-unit-sense/" />
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://sequencemath.co.kr/blog/2026-08-26-decimal-multiplication-unit-sense/" />
+  <meta property="og:site_name" content="시퀀스 수학" />
+  <meta property="og:title" content="소수 곱셈, 자리보다 먼저 보는 단위 감각" />
+  <meta property="og:description" content="소수 곱셈을 자리 옮기기 규칙으로만 외우기 전에 단위 감각, 첫 줄 시작, 어림, 풀이 시간, 오답 원인, 재풀이 성공, 자기 말로 설명을 함께 확인하는 방법을 차분히 정리합니다." />
+  <link rel="icon" type="image/x-icon" href="../../assets/favicon-DFJ2ZmKB.ico" />
+  <link rel="apple-touch-icon" href="../../assets/symbol-CmROu1Co.png" />
+  <meta name="theme-color" content="#16181B" />
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "소수 곱셈, 자리보다 먼저 보는 단위 감각",
+  "description": "소수 곱셈을 자리 옮기기 규칙으로만 외우기 전에 단위 감각, 첫 줄 시작, 어림, 풀이 시간, 오답 원인, 재풀이 성공, 자기 말로 설명을 함께 확인하는 방법을 차분히 정리합니다.",
+  "datePublished": "2026-08-26",
+  "dateModified": "2026-08-26",
+  "inLanguage": "ko-KR",
+  "mainEntityOfPage": "https://sequencemath.co.kr/blog/2026-08-26-decimal-multiplication-unit-sense/",
+  "author": {
+    "@type": "Organization",
+    "name": "시퀀스 수학"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "시퀀스 수학",
+    "url": "https://sequencemath.co.kr/"
+  },
+  "keywords": [
+    "소수곱셈",
+    "초등수학",
+    "수학개념",
+    "자기말로설명",
+    "수학공부법",
+    "오답관리",
+    "학습루틴",
+    "시퀀스수학"
+  ]
+}
+  </script>
+  <script type="module" crossorigin src="../../assets/modulepreload-polyfill-Dezn_h7o.js"></script>
+  <script type="module" crossorigin src="../../assets/analytics-Cog-yM9Q.js"></script>
+  <link rel="stylesheet" crossorigin href="../../assets/analytics-B8Jmq6DP.css">
+</head>
+<body class="blog-page">
+  <header class="blog-topbar">
+    <a class="blog-brand" href="/" aria-label="시퀀스 수학 홈페이지로 이동">
+      <strong>시퀀스 수학</strong>
+      <span>Sequence Math</span>
+    </a>
+    <a class="blog-home-link" href="/blog/">블로그 목록 →</a>
+  </header>
+  <main>
+    <header class="article-header grid-bg">
+      <div class="wrap">
+        <p class="article-kicker">개념 설명</p>
+        <h1>소수 곱셈, 자리보다 먼저 보는 단위 감각</h1>
+        <p class="article-deck">소수 곱셈을 자리 옮기기 규칙으로만 외우기 전에 단위 감각, 첫 줄 시작, 어림, 풀이 시간, 오답 원인, 재풀이 성공, 자기 말로 설명을 함께 확인하는 방법을 차분히 정리합니다.</p>
+        <p class="article-meta"><time datetime="2026-08-26">2026.08.26</time> · 읽는 시간 약 4분</p>
+      </div>
+    </header>
+    <article class="article-body">
+      <h2>도입: 소수 곱셈에서 자릿수만 맞추면 된다고 느껴질 때</h2>
+      <p>소수 곱셈은 처음 배울 때 규칙이 또렷해 보입니다. 자연수처럼 곱한 뒤 소수점 아래 자리 수를 세어 찍으면 된다고 배우기 때문입니다. 그래서 문제를 어느 정도 맞히면 “이 단원은 괜찮다”고 느끼기 쉽습니다. 하지만 실제 학습에서는 정답률만으로 아이가 소수 곱셈을 이해했다고 판단하기 어렵습니다. 자리를 세는 절차는 따라 했지만, 왜 답이 그 정도 크기인지 설명하지 못하면 문장제나 단위가 붙은 문제에서 다시 멈출 수 있습니다.</p>
+      <p>가정에서 살펴볼 때도 아이에게 더 많은 문제를 바로 추가하기보다, 첫 줄을 어떻게 시작하는지 보는 편이 좋습니다. 0.4×3이 1보다 큰지 작은지, 2.5×0.6이 왜 2.5보다 작아지는지, 1.2m를 3번 더하면 어떤 양이 되는지 자기 말로 설명할 수 있는지가 중요합니다. 시퀀스 수학에서 개념을 확인할 때도 계산 결과 하나만 보지 않고, 단위 감각과 어림, 풀이 시간, 빈칸, 오답 원인, 재풀이 성공을 함께 봅니다. 재능이 아니라 반복이 만든 실력이라는 말은 이런 작은 확인이 쌓일 때 자연스럽게 드러납니다.</p>
+      <figure class="article-image">
+        <img src="../../img/blog/2026-08-26-decimal-multiplication-unit-sense-inline-01.png" alt="소수 곱셈을 자리보다 단위 감각으로 보는 대표 이미지" loading="lazy" width="1200" height="630" />
+        <figcaption>소수 곱셈을 자리보다 단위 감각으로 보는 대표 이미지</figcaption>
+      </figure>
+      <h2>1. 소수 곱셈은 먼저 ‘얼마쯤인지’를 묻습니다</h2>
+      <p>소수 곱셈에서 가장 먼저 확인할 것은 소수점 위치를 찍는 기술이 아니라 답의 크기를 예상하는 힘입니다. 예를 들어 0.8×4를 계산할 때 8×4=32를 떠올리는 것은 필요합니다. 그러나 그다음 “0.8이 거의 1에 가까운 수이므로 네 번이면 4보다 조금 작겠다”는 감각이 함께 있어야 합니다. 이 감각이 없으면 32, 3.2, 0.32 중 어느 답이 말이 되는지 스스로 걸러내기 어렵습니다.</p>
+      <p>부모가 옆에서 확인할 때는 “소수점 몇 칸 옮겼어?”라고 바로 묻기보다 “답이 1보다 클까, 작을까?”, “자연수로 바꾸어 생각하면 얼마쯤일까?”라고 먼저 물어볼 수 있습니다. 아이가 답의 범위를 자기 말로 설명하면 자리 계산이 조금 틀려도 다시 고칠 실마리가 생깁니다. 반대로 답은 맞혔지만 크기 판단을 전혀 하지 않았다면, 다음 문제에서 숫자가 바뀌었을 때 같은 안정감을 갖기 어렵습니다.</p>
+      <h2>2. 첫 줄은 규칙 암기가 아니라 단위 바꾸기에서 시작합니다</h2>
+      <p>소수 곱셈의 첫 줄은 아이마다 다르게 나타납니다. 어떤 아이는 바로 세로셈을 쓰고, 어떤 아이는 분수나 단위로 바꾸어 생각하며, 어떤 아이는 문제를 읽은 뒤 한동안 빈칸으로 둡니다. 이때 빈칸을 단순히 성실하지 않은 모습으로 보기보다, 첫 줄의 기준이 아직 정해지지 않았다는 신호로 볼 수 있습니다.</p>
+      <p>예를 들어 0.3×5는 0.3을 0.1이 3개라고 생각하면 0.1이 15개, 곧 1.5가 됩니다. 1.2×4는 1이 4개와 0.2가 4개로 나누어 볼 수 있습니다. 이런 첫 줄은 계산을 느리게 만드는 과정처럼 보일 수 있지만, 실제로는 소수의 단위를 붙잡는 연습입니다. 처음부터 모든 문제를 길게 풀 필요는 없습니다. 다만 아이가 한두 문제라도 “왜 이 답이 나오는지”를 자기 말로 설명할 수 있어야 이후의 반복이 단순한 손놀림으로 끝나지 않습니다.</p>
+      <figure class="article-image">
+        <img src="../../img/blog/2026-08-26-decimal-multiplication-unit-sense-inline-02.png" alt="어림, 단위 바꾸기, 첫 줄 시작을 나누어 보는 이미지" loading="lazy" width="1200" height="630" />
+        <figcaption>어림, 단위 바꾸기, 첫 줄 시작을 나누어 보는 이미지</figcaption>
+      </figure>
+      <h2>3. 풀이 시간이 길어질 때는 어느 위치에서 멈췄는지 나눕니다</h2>
+      <p>소수 곱셈에서 풀이 시간이 길어지면 계산이 약하다고 느껴질 수 있습니다. 하지만 시간이 길어진 위치는 서로 다릅니다. 문제를 읽고 어떤 연산인지 고르는 데 오래 걸릴 수도 있고, 자연수 곱셈은 빠르지만 소수점 위치에서 멈출 수도 있습니다. 또는 답을 쓴 뒤 단위와 크기가 맞는지 확인하지 않아 재풀이에서 다시 틀릴 수도 있습니다.</p>
+      <p>그래서 학습 기록에는 “느림”이라고만 쓰기보다 “첫 줄 전에서 멈춤”, “곱셈 과정은 가능하나 소수점 위치 확인 필요”, “답의 크기 어림 없이 바로 계산”, “재풀이 때 어림 후 성공”처럼 남기는 것이 좋습니다. 이렇게 적으면 아이를 판단하는 말이 줄고, 다음 시간에 무엇을 반복할지 분명해집니다. 반복은 같은 문제를 많이 푸는 것만을 뜻하지 않습니다. 같은 개념을 더 작은 관찰 단위로 다시 확인하는 것도 반복입니다.</p>
+      <h2>4. 오답은 자릿수 실수와 개념 흔들림을 구분합니다</h2>
+      <p>소수 곱셈의 오답은 겉으로 보면 비슷합니다. 소수점이 한 칸 밀렸거나, 0을 빠뜨렸거나, 자연수 계산이 틀린 것처럼 보입니다. 하지만 오답 원인을 보면 단순 실수와 개념 흔들림이 나뉩니다. 자연수 곱셈은 정확했지만 마지막 소수점 위치만 잘못 찍었다면 확인 루틴을 만들면 됩니다. 반면 0.5를 곱했는데 답이 원래 수보다 커지는 것을 이상하게 느끼지 못했다면, 자리 규칙보다 크기 감각을 다시 다루어야 합니다.</p>
+      <p>오답을 고칠 때는 해설을 베껴 쓰는 것으로 끝내지 않는 편이 좋습니다. 아이가 “0.5는 반이니까 원래 수보다 작아져야 해요”, “0.2가 6개면 1.2예요”, “자연수로 계산한 뒤 다시 소수 한 자리와 한 자리를 합쳐 봤어요”처럼 설명하면 오답이 다음 반복으로 이어집니다. 정답을 다시 맞히는 것보다 중요한 것은 오답의 이유를 말로 정리하고, 비슷한 문제에서 재풀이가 되는지 확인하는 일입니다.</p>
+      <figure class="article-image">
+        <img src="../../img/blog/2026-08-26-decimal-multiplication-unit-sense-inline-03.png" alt="오답 원인과 재풀이 성공을 연결하는 요약 이미지" loading="lazy" width="1200" height="630" />
+        <figcaption>오답 원인과 재풀이 성공을 연결하는 요약 이미지</figcaption>
+      </figure>
+      <h2>5. 문장제에서는 숫자보다 상황의 단위를 먼저 봅니다</h2>
+      <p>소수 곱셈 문장제는 계산식만 찾으려 하면 갑자기 어려워질 수 있습니다. 1.5L 주스를 4병 준비했다거나, 0.7m 리본을 6개 사용했다거나, 2.4kg 상자를 3개 옮겼다는 상황에서는 숫자보다 단위가 먼저입니다. 같은 양이 몇 번 반복되는지, 한 묶음의 크기가 얼마인지, 답의 단위가 무엇인지 확인해야 첫 줄이 안정됩니다.</p>
+      <p>가정에서는 문장제를 풀기 전 “무엇이 한 번의 양이야?”, “몇 번 반복돼?”, “답은 어떤 단위로 써야 해?”를 짧게 확인해 볼 수 있습니다. 이 질문은 아이를 몰아붙이기 위한 것이 아니라 문제 상황을 정리하는 도움말입니다. 소수 곱셈은 자리 계산만 빨라진다고 완성되지 않습니다. 단위 감각, 어림, 첫 줄 시작, 오답 설명, 재풀이 성공이 함께 이어질 때 아이가 수학에서 멀어질 수 있는 순간을 줄일 수 있습니다. 작은 반복이 쌓이면 계산 규칙도 더 오래 남습니다.</p>
+      <p class="article-tags">#소수곱셈 #초등수학 #수학개념 #자기말로설명 #수학공부법 #오답관리 #학습루틴 #시퀀스수학</p>
+      <a class="article-back" href="/blog/">← 블로그 목록으로</a>
+    </article>
+  </main>
+</body>
+</html>

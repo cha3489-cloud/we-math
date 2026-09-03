@@ -1,0 +1,164 @@
+<!doctype html><html lang=ko><head><meta charset=UTF-8><meta name=viewport content='width=device-width, initial-scale=1, viewport-fit=cover'><meta name=theme-color content=#173f3a><title>태블릿 학습 | 시퀀스 수학</title>  <script type="module" crossorigin src="../assets/tablet-DPdqM70A.js"></script>
+  <link rel="modulepreload" crossorigin href="../assets/modulepreload-polyfill-Dezn_h7o.js">
+  <link rel="modulepreload" crossorigin href="../assets/domain-DkMXN1H3.js">
+  <link rel="stylesheet" crossorigin href="../assets/tablet-B-ZQiBFy.css">
+</head><body class=tablet-app><main class=tablet>
+<header class=tablet-header>
+  <a href=../ class=brand><span class=brand-mark aria-hidden=true>S</span><span>시퀀스 수학<small>TABLET</small></span></a>
+  <button id=logout class=tablet-logout hidden>로그아웃</button>
+</header>
+
+<section id=login class=tablet-panel>
+  <p class=tablet-kicker>학생 로그인</p>
+  <h1>내 학습 공간</h1>
+  <p class=tablet-lead>원장님이 알려준 전화번호와 PIN을 입력하세요.</p>
+  <form id=loginForm class=tablet-form novalidate>
+    <label class=tablet-field>전화번호
+      <input id=phone type=tel inputmode=numeric autocomplete=username placeholder="01012345678" required>
+    </label>
+    <div class=tablet-field>
+      <span id=pinLabel>PIN</span>
+      <output id=pinDisplay class=pin-display aria-labelledby=pinLabel aria-live=polite></output>
+    </div>
+    <div id=loginKeypad class=keypad role=group aria-label="PIN 숫자 키패드"></div>
+    <button id=loginSubmit class=tablet-primary type=submit>로그인</button>
+    <p id=loginError class=tablet-error role=alert></p>
+  </form>
+</section>
+
+<section id=pinChange class=tablet-panel hidden>
+  <p class=tablet-kicker>첫 로그인</p>
+  <h1>나만의 PIN으로 바꿔요</h1>
+  <p class=tablet-lead>처음 한 번만 바꾸면 다음부터 새 PIN으로 들어올 수 있어요. 숫자 6자리로 정해주세요.</p>
+  <form id=pinChangeForm class=tablet-form novalidate>
+    <div class=tablet-field>
+      <span id=newPinLabel>새 PIN</span>
+      <output id=newPinDisplay class=pin-display aria-labelledby=newPinLabel aria-live=polite></output>
+    </div>
+    <div class=tablet-field>
+      <span id=confirmPinLabel>새 PIN 다시 입력</span>
+      <output id=confirmPinDisplay class=pin-display aria-labelledby=confirmPinLabel aria-live=polite></output>
+    </div>
+    <div id=pinKeypad class=keypad role=group aria-label="새 PIN 숫자 키패드"></div>
+    <button id=pinChangeSubmit class=tablet-primary type=submit>PIN 바꾸기</button>
+    <p id=pinChangeError class=tablet-error role=alert></p>
+  </form>
+</section>
+
+<section id=today hidden>
+  <div class=today-hero>
+    <p class=tablet-kicker>TODAY'S SEQUENCE</p>
+    <h1 id=greeting>오늘도 한 걸음</h1>
+    <p id=todaySummary class=tablet-lead role=status></p>
+  </div>
+  <p id=todayError class=tablet-error role=alert></p>
+  <div id=emptyState class=empty-state hidden>
+    <p class=empty-mark aria-hidden=true>🗓️</p>
+    <h2>오늘 등록된 과제가 없어요.</h2>
+    <p>새 과제가 생기면 이 화면에 바로 보여요.</p>
+  </div>
+  <div id=sections></div>
+</section>
+
+<section id=detail hidden>
+  <button id=detailBack class=tablet-back type=button>← 오늘의 과제로</button>
+  <article class=detail-card>
+    <p class=detail-statusline><span id=detailStatus></span><span id=detailDue class=detail-due></span></p>
+    <h1 id=detailTitle></h1>
+
+    <!-- 사진 제출 가능 여부와 무관하게 항상 보인다. 스크롤하지 않아도 바로 보이는
+         자리에 둔다 — completed 과제처럼 사진 제출 영역이 닫혀 있을 때 특히 중요하다. -->
+    <button id=jumpToQuestion type=button class=question-jump>❓ 질문하기</button>
+
+    <div id=detailMathflat class=mathflat-card hidden>
+      <p class=mathflat-head><span aria-hidden=true>📱</span> 매쓰플랫에서 풀 과제</p>
+      <dl id=detailMathflatFields class=mathflat-fields></dl>
+      <p id=detailMathflatNotes class=mathflat-notes hidden></p>
+    </div>
+
+    <div id=detailDescriptionBlock class=detail-block hidden>
+      <h2>과제 안내</h2>
+      <p id=detailDescription class=detail-description></p>
+    </div>
+
+    <div class=detail-block>
+      <h2>제출 상태</h2>
+      <p id=detailSubmission class=detail-submission></p>
+      <div id=detailMineBlock class=detail-mine hidden>
+        <p id=detailMineTags class=detail-mine-tags></p>
+        <p id=detailMineNote class=detail-mine-note></p>
+      </div>
+    </div>
+
+    <div id=submitBlock class=detail-block hidden>
+      <h2 id=submitHeading>사진으로 제출하기</h2>
+      <p class=submit-guide>풀이가 잘 보이게 찍어주세요. 최대 3장까지 올릴 수 있어요.</p>
+      <input id=photoInput type=file accept="image/jpeg,image/png,image/webp" capture=environment multiple hidden>
+      <button id=photoPick class=tablet-secondary type=button>사진 찍기 · 고르기</button>
+      <div id=photoPreview class=photo-preview></div>
+
+      <fieldset id=difficultyBlock class=difficulty>
+        <legend>어디서 막혔나요? <span class=difficulty-optional>(안 골라도 제출할 수 있어요)</span></legend>
+        <div id=difficultyOptions class=difficulty-options></div>
+        <label class=difficulty-note>남기고 싶은 말이 있으면 적어주세요
+          <textarea id=difficultyNote rows=2 maxlength=300 placeholder="예: 3번에서 식을 어떻게 세워야 할지 모르겠어요."></textarea>
+        </label>
+        <p id=difficultyCount class=difficulty-count aria-live=polite></p>
+      </fieldset>
+
+      <button id=photoSubmit class=tablet-primary type=button disabled>제출하기</button>
+      <p id=photoStatus class=submit-status role=status></p>
+      <p id=photoError class=tablet-error role=alert></p>
+    </div>
+
+    <div id=questionBlock class=detail-block>
+      <h2>질문하기</h2>
+      <p class=question-guide>사진을 제출하지 않아도 질문을 남길 수 있어요.</p>
+
+      <div id=questionReference class=question-reference hidden>
+        <p class=question-reference-head>지금 질문하는 과제</p>
+        <p id=questionReferenceTitle class=question-reference-title></p>
+        <p id=questionReferenceMathflat class=question-reference-note hidden></p>
+        <div id=questionReferencePhotos class=question-reference-photos></div>
+        <p id=questionReferenceStatus class=question-reference-status role=status></p>
+        <button id=questionReferenceRetry class=tablet-secondary type=button hidden>사진 다시 불러오기</button>
+      </div>
+
+      <div id=questionRecent class=question-recent hidden></div>
+
+      <fieldset id=questionForm class=question-form>
+        <legend>어떤 게 궁금해요?</legend>
+        <div id=questionCategoryOptions class=question-category-options></div>
+        <label class=question-note>질문 내용
+          <textarea id=questionBody rows=3 maxlength=1000 placeholder="예: 3번에서 식을 어떻게 세워야 할지 모르겠어요."></textarea>
+        </label>
+        <p id=questionCount class=question-count aria-live=polite></p>
+      </fieldset>
+      <button id=questionSubmit class=tablet-primary type=button disabled>질문 남기기</button>
+      <p id=questionStatus class=submit-status role=status></p>
+      <p id=questionError class=tablet-error role=alert></p>
+    </div>
+
+    <div id=detailFeedbackBlock class=detail-block hidden>
+      <h2>선생님 피드백</h2>
+      <p id=detailFeedback class=detail-feedback></p>
+      <div id=detailRedoBlock class=detail-redo hidden>
+        <p class=detail-redo-head>다시 풀 문제</p>
+        <p id=detailRedo class=detail-redo-list></p>
+      </div>
+    </div>
+  </article>
+</section>
+
+<dialog id=referenceViewer class=reference-viewer aria-label="내가 낸 사진 크게 보기">
+  <div class=reference-viewer-inner>
+    <img id=referenceViewerImage class=reference-viewer-image alt="">
+    <p id=referenceViewerCounter class=reference-viewer-counter aria-live=polite></p>
+    <div class=reference-viewer-controls>
+      <button id=referenceViewerPrev class=reference-viewer-nav type=button aria-label="이전 사진">←</button>
+      <button id=referenceViewerClose class=reference-viewer-close type=button>닫기</button>
+      <button id=referenceViewerNext class=reference-viewer-nav type=button aria-label="다음 사진">→</button>
+    </div>
+  </div>
+</dialog>
+</main></body></html>
