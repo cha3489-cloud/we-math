@@ -1,6 +1,30 @@
 import { defineConfig } from 'vite';
 import { resolve } from 'node:path';
 export default defineConfig({ root: '.', base: './', build: { outDir: 'dist', emptyOutDir: true, rollupOptions: { input: {
+// generated-vite-input:2026-08-25-math-learning-observation:start
+blog20260825MathLearningObservation: resolve(__dirname, 'blog/2026-08-25-math-learning-observation/index.html'),
+// generated-vite-input:2026-08-25-math-learning-observation:end
+
+// generated-vite-input:2026-08-26-decimal-multiplication-unit-sense:start
+blog20260826DecimalMultiplicationUnitSense: resolve(__dirname, 'blog/2026-08-26-decimal-multiplication-unit-sense/index.html'),
+// generated-vite-input:2026-08-26-decimal-multiplication-unit-sense:end
+
+// generated-vite-input:2026-08-27-math-error-note-retry-date:start
+blog20260827MathErrorNoteRetryDate: resolve(__dirname, 'blog/2026-08-27-math-error-note-retry-date/index.html'),
+// generated-vite-input:2026-08-27-math-error-note-retry-date:end
+
+// generated-vite-input:2026-08-31-math-workbook-retry-routine:start
+blog20260831MathWorkbookRetryRoutine: resolve(__dirname, 'blog/2026-08-31-math-workbook-retry-routine/index.html'),
+// generated-vite-input:2026-08-31-math-workbook-retry-routine:end
+
+// generated-vite-input:2026-09-02-math-question-before-answer:start
+blog20260902MathQuestionBeforeAnswer: resolve(__dirname, 'blog/2026-09-02-math-question-before-answer/index.html'),
+// generated-vite-input:2026-09-02-math-question-before-answer:end
+
+// generated-vite-input:2026-09-03-ratio-percent-meaning-first-line:start
+blog20260903RatioPercentMeaningFirstLine: resolve(__dirname, 'blog/2026-09-03-ratio-percent-meaning-first-line/index.html'),
+// generated-vite-input:2026-09-03-ratio-percent-meaning-first-line:end
+
 // generated-vite-input:2026-08-23-math-question-habit-before-answer:start
 blog20260823MathQuestionHabitBeforeAnswer: resolve(__dirname, 'blog/2026-08-23-math-question-habit-before-answer/index.html'),
 // generated-vite-input:2026-08-23-math-question-habit-before-answer:end
