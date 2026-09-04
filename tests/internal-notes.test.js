@@ -8,7 +8,11 @@ const read = (path) => readFileSync(resolve(root, path), 'utf8');
 const normalizeLocalModulePath = (fromPath, specifier) => {
   const [withoutQuery] = specifier.split('?');
   const normalized = resolve(root, fromPath, '..', withoutQuery);
-  return normalized.startsWith(root) ? normalized.slice(root.length + 1) : null;
+  if (!normalized.startsWith(root)) return null;
+  // path.resolve 는 Windows 에서 백슬래시를 쓴다 — 아래 곳곳의 'src/portal/...' 같은
+  // 슬래시 리터럴과 비교하려면 항상 슬래시로 통일해야 한다(안 그러면 이 파일의
+  // 모든 그래프 비교가 Windows 에서만 통과 못 한다).
+  return normalized.slice(root.length + 1).split('\\').join('/');
 };
 const localImportsFrom = (path) => {
   const source = read(path);
