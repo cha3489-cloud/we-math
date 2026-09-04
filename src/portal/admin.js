@@ -346,17 +346,22 @@ byId('decideComplete').addEventListener('click', () => decide('completed'));
 // questions 에 update 권한 자체가 없어 서버가 거부한다(문서 22/23).
 // student_id 로 profiles 를 두 번 참조하는 FK(student_id, answered_by)가 있어
 // 어느 쪽인지 명시해야 한다. assignment_id 는 questions 에서 하나뿐이라 그대로 둔다.
-const QUESTIONS_SELECT = 'id,category,body,created_at,profiles!questions_student_id_fkey(name),assignments(title)';
+const QUESTIONS_SELECT = 'id,category,body,created_at,answer_body,answered_at,answer_file_paths,profiles!questions_student_id_fkey(name),assignments(title)';
 // 오래된 질문부터 보이게 하고(review queue 와 같은 방향), 목록이 한없이 길어지지
 // 않도록 개수를 제한한다. 100건을 넘게 밀리는 상황이면 운영상 이미 다른 조치가 필요하다.
 const QUESTIONS_LIMIT = 100;
 const questionsRequestGate = createLatestRequestGate();
 let questionInbox = [];
 let questionStudentFilter = '';
+let questionStatusFilter = 'open';
 let questionProcessingId = null;
 const questionErrors = new Map();
 const questionDrafts = new Map();
 const questionAnswerFiles = new Map(); // questionId -> [{ file, url }]
+const QUESTION_EMPTY_COPY = {
+  open: { title: '답변을 기다리는 질문이 없습니다.', body: '학생이 새 질문을 남기면 여기에 표시됩니다.' },
+  answered: { title: '답변 완료된 질문이 없습니다.', body: '답변을 보낸 질문은 여기에 표시됩니다.' },
+};
 
 function clearAnswerAttachments(questionId) {
   const list = questionAnswerFiles.get(questionId) || [];
@@ -384,8 +389,8 @@ async function loadQuestionInbox() {
   let query = supabase
     .from('questions')
     .select(questionStudentFilter ? QUESTIONS_SELECT.replace('profiles!questions_student_id_fkey(', 'profiles!questions_student_id_fkey!inner(') : QUESTIONS_SELECT)
-    .eq('status', 'open')
-    .order('created_at', { ascending: true })
+    .eq('status', questionStatusFilter)
+    .order('created_at', { ascending: questionStatusFilter === 'open' })
     .limit(QUESTIONS_LIMIT);
   if (questionStudentFilter) query = query.eq('profiles.name', questionStudentFilter);
   const { data, error } = await query;
@@ -393,11 +398,11 @@ async function loadQuestionInbox() {
   if (error) { showError(byId('questionsError'), error.message || '질문 목록을 불러오지 못했습니다.'); return; }
   showError(byId('questionsError'), '');
   questionInbox = data || [];
-  if (!questionStudentFilter) byId('questionCount').textContent = String(questionInbox.length);
+  if (!questionStudentFilter && questionStatusFilter === 'open') byId('questionCount').textContent = String(questionInbox.length);
   renderQuestionInbox();
 }
 
-function questionCard(entry) {
+function openQuestionCard(entry) {
   const card = document.createElement('article');
   card.className = 'card';
 
@@ -550,6 +555,50 @@ function questionCard(entry) {
   return card;
 }
 
+function answeredQuestionCard(entry) {
+  const card = document.createElement('article');
+  card.className = 'card';
+
+  const heading = document.createElement('h3');
+  heading.textContent = questionStudentName(entry) + ' · ' + entry.category;
+  card.append(heading);
+
+  const assignmentTitle = questionAssignmentTitle(entry);
+  if (assignmentTitle) {
+    const titleEl = document.createElement('p');
+    titleEl.className = 'workflow-title';
+    titleEl.textContent = assignmentTitle;
+    card.append(titleEl);
+  }
+
+  const metaLine = document.createElement('p');
+  metaLine.className = 'meta';
+  metaLine.textContent = '질문 ' + new Date(entry.created_at).toLocaleString('ko-KR')
+    + (entry.answered_at ? ' · 답변 ' + new Date(entry.answered_at).toLocaleString('ko-KR') : '');
+  card.append(metaLine);
+
+  const body = document.createElement('p');
+  body.textContent = entry.body;
+  card.append(body);
+
+  const answerTitle = document.createElement('p');
+  answerTitle.className = 'workflow-title';
+  answerTitle.textContent = '답변';
+  card.append(answerTitle);
+
+  const answer = document.createElement('p');
+  answer.textContent = entry.answer_body || '답변 내용 없음';
+  card.append(answer);
+
+  const fileCount = Math.min(3, Array.isArray(entry.answer_file_paths) ? entry.answer_file_paths.length : 0);
+  const attachments = document.createElement('p');
+  attachments.className = 'meta';
+  attachments.textContent = fileCount ? '첨부 이미지 ' + fileCount + '장' : '첨부 이미지 없음';
+  card.append(attachments);
+
+  return card;
+}
+
 function renderQuestionInbox() {
   const copy = filteredAdminListCopy('questions', questionStudentFilter);
   byId('questionsSection').classList.toggle('question-section-filtered', Boolean(questionStudentFilter));
@@ -557,18 +606,29 @@ function renderQuestionInbox() {
   byId('questionFilterClear').textContent = copy.resetLabel;
   byId('questionFilterClear').setAttribute('aria-label', copy.resetAriaLabel);
   byId('questionFilterClear').hidden = copy.clearHidden;
-  byId('questionsEmpty').querySelector('h3').textContent = copy.emptyTitle;
-  byId('questionsEmpty').querySelector('p').textContent = copy.emptyBody;
+  const emptyCopy = QUESTION_EMPTY_COPY[questionStatusFilter] || QUESTION_EMPTY_COPY.open;
+  byId('questionShowOpen').setAttribute('aria-pressed', String(questionStatusFilter === 'open'));
+  byId('questionShowAnswered').setAttribute('aria-pressed', String(questionStatusFilter === 'answered'));
+  byId('questionsEmpty').querySelector('h3').textContent = questionStudentFilter ? copy.emptyTitle : emptyCopy.title;
+  byId('questionsEmpty').querySelector('p').textContent = questionStudentFilter ? copy.emptyBody : emptyCopy.body;
   byId('questionsEmpty').hidden = Boolean(questionInbox.length);
-  byId('questionsList').replaceChildren(...questionInbox.map(questionCard));
+  const cardFactory = questionStatusFilter === 'answered' ? answeredQuestionCard : openQuestionCard;
+  byId('questionsList').replaceChildren(...questionInbox.map(cardFactory));
 }
 function setQuestionStudentFilter(studentName) {
   questionStudentFilter = studentName || '';
+  questionStatusFilter = 'open';
   switchTab('questions')
     .then(() => byId('questionsList').scrollIntoView({ behavior: 'smooth', block: 'start' }))
     .catch((error) => showError(byId('adminError'), error.message));
 }
 byId('questionFilterClear').addEventListener('click', () => setQuestionStudentFilter(''));
+function setQuestionStatusFilter(status) {
+  questionStatusFilter = status === 'answered' ? 'answered' : 'open';
+  loadQuestionInbox().catch((error) => showError(byId('questionsError'), error.message));
+}
+byId('questionShowOpen').addEventListener('click', () => setQuestionStatusFilter('open'));
+byId('questionShowAnswered').addEventListener('click', () => setQuestionStatusFilter('answered'));
 
 async function answerQuestion(questionId, answerBody, attachments = []) {
   if (questionProcessingId) return;

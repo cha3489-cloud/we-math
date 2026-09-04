@@ -35,8 +35,8 @@ describe('admin question inbox — open question query', () => {
   it('filters to open status, oldest first, with a bounded limit', () => {
     const fn = admin.match(/async function loadQuestionInbox\(\)[\s\S]*?\n\}/)?.[0] ?? '';
     expect(fn).toContain(".from('questions')");
-    expect(fn).toContain(".eq('status', 'open')");
-    expect(fn).toMatch(/\.order\('created_at', \{ ascending: true \}\)/);
+    expect(fn).toContain(".eq('status', questionStatusFilter)");
+    expect(fn).toContain(".order('created_at', { ascending: questionStatusFilter === 'open' })");
     expect(fn).toMatch(/\.limit\(QUESTIONS_LIMIT\)/);
     expect(admin).toMatch(/QUESTIONS_LIMIT = \d+/);
   });
@@ -77,10 +77,11 @@ describe('admin question inbox — RPC-only state changes', () => {
     expect(admin).not.toMatch(/from\('questions'\)\.update/);
   });
 
-  it('sends only the question id and answer body to answer_question — nothing else', () => {
+  it('sends the question id, answer body, and attachment paths to answer_question', () => {
     const call = admin.match(/supabase\.rpc\('answer_question', \{[^}]*\}\)/)?.[0] ?? '';
     expect(call).toContain('p_question_id: questionId');
     expect(call).toContain('p_answer_body: clean');
+    expect(call).toContain('p_file_paths: uploaded');
   });
 });
 
@@ -140,7 +141,7 @@ describe('admin question inbox — student identity stays at the existing displa
   it('shows only the student name, the same field already shown in the review queue', () => {
     const fn = admin.match(/function questionStudentName\([\s\S]*?\n\}/)?.[0] ?? '';
     expect(fn).toContain('name');
-    const card = admin.match(/function questionCard\(entry\)[\s\S]*?\n\}/)?.[0] ?? '';
+    const card = admin.match(/function openQuestionCard\(entry\)[\s\S]*?\n\}/)?.[0] ?? '';
     expect(card).not.toContain('.phone');
     expect(card).not.toContain('suspended_at');
   });
@@ -172,7 +173,7 @@ describe('admin answer image attachments — investigation', () => {
 
   it('reuses the existing thumbs/thumb/thumb-remove preview classes instead of adding new CSS', () => {
     // student.js 의 제출 파일 미리보기와 같은 클래스를 쓴다(portal.css 에 이미 있다).
-    const card = admin.match(/function questionCard\(entry\)[\s\S]*?\n\}/)?.[0] ?? '';
+    const card = admin.match(/function openQuestionCard\(entry\)[\s\S]*?\n\}/)?.[0] ?? '';
     expect(card).toContain("className = 'thumbs'");
     expect(card).toContain("figure.className = 'thumb'");
     expect(card).toContain("remove.className = 'thumb-remove'");
@@ -181,13 +182,13 @@ describe('admin answer image attachments — investigation', () => {
 
 describe('admin answer image attachments — file picker UI', () => {
   it('only accepts image mime types on the file input', () => {
-    const card = admin.match(/function questionCard\(entry\)[\s\S]*?\n\}/)?.[0] ?? '';
+    const card = admin.match(/function openQuestionCard\(entry\)[\s\S]*?\n\}/)?.[0] ?? '';
     expect(card).toContain("fileInput.accept = 'image/jpeg,image/png,image/webp'");
     expect(card).not.toContain('application/pdf');
   });
 
   it('allows selecting more than one file at a time, up to the cap enforced elsewhere', () => {
-    const card = admin.match(/function questionCard\(entry\)[\s\S]*?\n\}/)?.[0] ?? '';
+    const card = admin.match(/function openQuestionCard\(entry\)[\s\S]*?\n\}/)?.[0] ?? '';
     expect(card).toContain('fileInput.multiple = true');
   });
 
@@ -195,23 +196,23 @@ describe('admin answer image attachments — file picker UI', () => {
     // 붙여넣기(Ctrl+V) 지원이 들어오며 파일 선택 쪽 로직이 addAnswerFiles(files) 로
     // 옮겨갔다 — 호출 자체(acceptAnswerImages(current.length, files))는 그대로다.
     // 파일 선택이 실제로 그 공유 함수를 거치는지는 별도 테스트(아래 paste 섹션)에서 본다.
-    const card = admin.match(/function questionCard\(entry\)[\s\S]*?\n\}/)?.[0] ?? '';
+    const card = admin.match(/function openQuestionCard\(entry\)[\s\S]*?\n\}/)?.[0] ?? '';
     expect(card).toContain('acceptAnswerImages(current.length, files)');
   });
 
   it('shows the first rejection reason inline instead of silently dropping files', () => {
-    const card = admin.match(/function questionCard\(entry\)[\s\S]*?\n\}/)?.[0] ?? '';
+    const card = admin.match(/function openQuestionCard\(entry\)[\s\S]*?\n\}/)?.[0] ?? '';
     expect(card).toMatch(/attachmentError\.textContent = rejected\.length \? rejected\[0\]\.message/);
   });
 
   it('lets each thumbnail be removed independently and revokes its object url', () => {
-    const card = admin.match(/function questionCard\(entry\)[\s\S]*?\n\}/)?.[0] ?? '';
+    const card = admin.match(/function openQuestionCard\(entry\)[\s\S]*?\n\}/)?.[0] ?? '';
     expect(card).toContain("remove.className = 'thumb-remove'");
     expect(card).toMatch(/if \(target\?\.url\) URL\.revokeObjectURL\(target\.url\)/);
   });
 
   it('disables the pick button once three images are selected or while processing', () => {
-    const card = admin.match(/function questionCard\(entry\)[\s\S]*?\n\}/)?.[0] ?? '';
+    const card = admin.match(/function openQuestionCard\(entry\)[\s\S]*?\n\}/)?.[0] ?? '';
     expect(card).toContain('pickButton.disabled = busy || !model.canAddMore;');
   });
 });
@@ -240,7 +241,7 @@ describe('admin answer image attachments — paste to attach (Ctrl+V)', () => {
   });
 
   it('feeds pasted images into the same addAnswerFiles path the file picker uses', () => {
-    const card = admin.match(/function questionCard\(entry\)[\s\S]*?\n\}/)?.[0] ?? '';
+    const card = admin.match(/function openQuestionCard\(entry\)[\s\S]*?\n\}/)?.[0] ?? '';
     // 공유 함수가 한 곳에서만 정의되고, 파일 선택과 붙여넣기 둘 다에서 호출된다 —
     // acceptAnswerImages 호출이 중복 구현되지 않았다는 뜻이다.
     expect(card).toContain('const addAnswerFiles = (files) => {');
@@ -254,19 +255,19 @@ describe('admin answer image attachments — paste to attach (Ctrl+V)', () => {
   });
 
   it('reuses the existing .meta class for the hint instead of adding new CSS', () => {
-    const card = admin.match(/function questionCard\(entry\)[\s\S]*?\n\}/)?.[0] ?? '';
+    const card = admin.match(/function openQuestionCard\(entry\)[\s\S]*?\n\}/)?.[0] ?? '';
     expect(card).toContain("attachmentGuide.className = 'meta'");
   });
 });
 
 describe('admin answer image attachments — answer body stays required', () => {
   it('disables the submit button when the body is empty, even with attachments selected', () => {
-    const card = admin.match(/function questionCard\(entry\)[\s\S]*?\n\}/)?.[0] ?? '';
+    const card = admin.match(/function openQuestionCard\(entry\)[\s\S]*?\n\}/)?.[0] ?? '';
     expect(card).toContain('answerButton.disabled = busy || !canSubmitAnswer(answerInput.value);');
   });
 
   it('re-checks on every keystroke without a full re-render (keeps focus)', () => {
-    const card = admin.match(/function questionCard\(entry\)[\s\S]*?\n\}/)?.[0] ?? '';
+    const card = admin.match(/function openQuestionCard\(entry\)[\s\S]*?\n\}/)?.[0] ?? '';
     const listener = card.match(/answerInput\.addEventListener\('input', \(\) => \{[\s\S]*?\}\);/)?.[0] ?? '';
     expect(listener).toContain('canSubmitAnswer(answerInput.value)');
     expect(listener).not.toContain('renderQuestionInbox()');
@@ -407,5 +408,44 @@ describe('admin answer image attachments — nothing else touched', () => {
     const fn = admin.match(/async function answerQuestion\([\s\S]*?\n\}/)?.[0] ?? '';
     expect(fn).not.toContain('submission-files');
     expect(fn).not.toContain('assignment-files');
+  });
+});
+
+
+describe('admin question inbox — answered list filter', () => {
+  it('selects answered fields needed to review prior answers and attachments', () => {
+    expect(admin).toContain('answer_body');
+    expect(admin).toContain('answered_at');
+    expect(admin).toContain('answer_file_paths');
+  });
+
+  it('keeps open questions as the default filter and queries the selected status', () => {
+    expect(admin).toContain("let questionStatusFilter = 'open';");
+    const fn = admin.match(/async function loadQuestionInbox\(\)[\s\S]*?\n\}/)?.[0] ?? '';
+    expect(fn).toContain(".eq('status', questionStatusFilter)");
+    expect(fn).not.toContain(".eq('status', 'open')");
+  });
+
+  it('renders open questions with the answer form and answered questions as read-only history', () => {
+    expect(admin).toContain('function answeredQuestionCard(entry)');
+    expect(admin).toContain('function openQuestionCard(entry)');
+    const answered = admin.match(/function answeredQuestionCard\(entry\)[\s\S]*?function renderQuestionInbox/)?.[0] ?? '';
+    expect(answered).toContain('entry.answer_body');
+    expect(answered).toContain('answer_file_paths');
+    expect(answered).toContain('첨부 이미지');
+    expect(answered).not.toContain('answerInput');
+    expect(answered).not.toContain('답변 보내기');
+  });
+
+  it('adds controls to switch between unanswered and answered questions', () => {
+    expect(html).toContain('id=questionShowOpen');
+    expect(html).toContain('id=questionShowAnswered');
+    expect(admin).toContain("byId('questionShowOpen').addEventListener('click'");
+    expect(admin).toContain("byId('questionShowAnswered').addEventListener('click'");
+  });
+
+  it('keeps the dashboard question count tied to open questions even when viewing answered history', () => {
+    const fn = admin.match(/async function loadQuestionInbox\(\)[\s\S]*?\n\}/)?.[0] ?? '';
+    expect(fn).toContain("if (!questionStudentFilter && questionStatusFilter === 'open') byId('questionCount').textContent");
   });
 });

@@ -265,7 +265,7 @@ describe('portal design v2', () => {
     expect(admin).toContain('id=workflowEmpty');
     expect(adminJs).toContain('filteredAdminListCopy');
     expect(adminJs).toContain("const copy = filteredAdminListCopy('questions', questionStudentFilter)");
-    expect(adminJs).toContain("byId('questionsEmpty').querySelector('h3').textContent = copy.emptyTitle");
+    expect(adminJs).toContain("byId('questionsEmpty').querySelector('h3').textContent = questionStudentFilter ? copy.emptyTitle : emptyCopy.title");
     expect(adminJs).toContain("byId('questionFilterClear').textContent = copy.resetLabel");
     expect(adminJs).toContain("byId('questionFilterClear').setAttribute('aria-label', copy.resetAriaLabel)");
     expect(adminJs).toContain("byId('questionFilterClear').hidden = copy.clearHidden");
