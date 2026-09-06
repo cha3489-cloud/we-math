@@ -220,6 +220,14 @@ describe('tablet page boundaries', () => {
     expect(main).toContain("byId('studyTimer').textContent = formatElapsedSeconds(timerSeconds)");
     expect(main).toContain("byId('studyTimerToggle').addEventListener('click', toggleStudyTimer)");
   });
+
+  it('clears the local study timer on logout before the next student uses the tablet', () => {
+    const logoutHandler = main.match(/byId\('logout'\)\.addEventListener\('click', async \(\) => \{[\s\S]*?\n\}\);/)?.[0] ?? '';
+    expect(logoutHandler).toBeTruthy();
+    expect(logoutHandler).toContain('resetStudyTimer()');
+    expect(logoutHandler).toContain('await signOut()');
+    expect(logoutHandler.indexOf('resetStudyTimer()')).toBeLessThan(logoutHandler.indexOf('await signOut()'));
+  });
 });
 
 describe('tablet question form', () => {
