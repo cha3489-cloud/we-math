@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   TODAY_SECTIONS, todaySections, todaySummary, totalAssignmentCount,
-  dueLabel, applyKeypadInput, maskPin, greeting,
+  dueLabel, applyKeypadInput, maskPin, greeting, dailyQuote,
 } from '../src/tablet/view-model.js';
 
 const NOW = new Date('2026-08-21T10:00:00+09:00');
@@ -138,5 +138,27 @@ describe('tablet greeting', () => {
 
   it('falls back gracefully when the name is missing', () => {
     for (const value of ['', '   ', null, undefined]) expect(greeting(value)).toBe('오늘도 한 걸음');
+  });
+});
+
+describe('tablet daily quote', () => {
+  it('returns a short stable Korean quote for the same calendar day', () => {
+    const morning = dailyQuote(new Date('2026-08-21T09:00:00+09:00'));
+    const evening = dailyQuote(new Date('2026-08-21T21:00:00+09:00'));
+
+    expect(morning).toBe(evening);
+    expect(morning).toMatch(/^[가-힣0-9 ,.]+$/);
+    expect(morning.length).toBeLessThanOrEqual(32);
+  });
+
+  it('cycles through more than one message across days', () => {
+    const quotes = new Set([
+      dailyQuote(new Date('2026-08-21T09:00:00+09:00')),
+      dailyQuote(new Date('2026-08-22T09:00:00+09:00')),
+      dailyQuote(new Date('2026-08-23T09:00:00+09:00')),
+      dailyQuote(new Date('2026-08-24T09:00:00+09:00')),
+    ]);
+
+    expect(quotes.size).toBeGreaterThan(1);
   });
 });

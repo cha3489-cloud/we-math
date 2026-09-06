@@ -132,8 +132,16 @@ body.tablet-app{
 .tablet-primary:disabled{opacity:.55;cursor:progress;}
 
 /* ── 오늘의 수학 ─────────────────────────────────────────────────────── */
-.today-hero{margin-bottom:24px;}
+.today-hero{margin-bottom:16px;}
 .today-hero h1{margin:0 0 8px;font-size:28px;}
+
+.daily-quote-card{
+  margin:0 0 24px;padding:18px 20px;
+  border:1px solid var(--line);border-radius:18px;
+  background:var(--paper);box-shadow:0 10px 30px rgba(23,63,58,.06);
+}
+.quote-title{margin:0 0 6px;font-size:14px;font-weight:700;color:var(--green);}
+.quote-text{margin:0;font-size:20px;font-weight:700;color:var(--navy);}
 
 .empty-state{
   background:var(--paper);border:1px solid var(--line);border-radius:20px;

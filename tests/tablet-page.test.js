@@ -203,6 +203,13 @@ describe('tablet page boundaries', () => {
     expect(html).toContain('id=emptyState');
     expect(main).toMatch(/byId\('emptyState'\)\.hidden = totalAssignmentCount\(sections\) > 0/);
   });
+
+  it('shows a calm daily quote on the first today screen', () => {
+    expect(html).toContain('id=dailyQuote');
+    expect(html).toContain('오늘의 한 문장');
+    expect(main).toContain('dailyQuote');
+    expect(main).toContain("byId('dailyQuote').textContent = dailyQuote(new Date())");
+  });
 });
 
 describe('tablet question form', () => {
