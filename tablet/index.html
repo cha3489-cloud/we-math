@@ -51,6 +51,16 @@
     <p id=dailyQuoteTitle class=quote-title>오늘의 한 문장</p>
     <p id=dailyQuote class=quote-text></p>
   </aside>
+  <section class=study-timer-card aria-labelledby=studyTimerTitle>
+    <div>
+      <p id=studyTimerTitle class=quote-title>학습 타이머</p>
+      <output id=studyTimer class=study-timer aria-live=polite>00:00</output>
+    </div>
+    <div class=study-timer-actions>
+      <button id=studyTimerToggle class=tablet-primary type=button aria-pressed=false>시작하기</button>
+      <button id=studyTimerReset class=tablet-secondary type=button>초기화</button>
+    </div>
+  </section>
   <p id=todayError class=tablet-error role=alert></p>
   <div id=emptyState class=empty-state hidden>
     <p class=empty-mark aria-hidden=true>🗓️</p>

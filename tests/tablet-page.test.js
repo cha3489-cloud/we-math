@@ -210,6 +210,16 @@ describe('tablet page boundaries', () => {
     expect(main).toContain('dailyQuote');
     expect(main).toContain("byId('dailyQuote').textContent = dailyQuote(new Date())");
   });
+
+  it('puts a touch-first study timer on the first today screen', () => {
+    expect(html).toContain('id=studyTimer');
+    expect(html).toContain('id=studyTimerToggle');
+    expect(html).toContain('id=studyTimerReset');
+    expect(html).toContain('학습 타이머');
+    expect(main).toContain('formatElapsedSeconds');
+    expect(main).toContain("byId('studyTimer').textContent = formatElapsedSeconds(timerSeconds)");
+    expect(main).toContain("byId('studyTimerToggle').addEventListener('click', toggleStudyTimer)");
+  });
 });
 
 describe('tablet question form', () => {

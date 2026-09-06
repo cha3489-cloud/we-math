@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   TODAY_SECTIONS, todaySections, todaySummary, totalAssignmentCount,
-  dueLabel, applyKeypadInput, maskPin, greeting, dailyQuote,
+  dueLabel, applyKeypadInput, maskPin, greeting, dailyQuote, formatElapsedSeconds,
 } from '../src/tablet/view-model.js';
 
 const NOW = new Date('2026-08-21T10:00:00+09:00');
@@ -160,5 +160,25 @@ describe('tablet daily quote', () => {
     ]);
 
     expect(quotes.size).toBeGreaterThan(1);
+  });
+});
+
+describe('tablet study timer formatting', () => {
+  it('formats elapsed seconds as minutes and seconds for a calm tablet timer', () => {
+    expect(formatElapsedSeconds(0)).toBe('00:00');
+    expect(formatElapsedSeconds(9)).toBe('00:09');
+    expect(formatElapsedSeconds(65)).toBe('01:05');
+    expect(formatElapsedSeconds(3599)).toBe('59:59');
+  });
+
+  it('supports hour-long study sessions without switching labels', () => {
+    expect(formatElapsedSeconds(3600)).toBe('60:00');
+    expect(formatElapsedSeconds(3661)).toBe('61:01');
+  });
+
+  it('falls back safely for invalid elapsed values', () => {
+    for (const value of [-1, NaN, Infinity, '10', null, undefined]) {
+      expect(formatElapsedSeconds(value)).toBe('00:00');
+    }
   });
 });
