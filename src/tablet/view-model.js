@@ -76,6 +76,23 @@ export function greeting(name) {
   return clean ? clean + '님, 오늘도 한 걸음' : '오늘도 한 걸음';
 }
 
+const DAILY_QUOTES = [
+  '첫 줄만 정확히 시작해도 좋아요.',
+  '천천히 푼 문제도 실력이 됩니다.',
+  '막힌 곳을 찾는 것도 공부예요.',
+  '오늘은 한 문제를 끝까지 봐요.',
+  '틀린 문제는 다시 가까워질 기회예요.',
+  '작게 시작하면 계속할 수 있어요.',
+  '서두르지 말고 식을 먼저 세워요.',
+];
+
+export function dailyQuote(now = new Date()) {
+  const day = startOfDay(now).getTime();
+  if (Number.isNaN(day)) return DAILY_QUOTES[0];
+  const index = Math.abs(Math.floor(day / 86400000)) % DAILY_QUOTES.length;
+  return DAILY_QUOTES[index];
+}
+
 // ── 매쓰플랫 안내 블록 ───────────────────────────────────────────────────
 // 과제 설명(assignments.description) 안에 아래 형태로 적어두면 별도 카드로 강조한다.
 //   [매쓰플랫]

@@ -5,7 +5,7 @@ import { invokeAuthenticated, isMissingFeedbackSourceColumn, supabase } from '..
 import { validateLoginInput, validatePin, authErrorMessage, createLatestRequestGate, STATUS_META, assignmentStatus, assessImageQuality } from '../portal/domain.js';
 import { currentUserOrNull, signIn, signOut } from '../auth.js';
 import {
-  todaySections, todaySummary, totalAssignmentCount, dueLabel, applyKeypadInput, maskPin, greeting,
+  todaySections, todaySummary, totalAssignmentCount, dueLabel, applyKeypadInput, maskPin, greeting, dailyQuote,
   assignmentDetail, submissionSummaryLabel, findAssignment,
 } from './view-model.js';
 import {
@@ -659,6 +659,7 @@ function renderToday(profile, assignments, now = new Date()) {
   const sections = todaySections(assignments, now);
   byId('greeting').textContent = greeting(profile.name);
   byId('todaySummary').textContent = todaySummary(sections);
+  byId('dailyQuote').textContent = dailyQuote(new Date());
   byId('emptyState').hidden = totalAssignmentCount(sections) > 0;
   byId('sections').replaceChildren(
     ...sections.filter((section) => section.count).map((section) => groupBlock(section, now)),
