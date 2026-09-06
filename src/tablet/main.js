@@ -972,6 +972,7 @@ byId('logout').addEventListener('click', async () => {
   answerImageUrls = new Map();
   byId('questionReferencePhotos').replaceChildren();
   byId('questionReference').hidden = true;
+  resetStudyTimer();
   await signOut();
   // 다음 사람이 이전 학생의 과제 경로를 열지 않도록 hash 도 비운다.
   location.replace(location.pathname);
