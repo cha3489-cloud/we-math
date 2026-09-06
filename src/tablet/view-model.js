@@ -93,6 +93,13 @@ export function dailyQuote(now = new Date()) {
   return DAILY_QUOTES[index];
 }
 
+export function formatElapsedSeconds(value) {
+  if (!Number.isInteger(value) || value < 0) return '00:00';
+  const minutes = Math.floor(value / 60);
+  const seconds = value % 60;
+  return String(minutes).padStart(2, '0') + ':' + String(seconds).padStart(2, '0');
+}
+
 // ── 매쓰플랫 안내 블록 ───────────────────────────────────────────────────
 // 과제 설명(assignments.description) 안에 아래 형태로 적어두면 별도 카드로 강조한다.
 //   [매쓰플랫]

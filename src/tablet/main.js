@@ -5,7 +5,7 @@ import { invokeAuthenticated, isMissingFeedbackSourceColumn, supabase } from '..
 import { validateLoginInput, validatePin, authErrorMessage, createLatestRequestGate, STATUS_META, assignmentStatus, assessImageQuality } from '../portal/domain.js';
 import { currentUserOrNull, signIn, signOut } from '../auth.js';
 import {
-  todaySections, todaySummary, totalAssignmentCount, dueLabel, applyKeypadInput, maskPin, greeting, dailyQuote,
+  todaySections, todaySummary, totalAssignmentCount, dueLabel, applyKeypadInput, maskPin, greeting, dailyQuote, formatElapsedSeconds,
   assignmentDetail, submissionSummaryLabel, findAssignment,
 } from './view-model.js';
 import {
@@ -24,6 +24,7 @@ import {
 } from './question.js';
 const ANSWER_IMAGE_LABEL = '선생님이 보낸 이미지';
 const REFERENCE_PHOTO_LABEL = '내가 낸 사진';
+const TIMER_STORAGE_KEY = 'sequence-tablet-study-seconds';
 
 const byId = (id) => document.getElementById(id);
 const showError = (el, message) => { el.textContent = message || ''; };
@@ -50,6 +51,10 @@ const answerImagesGate = createLatestRequestGate();
 let answerImageUrls = new Map(); // question id -> [{ url }] 서명 URL
 let selectedQuestionCategory = null;
 let questionSubmitting = false;
+let timerSeconds = Number.parseInt(sessionStorage.getItem(TIMER_STORAGE_KEY) || '0', 10);
+if (!Number.isInteger(timerSeconds) || timerSeconds < 0) timerSeconds = 0;
+let timerRunning = false;
+let timerId = null;
 
 async function requireStudent(user) {
   const { data, error } = await supabase.from('user_roles').select('role').eq('user_id', user.id).single();
@@ -113,6 +118,46 @@ function focusPinField(field) {
 }
 
 // ── 오늘의 수학 ──────────────────────────────────────────────────────────
+function renderStudyTimer() {
+  byId('studyTimer').textContent = formatElapsedSeconds(timerSeconds);
+  byId('studyTimerToggle').textContent = timerRunning ? '잠깐 멈추기' : '시작하기';
+  byId('studyTimerToggle').setAttribute('aria-pressed', String(timerRunning));
+}
+
+function persistStudyTimer() {
+  sessionStorage.setItem(TIMER_STORAGE_KEY, String(timerSeconds));
+}
+
+function startStudyTimer() {
+  if (timerId) return;
+  timerRunning = true;
+  renderStudyTimer();
+  timerId = setInterval(() => {
+    timerSeconds += 1;
+    persistStudyTimer();
+    renderStudyTimer();
+  }, 1000);
+}
+
+function stopStudyTimer() {
+  if (timerId) clearInterval(timerId);
+  timerId = null;
+  timerRunning = false;
+  renderStudyTimer();
+}
+
+function toggleStudyTimer() {
+  if (timerRunning) stopStudyTimer();
+  else startStudyTimer();
+}
+
+function resetStudyTimer() {
+  stopStudyTimer();
+  timerSeconds = 0;
+  persistStudyTimer();
+  renderStudyTimer();
+}
+
 // 카드 전체를 누르면 상세로, 별도의 작은 버튼으로는 질문하기로 바로 간다.
 // 버튼 안에 버튼을 넣을 수 없어 감싸는 요소(wrap)를 하나 둔다.
 function assignmentCard(assignment, now) {
@@ -660,6 +705,7 @@ function renderToday(profile, assignments, now = new Date()) {
   byId('greeting').textContent = greeting(profile.name);
   byId('todaySummary').textContent = todaySummary(sections);
   byId('dailyQuote').textContent = dailyQuote(new Date());
+  renderStudyTimer();
   byId('emptyState').hidden = totalAssignmentCount(sections) > 0;
   byId('sections').replaceChildren(
     ...sections.filter((section) => section.count).map((section) => groupBlock(section, now)),
@@ -840,6 +886,10 @@ window.addEventListener('hashchange', () => {
   if (byId('login').hidden === false || byId('pinChange').hidden === false) return;
   applyRoute();
 });
+
+byId('studyTimerToggle').addEventListener('click', toggleStudyTimer);
+byId('studyTimerReset').addEventListener('click', resetStudyTimer);
+renderStudyTimer();
 
 byId('detailBack').addEventListener('click', goToday);
 
