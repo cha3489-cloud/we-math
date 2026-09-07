@@ -156,6 +156,23 @@ body.tablet-app{
   .study-timer-actions{grid-template-columns:1fr 1fr;}
 }
 
+.start-sequence-card{
+  margin:0 0 24px;padding:20px;
+  border:1px solid var(--line);border-radius:20px;background:var(--mint-soft);
+}
+.start-sequence-card h2{margin:0 0 14px;font-size:var(--text-title);color:var(--navy);}
+.start-sequence-list{display:grid;gap:10px;margin:0;padding:0;list-style:none;counter-reset:start-step;}
+.start-sequence-list li{
+  display:grid;grid-template-columns:auto 1fr;gap:4px 12px;align-items:start;
+  padding:12px;border-radius:14px;background:rgba(255,253,248,.72);counter-increment:start-step;
+}
+.start-sequence-list li::before{
+  content:counter(start-step);display:grid;place-items:center;grid-row:1 / span 2;
+  width:32px;height:32px;border-radius:50%;background:var(--navy);color:var(--paper);font-weight:800;
+}
+.start-sequence-list strong{font-size:18px;color:var(--ink);}
+.start-sequence-list span{color:var(--muted);font-size:15px;}
+
 .empty-state{
   background:var(--paper);border:1px solid var(--line);border-radius:20px;
   padding:48px 32px;text-align:center;
