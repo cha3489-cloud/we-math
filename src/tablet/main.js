@@ -890,6 +890,9 @@ window.addEventListener('hashchange', () => {
 
 byId('studyTimerToggle').addEventListener('click', toggleStudyTimer);
 byId('studyTimerReset').addEventListener('click', resetStudyTimer);
+byId('todayPlanLink').addEventListener('click', () => {
+  requestAnimationFrame(() => byId('sections').focus({ preventScroll: true }));
+});
 renderStudyTimer();
 
 byId('detailBack').addEventListener('click', goToday);

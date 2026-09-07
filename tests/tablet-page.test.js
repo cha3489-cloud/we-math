@@ -270,6 +270,11 @@ describe('tablet page boundaries', () => {
     expect(html).toContain('tabindex=-1');
     expect(read('src/tablet/tablet.css')).toContain('#sections:focus-visible');
   });
+
+  it('moves focus to the assignment-list target when students tap today-plan jump', () => {
+    expect(main).toContain("byId('todayPlanLink').addEventListener('click'");
+    expect(main).toContain("byId('sections').focus({ preventScroll: true })");
+  });
 });
 
 describe('tablet question form', () => {
