@@ -172,13 +172,16 @@ body.tablet-app{
 }
 .start-sequence-list strong{font-size:18px;color:var(--ink);}
 .start-sequence-list span{color:var(--muted);font-size:15px;}
-.mathflat-student-link{
+.mathflat-student-link,
+.today-plan-link{
   grid-column:2;display:inline-flex;align-items:center;justify-content:center;
   min-height:48px;width:max-content;margin-top:6px;padding:0 16px;
   border-radius:999px;background:var(--green);color:var(--paper);
   text-decoration:none;font-weight:800;font-size:15px;
 }
-.mathflat-student-link:focus-visible{outline:3px solid var(--navy);outline-offset:2px;}
+.today-plan-link{background:var(--navy);}
+.mathflat-student-link:focus-visible,
+.today-plan-link:focus-visible{outline:3px solid var(--navy);outline-offset:2px;}
 
 .empty-state{
   background:var(--paper);border:1px solid var(--line);border-radius:20px;
