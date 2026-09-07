@@ -243,6 +243,8 @@ describe('tablet page boundaries', () => {
     expect(html).toContain('타이머 시작');
     expect(html).toContain('매쓰플랫 풀이');
     expect(html).toContain('과제 확인');
+    expect(html).toContain('마치면 로그아웃');
+    expect(html).toContain('다음 친구가 바로 쓸 수 있게 정리해요.');
     expect(html.indexOf('id=startSequence')).toBeLessThan(html.indexOf('id=sections'));
     expect(read('src/tablet/tablet.css')).toContain('.start-sequence-card');
   });
