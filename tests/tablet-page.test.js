@@ -187,6 +187,14 @@ describe('tablet page boundaries', () => {
     expect(main).toContain('renderMathflat');
   });
 
+  it('links the assignment detail mathflat card to the student site', () => {
+    expect(html).toContain('id=detailMathflatLink');
+    expect(html).toContain('href="http://student.mathflat.com"');
+    expect(html).toContain('매쓰플랫 바로 열기');
+    expect(main).toContain("byId('detailMathflatLink').hidden = card.hidden");
+    expect(read('src/tablet/tablet.css')).toContain('.mathflat-detail-link');
+  });
+
   it('keeps the pin out of the DOM value and the network log', () => {
     // PIN 은 마스킹된 표시만 DOM 에 넣는다. input value 로 두지 않는다.
     expect(html).not.toMatch(/<input[^>]*id=pin[^>]*>/);
