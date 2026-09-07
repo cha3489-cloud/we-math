@@ -238,6 +238,15 @@ describe('tablet page boundaries', () => {
     expect(html.indexOf('id=startSequence')).toBeLessThan(html.indexOf('id=sections'));
     expect(read('src/tablet/tablet.css')).toContain('.start-sequence-card');
   });
+
+  it('links the start sequence directly to the MathFlat student site', () => {
+    expect(html).toContain('id=mathflatStudentLink');
+    expect(html).toContain('href="http://student.mathflat.com"');
+    expect(html).toContain('target=_blank');
+    expect(html).toContain('rel="noopener noreferrer"');
+    expect(html).toContain('매쓰플랫 열기');
+    expect(read('src/tablet/tablet.css')).toContain('.mathflat-student-link');
+  });
 });
 
 describe('tablet question form', () => {
