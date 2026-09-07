@@ -201,6 +201,7 @@ body.tablet-app{
 .today-group-head h2{margin:0;font-size:var(--text-title);}
 .today-group-head p{margin:0;color:var(--muted);font-size:16px;}
 .today-group-count{margin-left:auto;font-weight:700;color:var(--muted);white-space:nowrap;}
+#sections:focus-visible{outline:3px solid var(--green);outline-offset:4px;border-radius:16px;}
 
 .today-cards{display:grid;gap:12px;}
 .assignment-card{
