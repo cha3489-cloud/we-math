@@ -227,6 +227,7 @@ function renderMathflat(mathflat) {
   notes.hidden = !noteText;
   // 라벨도 자유 문장도 하나도 없으면 빈 카드를 띄우지 않는다.
   card.hidden = !mathflat.fields.length && !noteText;
+  byId('detailMathflatLink').hidden = card.hidden;
 }
 
 // ── 사진 선택 · 리사이즈 ─────────────────────────────────────────────────

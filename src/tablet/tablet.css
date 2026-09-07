@@ -266,6 +266,12 @@ body.tablet-app{
 .mathflat-fields dt{font-weight:700;color:var(--muted);}
 .mathflat-fields dd{margin:0;}
 .mathflat-notes{margin:12px 0 0;white-space:pre-wrap;}
+.mathflat-detail-link{
+  display:inline-flex;align-items:center;justify-content:center;
+  min-height:52px;margin-top:16px;padding:0 18px;border-radius:14px;
+  background:var(--green);color:var(--paper);text-decoration:none;font-weight:800;
+}
+.mathflat-detail-link:focus-visible{outline:3px solid var(--navy);outline-offset:2px;}
 
 /* ── 사진 제출 ───────────────────────────────────────────────────────── */
 .submit-guide{margin:0 0 16px;color:var(--muted);}
