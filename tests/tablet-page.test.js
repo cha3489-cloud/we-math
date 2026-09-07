@@ -228,6 +228,16 @@ describe('tablet page boundaries', () => {
     expect(logoutHandler).toContain('await signOut()');
     expect(logoutHandler.indexOf('resetStudyTimer()')).toBeLessThan(logoutHandler.indexOf('await signOut()'));
   });
+
+  it('shows a short start sequence before assignment cards so students know the next action', () => {
+    expect(html).toContain('id=startSequence');
+    expect(html).toContain('오늘 학습 순서');
+    expect(html).toContain('타이머 시작');
+    expect(html).toContain('매쓰플랫 풀이');
+    expect(html).toContain('과제 확인');
+    expect(html.indexOf('id=startSequence')).toBeLessThan(html.indexOf('id=sections'));
+    expect(read('src/tablet/tablet.css')).toContain('.start-sequence-card');
+  });
 });
 
 describe('tablet question form', () => {
