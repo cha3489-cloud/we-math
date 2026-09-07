@@ -255,6 +255,14 @@ describe('tablet page boundaries', () => {
     expect(html).toContain('매쓰플랫 열기');
     expect(read('src/tablet/tablet.css')).toContain('.mathflat-student-link');
   });
+
+  it('offers a direct today-plan jump from the start sequence without extra typing', () => {
+    expect(html).toContain('id=todayPlanLink');
+    expect(html).toContain('href="#sections"');
+    expect(html).toContain('오늘 과제 보기');
+    expect(html.indexOf('id=todayPlanLink')).toBeLessThan(html.indexOf('id=sections'));
+    expect(read('src/tablet/tablet.css')).toContain('.today-plan-link');
+  });
 });
 
 describe('tablet question form', () => {
