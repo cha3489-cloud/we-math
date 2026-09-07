@@ -263,6 +263,13 @@ describe('tablet page boundaries', () => {
     expect(html.indexOf('id=todayPlanLink')).toBeLessThan(html.indexOf('id=sections'));
     expect(read('src/tablet/tablet.css')).toContain('.today-plan-link');
   });
+
+  it('labels the assignment-list jump target for screen readers and focus', () => {
+    expect(html).toContain('id=sections');
+    expect(html).toContain('aria-label="오늘 과제 목록"');
+    expect(html).toContain('tabindex=-1');
+    expect(read('src/tablet/tablet.css')).toContain('#sections:focus-visible');
+  });
 });
 
 describe('tablet question form', () => {
