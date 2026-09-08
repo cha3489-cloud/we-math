@@ -297,6 +297,17 @@ describe('portal design v2', () => {
     expect(css).toContain('.mathflat-assignment-block');
   });
 
+  it('previews MathFlat assignment fields before registration', () => {
+    expect(admin).toContain('id=mathflatAssignmentPreview');
+    expect(admin).toContain('role=status');
+    expect(admin).toContain('학생 화면 카드');
+    expect(adminJs).toContain('mathflatAssignmentPreview');
+    expect(adminJs).toContain('renderMathflatAssignmentPreview');
+    expect(adminJs).toContain("byId('mathflatAssignmentBlock').addEventListener('input', renderMathflatAssignmentPreview)");
+    expect(adminJs).toContain('renderMathflatAssignmentPreview();');
+    expect(css).toContain('.mathflat-assignment-preview');
+  });
+
   it('makes collapsed admin long lists scannable when opened', () => {
     expect(admin).toContain('<small>이름·역할·상태만 빠르게 확인할 때 펼칩니다.</small>');
     expect(admin).toContain('<div id=users class="cards compact-admin-cards user-list-cards"></div>');

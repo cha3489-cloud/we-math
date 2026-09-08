@@ -43,6 +43,15 @@ export function composeMathflatAssignmentDescription(description, mathflat = {})
   const block = ['[매쓰플랫]', ...lines.map(([label, value]) => label + ': ' + value), '[/매쓰플랫]'].join('\n');
   return [base, block].filter(Boolean).join('\n\n');
 }
+export function mathflatAssignmentPreview(mathflat = {}) {
+  const parts = [
+    ['단원', mathflat.unit],
+    ['범위', mathflat.range],
+    ['메모', mathflat.note],
+  ].map(([label, value]) => [label, String(value ?? '').trim()]).filter(([, value]) => value);
+  if (!parts.length) return '매쓰플랫 안내를 입력하면 학생 화면 카드에 따로 표시됩니다.';
+  return '학생 화면 카드: ' + parts.map(([label, value]) => label + ' ' + value).join(' · ');
+}
 export function latestAttempt(attempts = []) {
   return [...attempts].sort((a, b) => Number(b.attempt_no) - Number(a.attempt_no))[0] ?? null;
 }
