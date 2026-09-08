@@ -32,6 +32,17 @@ export function validateSubmissionInput(body, files = []) {
   if (!clean && !files.length) throw new Error('제출 내용 또는 파일을 추가하세요.');
   return { body: clean, hasFiles: files.length > 0 };
 }
+export function composeMathflatAssignmentDescription(description, mathflat = {}) {
+  const base = String(description ?? '').trim();
+  const lines = [
+    ['단원', mathflat.unit],
+    ['범위', mathflat.range],
+    ['메모', mathflat.note],
+  ].map(([label, value]) => [label, String(value ?? '').trim()]).filter(([, value]) => value);
+  if (!lines.length) return base;
+  const block = ['[매쓰플랫]', ...lines.map(([label, value]) => label + ': ' + value), '[/매쓰플랫]'].join('\n');
+  return [base, block].filter(Boolean).join('\n\n');
+}
 export function latestAttempt(attempts = []) {
   return [...attempts].sort((a, b) => Number(b.attempt_no) - Number(a.attempt_no))[0] ?? null;
 }
