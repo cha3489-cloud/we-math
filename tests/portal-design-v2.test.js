@@ -286,6 +286,17 @@ describe('portal design v2', () => {
     expect(css).toContain('.admin-tools summary');
   });
 
+  it('lets admins enter MathFlat details without hand-writing marker syntax', () => {
+    expect(admin).toContain('id=mathflatAssignmentBlock');
+    expect(admin).toContain('name=mathflat_unit');
+    expect(admin).toContain('name=mathflat_range');
+    expect(admin).toContain('name=mathflat_note');
+    expect(admin).toContain('매쓰플랫 안내');
+    expect(adminJs).toContain('composeMathflatAssignmentDescription');
+    expect(adminJs).toContain("unit: data.get('mathflat_unit')");
+    expect(css).toContain('.mathflat-assignment-block');
+  });
+
   it('makes collapsed admin long lists scannable when opened', () => {
     expect(admin).toContain('<small>이름·역할·상태만 빠르게 확인할 때 펼칩니다.</small>');
     expect(admin).toContain('<div id=users class="cards compact-admin-cards user-list-cards"></div>');

@@ -9,6 +9,7 @@ import {
   studentOperationStatusCopy, studentOperationSafeCounts, adminSummaryCountCopy,
   isActiveStudentAssignment, isActiveProfile, collectKeysetPages, createLatestRequestGate,
   reviewQueue, reconcileQueueSelection, filteredAdminListCopy, adminActionFilterCopy,
+  composeMathflatAssignmentDescription,
 } from './domain.js';
 import { currentUserOrNull, signIn, signOut } from '../auth.js';
 import {
@@ -1131,7 +1132,11 @@ byId('assignmentForm').addEventListener('submit', async (event) => {
     const due = data.get('due_at');
     const { error } = await supabase.from('assignments').insert({
       student_id: data.get('student_id'), created_by: currentAdmin.id, title,
-      description: String(data.get('description') || '').trim(),
+      description: composeMathflatAssignmentDescription(data.get('description'), {
+        unit: data.get('mathflat_unit'),
+        range: data.get('mathflat_range'),
+        note: data.get('mathflat_note'),
+      }),
       due_at: due ? new Date(due).toISOString() : null, attachment_paths: paths,
     });
     if (error) throw error;
