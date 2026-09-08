@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { normalizePhone, validatePin, validateLoginInput, validateAccountInput, validateSubmissionInput, assignmentStatus, latestAttempt, canSubmitAttempt, feedbackItems, isAutoComposedFeedback, authErrorMessage, adminWorkflowMeta, summarizeAdminWorkflows, summarizeStudentOperations, studentOperationStatusCopy, adminActionFilterCopy, adminSummaryCountCopy, isActiveStudentAssignment, isActiveProfile, collectKeysetPages, createLatestRequestGate, reconcileQueueSelection, filteredAdminListCopy, composeMathflatAssignmentDescription } from '../src/portal/domain.js';
+import { normalizePhone, validatePin, validateLoginInput, validateAccountInput, validateSubmissionInput, assignmentStatus, latestAttempt, canSubmitAttempt, feedbackItems, isAutoComposedFeedback, authErrorMessage, adminWorkflowMeta, summarizeAdminWorkflows, summarizeStudentOperations, studentOperationStatusCopy, adminActionFilterCopy, adminSummaryCountCopy, isActiveStudentAssignment, isActiveProfile, collectKeysetPages, createLatestRequestGate, reconcileQueueSelection, filteredAdminListCopy, composeMathflatAssignmentDescription, mathflatAssignmentPreview } from '../src/portal/domain.js';
 describe('portal domain rules', () => {
   it('normalizes Korean mobile numbers', () => { expect(normalizePhone('010-1234-5678')).toBe('01012345678'); expect(() => normalizePhone('02-123-4567')).toThrow(); });
   it('temporarily accepts legacy four-digit or current six-digit login PINs', () => { expect(validateLoginInput('01012345678', '1234').pin).toBe('1234'); expect(validateLoginInput('01012345678', '123456').pin).toBe('123456'); for (const bad of ['12345', '1234567', '12ab']) expect(() => validateLoginInput('01012345678', bad)).toThrow('PIN'); });
@@ -25,6 +25,10 @@ describe('portal domain rules', () => {
   it('composes MathFlat assignment details into the student tablet marker block', () => {
     expect(composeMathflatAssignmentDescription('프린트를 먼저 보세요.', { unit: '일차방정식', range: '3번~18번', note: '틀린 문제는 별표' })).toBe('프린트를 먼저 보세요.\n\n[매쓰플랫]\n단원: 일차방정식\n범위: 3번~18번\n메모: 틀린 문제는 별표\n[/매쓰플랫]');
     expect(composeMathflatAssignmentDescription('기본 설명', {})).toBe('기본 설명');
+  });
+  it('summarizes MathFlat assignment fields for a live admin preview', () => {
+    expect(mathflatAssignmentPreview({})).toBe('매쓰플랫 안내를 입력하면 학생 화면 카드에 따로 표시됩니다.');
+    expect(mathflatAssignmentPreview({ unit: '일차방정식', range: '3번~18번', note: '별표' })).toBe('학생 화면 카드: 단원 일차방정식 · 범위 3번~18번 · 메모 별표');
   });
   it('limits each submission to three files', () => { expect(validateSubmissionInput('', [{}, {}, {}]).hasFiles).toBe(true); expect(() => validateSubmissionInput('', [{}, {}, {}, {}])).toThrow('3개'); });
   it('chooses the newest attempt and supports revision retries only', () => { const attempts = [{ attempt_no: 1, status: 'needs_revision' }, { attempt_no: 2, status: 'submitted' }]; expect(latestAttempt(attempts)).toEqual(attempts[1]); expect(canSubmitAttempt([])).toBe(true); expect(canSubmitAttempt([{ attempt_no: 1, status: 'needs_revision' }])).toBe(true); expect(canSubmitAttempt(attempts)).toBe(false); expect(canSubmitAttempt([{ attempt_no: 1, status: 'completed' }])).toBe(false); });

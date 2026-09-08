@@ -9,7 +9,7 @@ import {
   studentOperationStatusCopy, studentOperationSafeCounts, adminSummaryCountCopy,
   isActiveStudentAssignment, isActiveProfile, collectKeysetPages, createLatestRequestGate,
   reviewQueue, reconcileQueueSelection, filteredAdminListCopy, adminActionFilterCopy,
-  composeMathflatAssignmentDescription,
+  composeMathflatAssignmentDescription, mathflatAssignmentPreview,
 } from './domain.js';
 import { currentUserOrNull, signIn, signOut } from '../auth.js';
 import {
@@ -1102,6 +1102,18 @@ byId('workflowNext').addEventListener('click', () => {
   changeWorkflowPage(1).catch((error) => showError(byId('adminError'), error.message));
 });
 
+function renderMathflatAssignmentPreview() {
+  const form = byId('assignmentForm');
+  const data = new FormData(form);
+  byId('mathflatAssignmentPreview').textContent = mathflatAssignmentPreview({
+    unit: data.get('mathflat_unit'),
+    range: data.get('mathflat_range'),
+    note: data.get('mathflat_note'),
+  });
+}
+byId('mathflatAssignmentBlock').addEventListener('input', renderMathflatAssignmentPreview);
+renderMathflatAssignmentPreview();
+
 byId('accountForm').addEventListener('submit', async (event) => {
   event.preventDefault(); const form = event.currentTarget; const output = byId('accountResult'); const button = form.querySelector('button'); button.disabled = true;
   try {
@@ -1144,6 +1156,7 @@ byId('assignmentForm').addEventListener('submit', async (event) => {
     workflowPage = 0;
     output.textContent = '과제를 등록했습니다.';
     form.reset();
+    renderMathflatAssignmentPreview();
     try {
       await Promise.all([loadQueue(), loadWorkflows(), loadOperationsSummary()]);
     } catch (refreshError) {
