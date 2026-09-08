@@ -212,6 +212,16 @@ describe('tablet page boundaries', () => {
     expect(main).toMatch(/byId\('emptyState'\)\.hidden = totalAssignmentCount\(sections\) > 0/);
   });
 
+  it('turns the no-assignment state into next actions for class tablets', () => {
+    expect(html).toContain('id=emptyMathflatLink');
+    expect(html).toContain('href="http://student.mathflat.com"');
+    expect(html).toContain('매쓰플랫 먼저 열기');
+    expect(html).toContain('선생님에게 오늘 학습지를 받아요.');
+    expect(html).toContain('타이머는 켜둔 채 기다려요.');
+    expect(read('src/tablet/tablet.css')).toContain('.empty-actions');
+    expect(read('src/tablet/tablet.css')).toContain('.empty-next-list');
+  });
+
   it('shows a calm daily quote on the first today screen', () => {
     expect(html).toContain('id=dailyQuote');
     expect(html).toContain('오늘의 한 문장');

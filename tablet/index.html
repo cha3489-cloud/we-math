@@ -74,8 +74,16 @@
   <p id=todayError class=tablet-error role=alert></p>
   <div id=emptyState class=empty-state hidden>
     <p class=empty-mark aria-hidden=true>🗓️</p>
-    <h2>오늘 등록된 과제가 없어요.</h2>
-    <p>새 과제가 생기면 이 화면에 바로 보여요.</p>
+    <h2>오늘 학습지를 받을 차례예요.</h2>
+    <p>과제가 아직 안 보이면 아래 순서대로 시작하면 됩니다.</p>
+    <ol class=empty-next-list>
+      <li>선생님에게 오늘 학습지를 받아요.</li>
+      <li>타이머는 켜둔 채 기다려요.</li>
+      <li>매쓰플랫을 열고 선생님 안내를 따라요.</li>
+    </ol>
+    <div class=empty-actions>
+      <a id=emptyMathflatLink class=mathflat-student-link href="http://student.mathflat.com" target=_blank rel="noopener noreferrer">매쓰플랫 먼저 열기</a>
+    </div>
   </div>
   <div id=sections aria-label="오늘 과제 목록" tabindex=-1></div>
 </section>

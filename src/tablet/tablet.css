@@ -185,11 +185,16 @@ body.tablet-app{
 
 .empty-state{
   background:var(--paper);border:1px solid var(--line);border-radius:20px;
-  padding:48px 32px;text-align:center;
+  padding:40px 28px;text-align:center;
 }
 .empty-mark{margin:0 0 12px;font-size:48px;}
 .empty-state h2{margin:0 0 8px;font-size:var(--text-title);}
 .empty-state p{margin:0;color:var(--muted);}
+.empty-next-list{display:grid;gap:8px;max-width:520px;margin:20px auto 0;padding:0;list-style:none;text-align:left;counter-reset:empty-step;}
+.empty-next-list li{display:grid;grid-template-columns:auto 1fr;gap:10px;align-items:center;padding:12px 14px;border-radius:14px;background:var(--cream);color:var(--ink);font-weight:700;counter-increment:empty-step;}
+.empty-next-list li::before{content:counter(empty-step);display:grid;place-items:center;width:28px;height:28px;border-radius:50%;background:var(--mint-soft);color:var(--green);font-size:15px;font-weight:900;}
+.empty-actions{display:flex;justify-content:center;margin-top:18px;}
+.empty-actions .mathflat-student-link{grid-column:auto;margin-top:0;min-height:var(--touch-min);padding:0 22px;}
 
 .today-group{
   background:var(--paper);border:1px solid var(--line);border-radius:20px;
