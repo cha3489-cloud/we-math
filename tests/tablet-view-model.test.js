@@ -73,8 +73,8 @@ describe('tablet today summary', () => {
       .toBe('오늘 할 일을 다 마쳤어요.');
   });
 
-  it('says nothing when there is no assignment at all', () => {
-    expect(summaryOf([])).toBe('');
+  it('guides the student when there is no assignment at all', () => {
+    expect(summaryOf([])).toBe('선생님에게 오늘 학습지를 받고 매쓰플랫을 열어요.');
   });
 });
 

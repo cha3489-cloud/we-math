@@ -36,7 +36,7 @@ export function todaySummary(sections = []) {
   if (parts.length) return parts.slice(0, 2).join(' · ');
   if (countOf('review')) return '선생님이 확인하고 있어요.';
   if (countOf('done')) return '오늘 할 일을 다 마쳤어요.';
-  return '';
+  return '선생님에게 오늘 학습지를 받고 매쓰플랫을 열어요.';
 }
 
 const startOfDay = (value) => {
