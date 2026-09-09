@@ -176,9 +176,15 @@ describe('tablet page boundaries', () => {
     expect(main).toMatch(/currentAssignments = \[\];[\s\S]*?signOut\(\)[\s\S]*?location\.replace\(location\.pathname\)/);
   });
 
-  it('has a way back from the detail screen', () => {
+  it('has a clear close action at the top and bottom of the assignment detail screen', () => {
     expect(html).toContain('id=detailBack');
-    expect(main).toContain("byId('detailBack').addEventListener('click', goToday)");
+    expect(html).toContain('과제 닫기');
+    expect(html).toContain('id=detailCloseBottom');
+    expect(html).toContain('class=detail-close-actions');
+    expect(main).toContain("byId('detailBack').addEventListener('click', closeDetail)");
+    expect(main).toContain("byId('detailCloseBottom').addEventListener('click', closeDetail)");
+    expect(main).toContain('function closeDetail()');
+    expect(read('src/tablet/tablet.css')).toContain('.detail-close-actions');
   });
 
   it('renders the mathflat card as its own block', () => {

@@ -77,6 +77,7 @@ const routeOf = () => {
     : { name: 'today' };
 };
 const goToday = () => { location.hash = '#/today'; };
+function closeDetail() { goToday(); }
 const goDetail = (id, focusQuestion = false) => {
   location.hash = '#/assignment/' + encodeURIComponent(id) + (focusQuestion ? '/question' : '');
 };
@@ -895,7 +896,8 @@ byId('todayPlanLink').addEventListener('click', () => {
 });
 renderStudyTimer();
 
-byId('detailBack').addEventListener('click', goToday);
+byId('detailBack').addEventListener('click', closeDetail);
+byId('detailCloseBottom').addEventListener('click', closeDetail);
 
 // ── 로그인 ───────────────────────────────────────────────────────────────
 buildKeypad(byId('loginKeypad'), (key) => {
