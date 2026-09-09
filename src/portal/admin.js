@@ -16,7 +16,10 @@ import {
   acceptAnswerImages, answerImagesPreviewModel, extractPastedImageFiles,
   buildAnswerFilePath, isAnswerFilePathValid, canSubmitAnswer, answerErrorMessage,
 } from './answer-attachments.js';
-import { validateInternalNote } from './admin-internal-notes.js';
+import {
+  composeObservationInternalNote, EXPLANATION_LEVELS, NEXT_INTENSITIES,
+  OBSERVATION_CAUSES, RETRY_RESULTS,
+} from './admin-internal-notes.js';
 
 const byId = (id) => document.getElementById(id);
 const showError = (el, message) => { el.textContent = message || ''; };
@@ -78,6 +81,23 @@ let processing = false;
 const REMOTE_PAGE_SIZE = 1000;
 const queueRequestGate = createLatestRequestGate();
 const QUEUE_SELECT = 'id,title,due_at,profiles!assignments_student_id_fkey(name,suspended_at),submissions(id,attempt_no,status,body,file_paths,submitted_at)';
+
+function populateSelect(select, values) {
+  for (const value of values) select.append(new Option(value, value));
+}
+function setupQuickObservationControls() {
+  const causes = byId('observationCauses');
+  causes.append(...OBSERVATION_CAUSES.map((cause) => {
+    const label = document.createElement('label'); label.className = 'check';
+    const input = document.createElement('input'); input.type = 'checkbox'; input.value = cause;
+    label.append(input, ' ', cause);
+    return label;
+  }));
+  populateSelect(byId('observationExplanation'), EXPLANATION_LEVELS);
+  populateSelect(byId('observationRetry'), RETRY_RESULTS);
+  populateSelect(byId('observationIntensity'), NEXT_INTENSITIES);
+}
+setupQuickObservationControls();
 
 async function fetchQueuePage(cursor, pageSize) {
   let query = supabase.from('assignments').select(QUEUE_SELECT)
@@ -143,7 +163,7 @@ async function openReview(index) {
   byId('reviewDetail').hidden = false;
   showError(byId('reviewError'), ''); showError(byId('viewerError'), '');
   byId('overallComment').value = ''; byId('problemRef').value = ''; byId('itemComment').value = ''; byId('redoRequired').checked = true;
-  byId('internalNote').value = ''; showError(byId('internalNoteStatus'), '');
+  byId('internalNote').value = ''; resetQuickObservation(); showError(byId('internalNoteStatus'), '');
   renderTagChips(); renderItems();
 
   const student = normalizeRelation(entry.assignment.profiles)[0]?.name || '학생';
@@ -243,6 +263,33 @@ byId('addItem').addEventListener('click', () => {
 // ── 내부 메모(원장 전용) ────────────────────────────────────────────────
 // review_internal_notes 는 admin-only RLS 라 학생 세션에서는 0행이 온다.
 // 학생 화면(student.js)은 이 테이블도 이 RPC 도 절대 호출하지 않는다.
+function resetQuickObservation() {
+  byId('observationCauses').querySelectorAll('input[type="checkbox"]').forEach((input) => { input.checked = false; });
+  byId('observationExplanation').value = '';
+  byId('observationRetry').value = '';
+  byId('observationIntensity').value = '';
+}
+function collectQuickObservation() {
+  return {
+    causes: [...byId('observationCauses').querySelectorAll('input[type="checkbox"]:checked')].map((input) => input.value),
+    explanation: byId('observationExplanation').value,
+    retry: byId('observationRetry').value,
+    intensity: byId('observationIntensity').value,
+  };
+}
+function memoWithoutObservationPrefix(value) {
+  return String(value || '').replace(/^\[관찰\][^\n]*(?:\n\[메모\] ?)?/, '').trim();
+}
+function applyObservationToNote() {
+  byId('internalNote').value = composeObservationInternalNote(collectQuickObservation(), memoWithoutObservationPrefix(byId('internalNote').value));
+}
+byId('applyObservationNote').addEventListener('click', () => {
+  try {
+    applyObservationToNote();
+    showError(byId('internalNoteStatus'), '관찰값을 내부 메모에 반영했습니다.');
+    showError(byId('reviewError'), '');
+  } catch (error) { showError(byId('reviewError'), error.message); }
+});
 async function loadInternalNote(submissionId) {
   const { data, error } = await supabase.from('review_internal_notes')
     .select('note').eq('submission_id', submissionId).maybeSingle();
@@ -258,7 +305,8 @@ function isMissingInternalNotesFeature(error) {
 }
 
 async function saveInternalNote(submissionId) {
-  const note = validateInternalNote(byId('internalNote').value);
+  const note = composeObservationInternalNote(collectQuickObservation(), memoWithoutObservationPrefix(byId('internalNote').value));
+  byId('internalNote').value = note;
   const { error } = await supabase.rpc('upsert_review_internal_note', {
     p_submission_id: submissionId, p_note: note,
   });

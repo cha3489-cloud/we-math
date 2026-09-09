@@ -32,6 +32,14 @@ export function validateSubmissionInput(body, files = []) {
   if (!clean && !files.length) throw new Error('제출 내용 또는 파일을 추가하세요.');
   return { body: clean, hasFiles: files.length > 0 };
 }
+export const STUDENT_DIFFICULTY_OPTIONS = Object.freeze(['문제 이해', '식 세우기', '계산', '설명하기', '마무리 확인']);
+export function composeSubmissionBodyWithDifficulty(body, difficulty = '') {
+  const clean = String(body ?? '').trim();
+  const choice = String(difficulty ?? '').trim();
+  if (!choice) return clean;
+  if (!STUDENT_DIFFICULTY_OPTIONS.includes(choice)) throw new Error('허용되지 않은 선택입니다.');
+  return ['[어려웠던 점] ' + choice, clean ? '[학생 메모] ' + clean : ''].filter(Boolean).join('\n');
+}
 export function composeMathflatAssignmentDescription(description, mathflat = {}) {
   const base = String(description ?? '').trim();
   const lines = [

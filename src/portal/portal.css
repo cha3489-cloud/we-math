@@ -191,6 +191,9 @@ a.file{display:block;margin:8px 0;color:var(--navy);font-weight:800}
 .item-list{display:grid;gap:7px;padding:0;list-style:none}
 .item-list li{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:10px;border-radius:9px;background:var(--mint-soft)}
 .item-list .thumb-remove{position:static;flex:none}
+.quick-observation{display:grid;gap:12px;margin:16px 0;padding:15px;border:1px solid var(--line);border-radius:12px;background:var(--gold-soft)}
+.quick-observation h4{margin-bottom:4px}.quick-observation fieldset{display:flex;flex-wrap:wrap;gap:8px;margin:0;padding:10px;border:1px solid var(--line);border-radius:10px;background:#fff}.quick-observation legend{padding:0 6px;color:var(--navy);font-weight:900}.quick-observation .check{width:max-content;font-size:.84rem}
+.student-difficulty{padding:12px;border:1px solid var(--line);border-radius:12px;background:var(--mint-soft)}
 .decision-guide{margin:14px 0 7px;color:var(--muted);font-size:.78rem;text-align:right}
 .decide{display:flex;gap:8px}
 .decide button{flex:1}

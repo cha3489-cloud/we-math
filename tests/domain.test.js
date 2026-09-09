@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { normalizePhone, validatePin, validateLoginInput, validateAccountInput, validateSubmissionInput, assignmentStatus, latestAttempt, canSubmitAttempt, feedbackItems, isAutoComposedFeedback, authErrorMessage, adminWorkflowMeta, summarizeAdminWorkflows, summarizeStudentOperations, studentOperationStatusCopy, adminActionFilterCopy, adminSummaryCountCopy, isActiveStudentAssignment, isActiveProfile, collectKeysetPages, createLatestRequestGate, reconcileQueueSelection, filteredAdminListCopy, composeMathflatAssignmentDescription, mathflatAssignmentPreview } from '../src/portal/domain.js';
+import { normalizePhone, validatePin, validateLoginInput, validateAccountInput, validateSubmissionInput, composeSubmissionBodyWithDifficulty, STUDENT_DIFFICULTY_OPTIONS, assignmentStatus, latestAttempt, canSubmitAttempt, feedbackItems, isAutoComposedFeedback, authErrorMessage, adminWorkflowMeta, summarizeAdminWorkflows, summarizeStudentOperations, studentOperationStatusCopy, adminActionFilterCopy, adminSummaryCountCopy, isActiveStudentAssignment, isActiveProfile, collectKeysetPages, createLatestRequestGate, reconcileQueueSelection, filteredAdminListCopy, composeMathflatAssignmentDescription, mathflatAssignmentPreview } from '../src/portal/domain.js';
 describe('portal domain rules', () => {
   it('normalizes Korean mobile numbers', () => { expect(normalizePhone('010-1234-5678')).toBe('01012345678'); expect(() => normalizePhone('02-123-4567')).toThrow(); });
   it('temporarily accepts legacy four-digit or current six-digit login PINs', () => { expect(validateLoginInput('01012345678', '1234').pin).toBe('1234'); expect(validateLoginInput('01012345678', '123456').pin).toBe('123456'); for (const bad of ['12345', '1234567', '12ab']) expect(() => validateLoginInput('01012345678', bad)).toThrow('PIN'); });
@@ -22,6 +22,16 @@ describe('portal domain rules', () => {
   });
   it('validates principal-issued accounts', () => { expect(validateAccountInput({ name: 'Student', phone: '010-2222-3333', pin: '987654', role: 'student' })).toEqual({ name: 'Student', phone: '01022223333', pin: '987654', role: 'student' }); expect(() => validateAccountInput({ name: '', phone: '01022223333', pin: '987654', role: 'student' })).toThrow(); expect(() => validateAccountInput({ name: 'X', phone: '01022223333', pin: '987654', role: 'owner' })).toThrow(); });
   it('requires text or files', () => { expect(validateSubmissionInput(' done ', [])).toEqual({ body: 'done', hasFiles: false }); expect(validateSubmissionInput('', [{ name: 'a.pdf' }])).toEqual({ body: '', hasFiles: true }); expect(() => validateSubmissionInput(' ', [])).toThrow(); });
+  it('lists the one-question difficulty choices shown to students', () => {
+    expect(STUDENT_DIFFICULTY_OPTIONS).toEqual(['문제 이해', '식 세우기', '계산', '설명하기', '마무리 확인']);
+  });
+  it('composes the optional student difficulty choice into the submitted body', () => {
+    expect(composeSubmissionBodyWithDifficulty('풀이를 적었어요.', '식 세우기'))
+      .toBe('[어려웠던 점] 식 세우기\n[학생 메모] 풀이를 적었어요.');
+    expect(composeSubmissionBodyWithDifficulty('', '설명하기')).toBe('[어려웠던 점] 설명하기');
+    expect(composeSubmissionBodyWithDifficulty('  기존 메모  ', '')).toBe('기존 메모');
+    expect(() => composeSubmissionBodyWithDifficulty('메모', '원장확인')).toThrow('허용되지 않은 선택');
+  });
   it('composes MathFlat assignment details into the student tablet marker block', () => {
     expect(composeMathflatAssignmentDescription('프린트를 먼저 보세요.', { unit: '일차방정식', range: '3번~18번', note: '틀린 문제는 별표' })).toBe('프린트를 먼저 보세요.\n\n[매쓰플랫]\n단원: 일차방정식\n범위: 3번~18번\n메모: 틀린 문제는 별표\n[/매쓰플랫]');
     expect(composeMathflatAssignmentDescription('기본 설명', {})).toBe('기본 설명');

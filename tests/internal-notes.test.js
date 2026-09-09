@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { validateInternalNote } from '../src/portal/admin-internal-notes.js';
+import { composeObservationInternalNote, validateInternalNote } from '../src/portal/admin-internal-notes.js';
 
 const root = resolve(import.meta.dirname, '..');
 const read = (path) => readFileSync(resolve(root, path), 'utf8');
@@ -221,5 +221,26 @@ describe('validateInternalNote', () => {
   it('matches the database length bound', () => {
     expect(validateInternalNote('가'.repeat(2000))).toHaveLength(2000);
     expect(() => validateInternalNote('가'.repeat(2001))).toThrow(/2000/);
+  });
+
+  it('composes quick observation values into the admin-only note prefix', () => {
+    expect(composeObservationInternalNote({
+      causes: ['식변환', '개념연결'], explanation: '부분설명', retry: '힌트후성공', intensity: '유지',
+    }, '그림→식 변환 지연. 다음 수업 첫 10분 재확인.'))
+      .toBe('[관찰] 원인=식변환,개념연결 / 설명=부분설명 / 재풀이=힌트후성공 / 다음=유지\n[메모] 그림→식 변환 지연. 다음 수업 첫 10분 재확인.');
+  });
+
+  it('omits blank quick observation fields and keeps a plain memo usable', () => {
+    expect(composeObservationInternalNote({ causes: [], explanation: '', retry: '', intensity: '' }, '메모만 저장'))
+      .toBe('메모만 저장');
+    expect(composeObservationInternalNote({ causes: ['계산부호'], explanation: '', retry: '', intensity: '' }, ''))
+      .toBe('[관찰] 원인=계산부호');
+  });
+
+  it('rejects quick observation values outside the fixed operating vocabulary', () => {
+    expect(() => composeObservationInternalNote({ causes: ['상담필요'], explanation: '', retry: '', intensity: '' }, ''))
+      .toThrow('허용되지 않은 관찰값');
+    expect(() => composeObservationInternalNote({ causes: [], explanation: '원장확인', retry: '', intensity: '' }, ''))
+      .toThrow('허용되지 않은 관찰값');
   });
 });

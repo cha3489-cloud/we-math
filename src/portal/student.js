@@ -2,10 +2,10 @@
 import './portal.css';
 import { invokeAuthenticated, isMissingFeedbackSourceColumn, supabase } from './client.js';
 import {
-  validatePin, validateLoginInput, validateSubmissionInput, assignmentStatus,
-  latestAttempt, canSubmitAttempt, normalizeRelation, groupAssignments,
-  redoProblems, allFeedbackItems, isAutoComposedFeedback, assessImageQuality, STATUS_META,
-  authErrorMessage,
+  validatePin, validateLoginInput, validateSubmissionInput, composeSubmissionBodyWithDifficulty,
+  STUDENT_DIFFICULTY_OPTIONS, assignmentStatus, latestAttempt, canSubmitAttempt,
+  normalizeRelation, groupAssignments, redoProblems, allFeedbackItems,
+  isAutoComposedFeedback, assessImageQuality, STATUS_META, authErrorMessage,
 } from './domain.js';
 import { currentUserOrNull, signIn, signOut } from '../auth.js';
 
@@ -207,13 +207,19 @@ function feedbackBlock(attempt) {
 function submissionForm(item, userId, label) {
   const form = document.createElement('form'); form.className = 'submit-form';
   const body = document.createElement('textarea'); body.placeholder = '풀이 과정이나 질문을 적어주세요. (선택)';
+  const difficultyLabel = document.createElement('label'); difficultyLabel.className = 'student-difficulty';
+  difficultyLabel.append('어디가 가장 어려웠나요? (선택)');
+  const difficulty = document.createElement('select');
+  difficulty.append(new Option('선택하지 않음', ''));
+  for (const option of STUDENT_DIFFICULTY_OPTIONS) difficulty.append(new Option(option, option));
+  difficultyLabel.append(difficulty);
   const fileInput = document.createElement('input');
   fileInput.type = 'file'; fileInput.accept = '.pdf,image/jpeg,image/png,image/webp'; fileInput.multiple = true; fileInput.hidden = true;
   const pick = document.createElement('button'); pick.type = 'button'; pick.className = 'secondary'; pick.textContent = '📎 파일 선택';
   const thumbs = document.createElement('div'); thumbs.className = 'thumbs';
   const errorBox = document.createElement('p'); errorBox.className = 'error'; errorBox.setAttribute('role', 'alert');
   const submit = document.createElement('button'); submit.textContent = label;
-  form.append(body, pick, fileInput, thumbs, submit, errorBox);
+  form.append(body, difficultyLabel, pick, fileInput, thumbs, submit, errorBox);
 
   let selected = []; // { file, url, warnings }
   let selectingFiles = false;
@@ -265,7 +271,8 @@ function submissionForm(item, userId, label) {
     const paths = []; let inserted = false;
     try {
       const files = selected.map((entry) => entry.file);
-      const input = validateSubmissionInput(body.value, files);
+      const composedBody = composeSubmissionBodyWithDifficulty(body.value, difficulty.value);
+      const input = validateSubmissionInput(composedBody, files);
       for (const upload of files) {
         const safe = upload.name.replace(/[^a-zA-Z0-9._-]/g, '_');
         const path = userId + '/' + item.id + '/' + crypto.randomUUID() + '-' + safe;
