@@ -308,6 +308,15 @@ describe('portal design v2', () => {
     expect(css).toContain('.mathflat-assignment-preview');
   });
 
+  it('links the admin manage tab to the MathFlat teacher site', () => {
+    expect(admin).toContain('id=mathflatTeacherLink');
+    expect(admin).toContain('href="https://teacher.mathflat.com"');
+    expect(admin).toContain('target=_blank');
+    expect(admin).toContain('rel="noopener noreferrer"');
+    expect(admin).toContain('매쓰플랫 선생님용 열기');
+    expect(css).toContain('.mathflat-teacher-link');
+  });
+
   it('makes collapsed admin long lists scannable when opened', () => {
     expect(admin).toContain('<small>이름·역할·상태만 빠르게 확인할 때 펼칩니다.</small>');
     expect(admin).toContain('<div id=users class="cards compact-admin-cards user-list-cards"></div>');

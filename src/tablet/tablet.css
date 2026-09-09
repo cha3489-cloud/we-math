@@ -265,6 +265,8 @@ body.tablet-app{
 .detail-block{margin-top:24px;}
 .detail-block h2{margin:0 0 8px;font-size:18px;color:var(--muted);}
 .detail-description,.detail-submission,.detail-feedback{margin:0;white-space:pre-wrap;}
+.detail-close-actions{margin-top:28px;padding-top:20px;border-top:1px solid var(--line);}
+.detail-close-actions .tablet-secondary{border-style:solid;background:var(--paper);color:var(--navy);}
 
 .mathflat-card{
   border:1px solid var(--green);border-radius:16px;
