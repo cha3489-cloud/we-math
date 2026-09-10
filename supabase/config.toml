@@ -421,3 +421,6 @@ verify_jwt = false
 
 [functions.consultation-intake]
 verify_jwt = false
+
+[functions.notion-learning-sync]
+verify_jwt = false
