@@ -26,6 +26,14 @@ async function ensureAdmin(user) {
   if (error || data?.role !== 'admin') { await signOut(); throw new Error('관리자 권한이 필요합니다.'); }
 }
 async function callAdmin(payload) { return invokeAuthenticated('admin-users', payload); }
+async function syncReviewedSubmissionToNotion(submissionId) {
+  try {
+    await invokeAuthenticated('notion-learning-sync', { submissionId });
+  } catch (error) {
+    console.warn('Notion 학습기록 동기화 실패:', error.message);
+    showError(byId('adminError'), '검토 처리는 완료됐지만 Notion 학습기록 동기화는 실패했습니다. 나중에 다시 동기화하면 됩니다.');
+  }
+}
 function safeName(name) { return name.replace(/[^a-zA-Z0-9._-]/g, '_'); }
 async function cleanup(bucket, paths) { if (paths.length) await supabase.storage.from(bucket).remove(paths); }
 
@@ -311,6 +319,7 @@ async function decide(status) {
       });
     }
     if (result.error) throw result.error;
+    await syncReviewedSubmissionToNotion(decidedId);
     if (current?.attempt.id === decidedId) {
       current = null;
       byId('reviewDetail').hidden = true;
