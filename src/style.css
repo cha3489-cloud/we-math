@@ -932,6 +932,19 @@ ul, ol { list-style: none; }
   font-size: 10px; letter-spacing: 0.08em;
   color: var(--ink-400);
 }
+.form-fallback {
+  text-align: center;
+  margin-top: 8px;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--ink-500);
+}
+.form-fallback a {
+  color: var(--ink-900);
+  font-weight: 800;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
 .form-group .optional,
 .choice-fieldset legend span {
   color: var(--ink-400);

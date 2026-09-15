@@ -52,6 +52,14 @@ describe('consultation form UI', () => {
     expect(source.indexOf('if (error) throw error')).toBeLessThan(source.indexOf('form.reset();'));
     expect(source).toContain('catch (error)');
     expect(source).toContain('접수되지 않았습니다');
+    expect(source).toContain('전화 상담도 가능합니다');
+  });
+
+  it('shows a direct phone fallback near the form for parents if online intake is unavailable', () => {
+    const html = read('consultation/index.html');
+    expect(html).toContain('id="consultation-fallback"');
+    expect(html).toContain('href="tel:010-2496-4031"');
+    expect(html).toContain('온라인 접수가 어렵다면');
   });
 
   it('uses only Notion-compatible option labels', () => {
