@@ -165,6 +165,17 @@ function renderQuickActions(sections) {
 
 // 카드 전체를 누르면 상세로, 별도의 작은 버튼으로는 질문하기로 바로 간다.
 // 버튼 안에 버튼을 넣을 수 없어 감싸는 요소(wrap)를 하나 둔다.
+function assignmentCardTags(assignment) {
+  const detail = assignmentDetail(assignment);
+  const hasMathflat = Boolean(detail?.mathflat && (detail.mathflat.fields.length || detail.mathflat.notes.length));
+  const canSubmitPhoto = Boolean(detail && (detail.attemptCount === 0 || detail.canResubmit));
+  return [
+    hasMathflat ? '매쓰플랫' : '',
+    canSubmitPhoto ? '사진 제출' : '',
+    '질문 가능',
+  ].filter(Boolean);
+}
+
 function assignmentCard(assignment, now) {
   const status = assignmentStatus(assignment, now);
   const meta = STATUS_META[status] ?? { icon: '•', label: status };
@@ -200,7 +211,16 @@ function assignmentCard(assignment, now) {
   chevron.setAttribute('aria-hidden', 'true');
   chevron.textContent = '›';
 
-  card.append(heading, line, chevron);
+  const tags = document.createElement('p');
+  tags.className = 'assignment-card-tags';
+  tags.append(...assignmentCardTags(assignment).map((label) => {
+    const tag = document.createElement('span');
+    tag.className = 'assignment-card-tag';
+    tag.textContent = label;
+    return tag;
+  }));
+
+  card.append(heading, line, tags, chevron);
 
   // 사진 제출 여부·과제 상태(completed 포함)와 무관하게 항상 누를 수 있다.
   const questionButton = document.createElement('button');

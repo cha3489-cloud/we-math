@@ -229,6 +229,8 @@ body.tablet-app{
 .assignment-card:focus-visible{outline:3px solid var(--green);outline-offset:2px;}
 .assignment-card h3{grid-column:1;margin:0 0 8px;font-size:20px;}
 .assignment-meta{grid-column:1;display:flex;flex-wrap:wrap;gap:8px 16px;margin:0;color:var(--muted);font-size:16px;}
+.assignment-card-tags{grid-column:1;display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 0;}
+.assignment-card-tag{display:inline-flex;align-items:center;min-height:32px;padding:0 10px;border-radius:999px;background:var(--paper);color:var(--green);font-size:14px;font-weight:800;}
 
 /* 오늘 카드 전체를 누르면 상세로 가고, 별도의 작은 버튼으로도 질문하기로 바로
    갈 수 있다. 큰 버튼(.assignment-card) 안에 작은 버튼을 넣을 수 없어 감싸는

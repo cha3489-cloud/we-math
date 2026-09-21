@@ -252,6 +252,18 @@ describe('tablet page boundaries', () => {
     expect(read('src/tablet/tablet.css')).toContain('.quick-action-card');
   });
 
+  it('adds classroom-operation tags to assignment cards before students open details', () => {
+    expect(main).toContain('function assignmentCardTags(assignment)');
+    expect(main).toContain('assignment-card-tags');
+    expect(main).toContain("tag.textContent = label");
+    expect(main).toContain("assignmentCardTags(assignment).map");
+    expect(main).toContain('매쓰플랫');
+    expect(main).toContain('사진 제출');
+    expect(main).toContain('질문 가능');
+    expect(read('src/tablet/tablet.css')).toContain('.assignment-card-tags');
+    expect(read('src/tablet/tablet.css')).toContain('.assignment-card-tag');
+  });
+
   it('puts a touch-first study timer on the first today screen', () => {
     expect(html).toContain('id=studyTimer');
     expect(html).toContain('id=studyTimerToggle');
