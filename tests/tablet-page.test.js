@@ -264,6 +264,15 @@ describe('tablet page boundaries', () => {
     expect(read('src/tablet/tablet.css')).toContain('.assignment-card-tag');
   });
 
+  it('marks assignment cards with status classes so urgent work is visually prioritized', () => {
+    expect(main).toContain("card.className = 'assignment-card assignment-card-' + status");
+    expect(read('src/tablet/tablet.css')).toContain('.assignment-card-needs_revision');
+    expect(read('src/tablet/tablet.css')).toContain('.assignment-card-open');
+    expect(read('src/tablet/tablet.css')).toContain('.assignment-card-overdue');
+    expect(read('src/tablet/tablet.css')).toContain('.assignment-card-submitted');
+    expect(read('src/tablet/tablet.css')).toContain('.assignment-card-completed');
+  });
+
   it('puts a touch-first study timer on the first today screen', () => {
     expect(html).toContain('id=studyTimer');
     expect(html).toContain('id=studyTimerToggle');

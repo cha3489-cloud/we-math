@@ -184,7 +184,7 @@ function assignmentCard(assignment, now) {
 
   const card = document.createElement('button');
   card.type = 'button';
-  card.className = 'assignment-card';
+  card.className = 'assignment-card assignment-card-' + status;
   card.dataset.assignmentId = assignment.id;
   card.addEventListener('click', () => goDetail(assignment.id));
 

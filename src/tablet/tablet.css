@@ -226,6 +226,11 @@ body.tablet-app{
   font:inherit;color:inherit;text-align:left;cursor:pointer;
 }
 .assignment-card:active{background:var(--mint-soft);}
+.assignment-card-needs_revision{border-color:var(--coral);background:#fff4ef;box-shadow:inset 6px 0 0 var(--coral);}
+.assignment-card-open{border-color:#b6d6c8;background:#f0faf5;box-shadow:inset 6px 0 0 var(--green);}
+.assignment-card-overdue{border-color:var(--coral);background:#fff8f3;box-shadow:inset 6px 0 0 var(--coral);}
+.assignment-card-submitted{border-color:#e0c37c;background:#fff9e8;}
+.assignment-card-completed{background:#f1f2ed;color:#57645f;}
 .assignment-card:focus-visible{outline:3px solid var(--green);outline-offset:2px;}
 .assignment-card h3{grid-column:1;margin:0 0 8px;font-size:20px;}
 .assignment-meta{grid-column:1;display:flex;flex-wrap:wrap;gap:8px 16px;margin:0;color:var(--muted);font-size:16px;}
