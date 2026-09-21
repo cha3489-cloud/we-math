@@ -40,6 +40,24 @@ describe('portal design v2', () => {
     expect(adminJs).toContain("byId('studentStatusItems').replaceChildren(...rows.map(studentStatusCard))");
   });
 
+  it('puts a one-tap today flow above admin tabs so operators do not start in raw lists', () => {
+    expect(admin).toContain('id=adminTodayFlow');
+    expect(admin).toContain('id=todayFlowReview');
+    expect(admin).toContain('id=todayFlowManage');
+    expect(admin).toContain('id=todayFlowQuestions');
+    expect(admin).toContain('오늘 운영 동선');
+    expect(admin).toContain('1. 제출 검토');
+    expect(admin).toContain('2. 학생별 상태');
+    expect(admin).toContain('3. 질문 답변');
+    expect(adminJs).toContain('function updateTodayFlow()');
+    expect(adminJs).toContain("byId('todayFlowReviewCount').textContent = String(operationsSummary.counts.submitted) + '건'");
+    expect(adminJs).toContain("byId('todayFlowManageCount').textContent = '후속 ' + operationsSummary.actionItems.length + '건 · 학생 ' + operationsSummary.studentItems.length + '명'");
+    expect(adminJs).toContain("byId('todayFlowQuestionsCount').textContent = String(questionOpenCount) + '건'");
+    expect(adminJs).toContain("byId('todayFlowManage').addEventListener('click'");
+    expect(css).toContain('.admin-today-flow');
+    expect(css).toContain('.today-flow-card');
+  });
+
   it('surfaces actionable revision and overdue work without making the operator inspect dates', () => {
     for (const id of ['principalCheckCount', 'questionCount', 'revisionCount', 'overdueCount', 'actionSection', 'actionItems', 'actionEmpty', 'studentStatusSection', 'studentStatusItems']) {
       expect(admin).toContain(`id=${id}`);

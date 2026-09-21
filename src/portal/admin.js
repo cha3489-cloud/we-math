@@ -40,7 +40,13 @@ async function cleanup(bucket, paths) { if (paths.length) await supabase.storage
 
 // ── 탭 ──────────────────────────────────────────────────────────────────
 let actionFilter = 'all';
+let questionOpenCount = 0;
 let operationsSummary = { counts: { principal_check: 0, submitted: 0, needs_revision: 0, overdue: 0 }, actionItems: [], studentItems: [] };
+function updateTodayFlow() {
+  byId('todayFlowReviewCount').textContent = String(operationsSummary.counts.submitted) + '건';
+  byId('todayFlowManageCount').textContent = '후속 ' + operationsSummary.actionItems.length + '건 · 학생 ' + operationsSummary.studentItems.length + '명';
+  byId('todayFlowQuestionsCount').textContent = String(questionOpenCount) + '건';
+}
 async function switchTab(tab) {
   const review = tab === 'review';
   const manage = tab === 'manage';
@@ -65,6 +71,9 @@ async function openActionFilter(filter) {
 byId('tabReview').addEventListener('click', () => switchTab('review').catch((error) => showError(byId('adminError'), error.message)));
 byId('tabManage').addEventListener('click', () => { actionFilter = 'all'; switchTab('manage').catch((error) => showError(byId('adminError'), error.message)); });
 byId('tabQuestions').addEventListener('click', () => switchTab('questions').catch((error) => showError(byId('adminError'), error.message)));
+byId('todayFlowReview').addEventListener('click', () => switchTab('review').then(() => byId('queue').scrollIntoView({ behavior: 'smooth', block: 'start' })).catch((error) => showError(byId('adminError'), error.message)));
+byId('todayFlowManage').addEventListener('click', () => { actionFilter = 'all'; switchTab('manage').then(() => byId('studentStatusSection').scrollIntoView({ behavior: 'smooth', block: 'start' })).catch((error) => showError(byId('adminError'), error.message)); });
+byId('todayFlowQuestions').addEventListener('click', () => switchTab('questions').then(() => byId('questionsList').scrollIntoView({ behavior: 'smooth', block: 'start' })).catch((error) => showError(byId('adminError'), error.message)));
 byId('statPrincipalCheck').addEventListener('click', () => openActionFilter('principal_check').catch((error) => showError(byId('adminError'), error.message)));
 byId('statSubmitted').addEventListener('click', () => switchTab('review').then(() => byId('queue').scrollIntoView({ behavior: 'smooth', block: 'start' })).catch((error) => showError(byId('adminError'), error.message)));
 byId('statRevision').addEventListener('click', () => openActionFilter('needs_revision').catch((error) => showError(byId('adminError'), error.message)));
@@ -391,7 +400,9 @@ async function loadQuestionCount() {
     .select('id', { count: 'exact', head: true })
     .eq('status', 'open');
   if (error) { console.warn('질문 개수 조회 실패:', error.message); return; }
-  byId('questionCount').textContent = String(count || 0);
+  questionOpenCount = count || 0;
+  byId('questionCount').textContent = String(questionOpenCount);
+  updateTodayFlow();
 }
 
 async function loadQuestionInbox() {
@@ -408,7 +419,11 @@ async function loadQuestionInbox() {
   if (error) { showError(byId('questionsError'), error.message || '질문 목록을 불러오지 못했습니다.'); return; }
   showError(byId('questionsError'), '');
   questionInbox = data || [];
-  if (!questionStudentFilter && questionStatusFilter === 'open') byId('questionCount').textContent = String(questionInbox.length);
+  if (!questionStudentFilter && questionStatusFilter === 'open') {
+    questionOpenCount = questionInbox.length;
+    byId('questionCount').textContent = String(questionOpenCount);
+    updateTodayFlow();
+  }
   renderQuestionInbox();
 }
 
@@ -902,6 +917,7 @@ async function loadOperationsSummary() {
   byId('queueCount').textContent = String(operationsSummary.counts.submitted);
   byId('revisionCount').textContent = String(operationsSummary.counts.needs_revision);
   byId('overdueCount').textContent = String(operationsSummary.counts.overdue);
+  updateTodayFlow();
   renderActionItems();
   renderStudentStatusItems();
 }

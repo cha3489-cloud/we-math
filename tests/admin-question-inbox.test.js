@@ -446,6 +446,9 @@ describe('admin question inbox — answered list filter', () => {
 
   it('keeps the dashboard question count tied to open questions even when viewing answered history', () => {
     const fn = admin.match(/async function loadQuestionInbox\(\)[\s\S]*?\n\}/)?.[0] ?? '';
-    expect(fn).toContain("if (!questionStudentFilter && questionStatusFilter === 'open') byId('questionCount').textContent");
+    expect(fn).toContain("if (!questionStudentFilter && questionStatusFilter === 'open')");
+    expect(fn).toContain("questionOpenCount = questionInbox.length");
+    expect(fn).toContain("byId('questionCount').textContent = String(questionOpenCount)");
+    expect(fn).toContain('updateTodayFlow()');
   });
 });
