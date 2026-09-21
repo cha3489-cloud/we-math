@@ -235,6 +235,23 @@ describe('tablet page boundaries', () => {
     expect(main).toContain("byId('dailyQuote').textContent = dailyQuote(new Date())");
   });
 
+  it('puts three large student quick actions before secondary cards', () => {
+    expect(html).toContain('id=tabletQuickActions');
+    expect(html).toContain('id=quickActionTimer');
+    expect(html).toContain('id=quickActionMathflat');
+    expect(html).toContain('id=quickActionPlan');
+    expect(html).toContain('id=quickActionPlanCount');
+    expect(html).toContain('1. 타이머 켜기');
+    expect(html).toContain('2. 매쓰플랫 열기');
+    expect(html).toContain('3. 오늘 과제');
+    expect(html.indexOf('id=tabletQuickActions')).toBeLessThan(html.indexOf('id=dailyQuote'));
+    expect(main).toContain('function renderQuickActions(sections)');
+    expect(main).toContain("byId('quickActionPlanCount').textContent = String(totalAssignmentCount(sections)) + '건'");
+    expect(main).toContain("byId('quickActionTimer').addEventListener('click'");
+    expect(read('src/tablet/tablet.css')).toContain('.tablet-quick-actions');
+    expect(read('src/tablet/tablet.css')).toContain('.quick-action-card');
+  });
+
   it('puts a touch-first study timer on the first today screen', () => {
     expect(html).toContain('id=studyTimer');
     expect(html).toContain('id=studyTimerToggle');

@@ -47,6 +47,11 @@
     <h1 id=greeting>오늘도 한 걸음</h1>
     <p id=todaySummary class=tablet-lead role=status></p>
   </div>
+  <section id=tabletQuickActions class=tablet-quick-actions aria-label="오늘 바로 할 일">
+    <button id=quickActionTimer type=button class=quick-action-card><span>1. 타이머 켜기</span><strong>공부 시간 시작</strong><small>자리에 앉으면 먼저 눌러요.</small></button>
+    <a id=quickActionMathflat class=quick-action-card href="http://student.mathflat.com" target=_blank rel="noopener noreferrer"><span>2. 매쓰플랫 열기</span><strong>문제 풀기</strong><small>선생님이 정한 문제를 풉니다.</small></a>
+    <a id=quickActionPlan class=quick-action-card href="#sections"><span>3. 오늘 과제</span><strong id=quickActionPlanCount>0건</strong><small>제출·질문할 과제를 확인해요.</small></a>
+  </section>
   <aside class=daily-quote-card aria-labelledby=dailyQuoteTitle>
     <p id=dailyQuoteTitle class=quote-title>오늘의 한 문장</p>
     <p id=dailyQuote class=quote-text></p>

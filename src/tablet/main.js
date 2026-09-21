@@ -159,6 +159,10 @@ function resetStudyTimer() {
   renderStudyTimer();
 }
 
+function renderQuickActions(sections) {
+  byId('quickActionPlanCount').textContent = String(totalAssignmentCount(sections)) + '건';
+}
+
 // 카드 전체를 누르면 상세로, 별도의 작은 버튼으로는 질문하기로 바로 간다.
 // 버튼 안에 버튼을 넣을 수 없어 감싸는 요소(wrap)를 하나 둔다.
 function assignmentCard(assignment, now) {
@@ -708,6 +712,7 @@ function renderToday(profile, assignments, now = new Date()) {
   byId('todaySummary').textContent = todaySummary(sections);
   byId('dailyQuote').textContent = dailyQuote(new Date());
   renderStudyTimer();
+  renderQuickActions(sections);
   byId('emptyState').hidden = totalAssignmentCount(sections) > 0;
   byId('sections').replaceChildren(
     ...sections.filter((section) => section.count).map((section) => groupBlock(section, now)),
@@ -891,6 +896,13 @@ window.addEventListener('hashchange', () => {
 
 byId('studyTimerToggle').addEventListener('click', toggleStudyTimer);
 byId('studyTimerReset').addEventListener('click', resetStudyTimer);
+byId('quickActionTimer').addEventListener('click', () => {
+  if (!timerRunning) startStudyTimer();
+  byId('studyTimer').scrollIntoView({ behavior: 'smooth', block: 'center' });
+});
+byId('quickActionPlan').addEventListener('click', () => {
+  requestAnimationFrame(() => byId('sections').focus({ preventScroll: true }));
+});
 byId('todayPlanLink').addEventListener('click', () => {
   requestAnimationFrame(() => byId('sections').focus({ preventScroll: true }));
 });
