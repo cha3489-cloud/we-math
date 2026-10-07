@@ -1,6 +1,10 @@
 import { defineConfig } from 'vite';
 import { resolve } from 'node:path';
 export default defineConfig({ root: '.', base: './', build: { outDir: 'dist', emptyOutDir: true, rollupOptions: { input: {
+// generated-vite-input:2026-09-27-math-learning-records:start
+blog20260927MathLearningRecords: resolve(__dirname, 'blog/2026-09-27-math-learning-records/index.html'),
+// generated-vite-input:2026-09-27-math-learning-records:end
+
 // generated-vite-input:2026-08-25-math-learning-observation:start
 blog20260825MathLearningObservation: resolve(__dirname, 'blog/2026-08-25-math-learning-observation/index.html'),
 // generated-vite-input:2026-08-25-math-learning-observation:end
