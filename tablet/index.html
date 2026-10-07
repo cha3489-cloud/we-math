@@ -1,7 +1,7 @@
-<!doctype html><html lang=ko><head><meta charset=UTF-8><meta name=viewport content='width=device-width, initial-scale=1, viewport-fit=cover'><meta name=theme-color content=#173f3a><title>태블릿 학습 | 시퀀스 수학</title>  <script type="module" crossorigin src="../assets/tablet-DPdqM70A.js"></script>
+<!doctype html><html lang=ko><head><meta charset=UTF-8><meta name=viewport content='width=device-width, initial-scale=1, viewport-fit=cover'><meta name=theme-color content=#173f3a><title>태블릿 학습 | 시퀀스 수학</title>  <script type="module" crossorigin src="../assets/tablet-DKRbGjwY.js"></script>
   <link rel="modulepreload" crossorigin href="../assets/modulepreload-polyfill-Dezn_h7o.js">
-  <link rel="modulepreload" crossorigin href="../assets/domain-DkMXN1H3.js">
-  <link rel="stylesheet" crossorigin href="../assets/tablet-B-ZQiBFy.css">
+  <link rel="modulepreload" crossorigin href="../assets/domain-LWCMmLHh.js">
+  <link rel="stylesheet" crossorigin href="../assets/tablet-BEfY-yXp.css">
 </head><body class=tablet-app><main class=tablet>
 <header class=tablet-header>
   <a href=../ class=brand><span class=brand-mark aria-hidden=true>S</span><span>시퀀스 수학<small>TABLET</small></span></a>
@@ -51,17 +51,54 @@
     <h1 id=greeting>오늘도 한 걸음</h1>
     <p id=todaySummary class=tablet-lead role=status></p>
   </div>
+  <section id=tabletQuickActions class=tablet-quick-actions aria-label="오늘 바로 할 일">
+    <button id=quickActionTimer type=button class=quick-action-card><span>1. 타이머 켜기</span><strong>공부 시간 시작</strong><small>자리에 앉으면 먼저 눌러요.</small></button>
+    <a id=quickActionMathflat class=quick-action-card href="http://student.mathflat.com" target=_blank rel="noopener noreferrer"><span>2. 매쓰플랫 열기</span><strong>문제 풀기</strong><small>선생님이 정한 문제를 풉니다.</small></a>
+    <a id=quickActionPlan class=quick-action-card href="#sections"><span>3. 오늘 과제</span><strong id=quickActionPlanCount>0건</strong><small>제출·질문할 과제를 확인해요.</small></a>
+  </section>
+  <aside class=daily-quote-card aria-labelledby=dailyQuoteTitle>
+    <p id=dailyQuoteTitle class=quote-title>오늘의 한 문장</p>
+    <p id=dailyQuote class=quote-text></p>
+  </aside>
+  <section class=study-timer-card aria-labelledby=studyTimerTitle>
+    <div>
+      <p id=studyTimerTitle class=quote-title>학습 타이머</p>
+      <output id=studyTimer class=study-timer aria-live=polite>00:00</output>
+    </div>
+    <div class=study-timer-actions>
+      <button id=studyTimerToggle class=tablet-primary type=button aria-pressed=false>시작하기</button>
+      <button id=studyTimerReset class=tablet-secondary type=button>초기화</button>
+    </div>
+  </section>
+  <section id=startSequence class=start-sequence-card aria-labelledby=startSequenceTitle>
+    <p class=tablet-kicker>START ROUTINE</p>
+    <h2 id=startSequenceTitle>오늘 학습 순서</h2>
+    <ol class=start-sequence-list>
+      <li><strong>타이머 시작</strong><span>자리에 앉으면 시간을 먼저 켜요.</span></li>
+      <li><strong>매쓰플랫 풀이</strong><span>선생님이 정한 문제를 차례로 풀어요.</span><a id=mathflatStudentLink class=mathflat-student-link href="http://student.mathflat.com" target=_blank rel="noopener noreferrer">매쓰플랫 열기</a></li>
+      <li><strong>과제 확인</strong><span>제출하거나 질문할 과제를 눌러요.</span><a id=todayPlanLink class=today-plan-link href="#sections">오늘 과제 보기</a></li>
+      <li><strong>마치면 로그아웃</strong><span>다음 친구가 바로 쓸 수 있게 정리해요.</span></li>
+    </ol>
+  </section>
   <p id=todayError class=tablet-error role=alert></p>
   <div id=emptyState class=empty-state hidden>
     <p class=empty-mark aria-hidden=true>🗓️</p>
-    <h2>오늘 등록된 과제가 없어요.</h2>
-    <p>새 과제가 생기면 이 화면에 바로 보여요.</p>
+    <h2>오늘 학습지를 받을 차례예요.</h2>
+    <p>과제가 아직 안 보이면 아래 순서대로 시작하면 됩니다.</p>
+    <ol class=empty-next-list>
+      <li>선생님에게 오늘 학습지를 받아요.</li>
+      <li>타이머는 켜둔 채 기다려요.</li>
+      <li>매쓰플랫을 열고 선생님 안내를 따라요.</li>
+    </ol>
+    <div class=empty-actions>
+      <a id=emptyMathflatLink class=mathflat-student-link href="http://student.mathflat.com" target=_blank rel="noopener noreferrer">매쓰플랫 먼저 열기</a>
+    </div>
   </div>
-  <div id=sections></div>
+  <div id=sections aria-label="오늘 과제 목록" tabindex=-1></div>
 </section>
 
 <section id=detail hidden>
-  <button id=detailBack class=tablet-back type=button>← 오늘의 과제로</button>
+  <button id=detailBack class=tablet-back type=button>← 과제 닫기</button>
   <article class=detail-card>
     <p class=detail-statusline><span id=detailStatus></span><span id=detailDue class=detail-due></span></p>
     <h1 id=detailTitle></h1>
@@ -74,6 +111,7 @@
       <p class=mathflat-head><span aria-hidden=true>📱</span> 매쓰플랫에서 풀 과제</p>
       <dl id=detailMathflatFields class=mathflat-fields></dl>
       <p id=detailMathflatNotes class=mathflat-notes hidden></p>
+      <a id=detailMathflatLink class=mathflat-detail-link href="http://student.mathflat.com" target=_blank rel="noopener noreferrer">매쓰플랫 바로 열기</a>
     </div>
 
     <div id=detailDescriptionBlock class=detail-block hidden>
@@ -146,6 +184,10 @@
         <p class=detail-redo-head>다시 풀 문제</p>
         <p id=detailRedo class=detail-redo-list></p>
       </div>
+    </div>
+
+    <div class=detail-close-actions>
+      <button id=detailCloseBottom class=tablet-secondary type=button>과제 닫기</button>
     </div>
   </article>
 </section>
