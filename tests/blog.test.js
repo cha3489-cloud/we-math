@@ -22,6 +22,19 @@ describe('시퀀스 수학 블로그', () => {
     expect(homepage.match(/href="\/blog\/"/g)?.length).toBeGreaterThanOrEqual(2);
   });
 
+  it('홈페이지 최근 학습 글은 최신 공개 글 3개를 보여준다', () => {
+    const homepage = read('index.html');
+    const latestSection = homepage.match(/<section id="latest-blog"[\s\S]*?<\/section>/)?.[0];
+    expect(latestSection).toBeTruthy();
+    const links = [...latestSection.matchAll(/class="latest-blog-card" href="([^"]+)"/g)].map((match) => match[1]);
+    expect(links).toEqual([
+      '/blog/2026-09-03-ratio-percent-meaning-first-line/',
+      '/blog/2026-09-02-math-question-before-answer/',
+      '/blog/2026-08-31-math-workbook-retry-routine/',
+    ]);
+    expect(latestSection).not.toContain('/blog/choosing-math-academy/');
+  });
+
   it('블로그 목록에서 첫 교육 칼럼으로 이동할 수 있다', () => {
     const blog = read('blog/index.html');
     expect(blog).toContain('수학교습소 선택 기준');
