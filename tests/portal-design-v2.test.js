@@ -394,7 +394,7 @@ describe('portal design v2', () => {
     expect(css).toContain('prefers-reduced-motion');
     expect(css).toMatch(/body::before\{[^}]*z-index:0/);
     expect(css).toMatch(/\.portal\{[^}]*position:relative;z-index:1/);
-    expect(css).toContain('.admin-stats{background:var(--navy);');
+    expect(css).toMatch(/@media\(max-width:640px\)[\s\S]*\.admin-stats\{[^}]*background:var\(--navy\);/);
     expect(css).toMatch(/\.review-head\{[^}]*word-break:keep-all/);
   });
 });
