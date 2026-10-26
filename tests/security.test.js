@@ -164,7 +164,7 @@ describe('student portal security boundary', () => {
     expect(studentInit).toMatch(/if \(profile[.]must_change_pin\) \{\s*byId\('login'\)[.]hidden = true;[\s\S]*?return;\s*\}[\s\S]*?if \(result[.]error\) throw result[.]error;[\s\S]*?byId\('studentName'\)[.]textContent = profile[.]name;\s*renderGroups\(result[.]data \|\| \[\], user[.]id\);\s*byId\('dashboard'\)[.]hidden = false;[\s\S]*?byId\('login'\)[.]hidden = true/);
 
     const adminInit = read('src/portal/admin.js').match(/async function showAdmin[\s\S]*?\n}\nbyId\('loginForm'\)/)?.[0] || '';
-    expect(adminInit).toMatch(/if \(profile[.]must_change_pin\) \{\s*byId\('login'\)[.]hidden = true;[\s\S]*?return;\s*\}[\s\S]*?await switchTab\('review'\);\s*await loadQueue\(\);[\s\S]*?byId\('login'\)[.]hidden = true/);
+    expect(adminInit).toMatch(/if \(profile[.]must_change_pin\) \{\s*byId\('login'\)[.]hidden = true;[\s\S]*?return;\s*\}[\s\S]*?await switchTab\('dashboard'\);\s*await loadQueue\(\);[\s\S]*?byId\('login'\)[.]hidden = true/);
   });
   it('lets CORS preflight reach functions that authenticate callers internally', () => {
     const config = read('supabase/config.toml');

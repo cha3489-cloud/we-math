@@ -364,7 +364,9 @@ describe('portal design v2', () => {
     expect(admin).toContain('id=workflowHistorySummaryCount');
     expect(admin).toContain('사용자 불러오는 중');
     expect(admin).toContain('기록 불러오는 중');
-    expect(adminJs).toContain("byId('userListSummaryCount').textContent = cards.length ? '사용자 ' + cards.length + '명' : '사용자 없음'");
+    expect(adminJs).toContain("function applyUserSearch()");
+    expect(adminJs).toContain("? `“${userSearchQuery}” 검색 결과 ${visible}명`");
+    expect(adminJs).toContain(": (cards.length ? '사용자 ' + cards.length + '명' : '사용자 없음')");
     expect(adminJs).toContain("byId('workflowHistorySummaryCount').textContent = total ? '과제 ' + total + '건' : '과제 없음'");
     expect(css).toContain('.admin-long-list summary strong');
     expect(css).toContain('.admin-long-list[open] summary strong');
@@ -394,7 +396,7 @@ describe('portal design v2', () => {
     expect(css).toContain('prefers-reduced-motion');
     expect(css).toMatch(/body::before\{[^}]*z-index:0/);
     expect(css).toMatch(/\.portal\{[^}]*position:relative;z-index:1/);
-    expect(css).toContain('.admin-stats{background:var(--navy);');
+    expect(css).toMatch(/@media\(max-width:640px\)[\s\S]*\.admin-stats\{[^}]*background:var\(--navy\);/);
     expect(css).toMatch(/\.review-head\{[^}]*word-break:keep-all/);
   });
 });

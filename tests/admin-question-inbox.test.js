@@ -16,13 +16,13 @@ describe('admin question inbox — tab and markup', () => {
     expect(html).toContain('id=questionsError');
   });
 
-  it('switches all three sections together, never leaving two visible', () => {
+  it('switches dashboard and all three workflow sections through one view controller', () => {
+    expect(admin).toContain("const dashboard = tab === 'dashboard';");
     expect(admin).toContain("const review = tab === 'review';");
     expect(admin).toContain("const manage = tab === 'manage';");
     expect(admin).toContain("const questions = tab === 'questions';");
-    expect(admin).toContain("byId('reviewSection').hidden = !review;");
-    expect(admin).toContain("byId('manageSection').hidden = !manage;");
-    expect(admin).toContain("byId('questionsSection').hidden = !questions;");
+    expect(admin).toContain('activateAdminView(document, tab, target);');
+    expect(admin).toContain("byId('adminQuickTabs').hidden = dashboard;");
   });
 
   it('loads the inbox only when the questions tab is opened, like the manage tab', () => {

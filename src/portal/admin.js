@@ -17,6 +17,7 @@ import {
   buildAnswerFilePath, isAnswerFilePathValid, canSubmitAnswer, answerErrorMessage,
 } from './answer-attachments.js';
 import { validateInternalNote } from './admin-internal-notes.js';
+import { activateAdminView, bindAdminShell, createAdminNavigationGate, studentSearchMatches } from './admin-shell.js';
 
 const byId = (id) => document.getElementById(id);
 const showError = (el, message) => { el.textContent = message || ''; };
@@ -40,30 +41,81 @@ async function cleanup(bucket, paths) { if (paths.length) await supabase.storage
 
 // ── 탭 ──────────────────────────────────────────────────────────────────
 let actionFilter = 'all';
+let userSearchQuery = '';
 let questionOpenCount = 0;
 let operationsSummary = { counts: { principal_check: 0, submitted: 0, needs_revision: 0, overdue: 0 }, actionItems: [], studentItems: [] };
+const adminNavigationGate = createAdminNavigationGate();
+function isCurrentAdminNavigation(navigation) {
+  return navigation === null || adminNavigationGate.isLatest(navigation);
+}
 function updateTodayFlow() {
   byId('todayFlowReviewCount').textContent = String(operationsSummary.counts.submitted) + '건';
   byId('todayFlowManageCount').textContent = '후속 ' + operationsSummary.actionItems.length + '건 · 학생 ' + operationsSummary.studentItems.length + '명';
   byId('todayFlowQuestionsCount').textContent = String(questionOpenCount) + '건';
 }
-async function switchTab(tab) {
+async function switchTab(tab, target = '') {
+  const navigation = adminNavigationGate.begin();
+  const dashboard = tab === 'dashboard';
   const review = tab === 'review';
   const manage = tab === 'manage';
   const questions = tab === 'questions';
-  byId('reviewSection').hidden = !review;
+  activateAdminView(document, tab, target);
+  byId('adminQuickTabs').hidden = dashboard;
   byId('noSelection').hidden = !review || Boolean(current);
-  byId('manageSection').hidden = !manage;
-  byId('questionsSection').hidden = !questions;
   byId('tabReview').setAttribute('aria-pressed', String(review));
   byId('tabManage').setAttribute('aria-pressed', String(manage));
   byId('tabQuestions').setAttribute('aria-pressed', String(questions));
-  if (manage) await Promise.all([loadUsers(), loadWorkflows(), loadOperationsSummary()]);
-  if (questions) await loadQuestionInbox();
+  try {
+    if (manage) await Promise.all([loadUsers(), loadWorkflows(), loadOperationsSummary()]);
+    if (questions) await loadQuestionInbox();
+  } catch (error) {
+    if (adminNavigationGate.isLatest(navigation)) throw error;
+  }
+  return navigation;
+}
+bindAdminShell(document, (view, target) => {
+  switchTab(view, target).then((navigation) => {
+    if (!adminNavigationGate.isLatest(navigation)) return;
+    if (target === 'users') {
+      byId('userListPanel').open = true;
+      byId('userListPanel').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+    if (target === 'workflows') {
+      byId('workflowHistoryPanel').open = true;
+      byId('workflowHistoryPanel').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+    if (target === 'action') {
+      byId('actionSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+    if (target === 'students') {
+      byId('studentStatusSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }).catch((error) => showError(byId('adminError'), error.message));
+});
+byId('adminStudentSearchForm').addEventListener('submit', async (event) => {
+  event.preventDefault();
+  userSearchQuery = byId('adminStudentSearch').value.trim();
+  if (!userSearchQuery) return;
+  try {
+    const navigation = await switchTab('manage', 'users');
+    if (!adminNavigationGate.isLatest(navigation)) return;
+    byId('userListPanel').open = true;
+    applyUserSearch();
+    byId('userListPanel').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  } catch (error) {
+    showError(byId('adminError'), error.message);
+  }
+});
+async function switchAndScroll(tab, elementId, target = '') {
+  const navigation = await switchTab(tab, target);
+  if (!adminNavigationGate.isLatest(navigation)) return false;
+  byId(elementId).scrollIntoView({ behavior: 'smooth', block: 'start' });
+  return true;
 }
 async function openActionFilter(filter) {
   actionFilter = filter;
-  await switchTab('manage');
+  const navigation = await switchTab('manage');
+  if (!adminNavigationGate.isLatest(navigation)) return;
   renderActionItems();
   byId('actionSection').focus({ preventScroll: true });
   byId('actionSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -71,11 +123,11 @@ async function openActionFilter(filter) {
 byId('tabReview').addEventListener('click', () => switchTab('review').catch((error) => showError(byId('adminError'), error.message)));
 byId('tabManage').addEventListener('click', () => { actionFilter = 'all'; switchTab('manage').catch((error) => showError(byId('adminError'), error.message)); });
 byId('tabQuestions').addEventListener('click', () => switchTab('questions').catch((error) => showError(byId('adminError'), error.message)));
-byId('todayFlowReview').addEventListener('click', () => switchTab('review').then(() => byId('queue').scrollIntoView({ behavior: 'smooth', block: 'start' })).catch((error) => showError(byId('adminError'), error.message)));
-byId('todayFlowManage').addEventListener('click', () => { actionFilter = 'all'; switchTab('manage').then(() => byId('studentStatusSection').scrollIntoView({ behavior: 'smooth', block: 'start' })).catch((error) => showError(byId('adminError'), error.message)); });
-byId('todayFlowQuestions').addEventListener('click', () => switchTab('questions').then(() => byId('questionsList').scrollIntoView({ behavior: 'smooth', block: 'start' })).catch((error) => showError(byId('adminError'), error.message)));
+byId('todayFlowReview').addEventListener('click', () => switchAndScroll('review', 'queue').catch((error) => showError(byId('adminError'), error.message)));
+byId('todayFlowManage').addEventListener('click', () => { actionFilter = 'all'; switchAndScroll('manage', 'studentStatusSection').catch((error) => showError(byId('adminError'), error.message)); });
+byId('todayFlowQuestions').addEventListener('click', () => switchAndScroll('questions', 'questionsList').catch((error) => showError(byId('adminError'), error.message)));
 byId('statPrincipalCheck').addEventListener('click', () => openActionFilter('principal_check').catch((error) => showError(byId('adminError'), error.message)));
-byId('statSubmitted').addEventListener('click', () => switchTab('review').then(() => byId('queue').scrollIntoView({ behavior: 'smooth', block: 'start' })).catch((error) => showError(byId('adminError'), error.message)));
+byId('statSubmitted').addEventListener('click', () => switchAndScroll('review', 'queue').catch((error) => showError(byId('adminError'), error.message)));
 byId('statRevision').addEventListener('click', () => openActionFilter('needs_revision').catch((error) => showError(byId('adminError'), error.message)));
 byId('statOverdue').addEventListener('click', () => openActionFilter('overdue').catch((error) => showError(byId('adminError'), error.message)));
 byId('statQuestions').addEventListener('click', () => setQuestionStudentFilter(''));
@@ -150,9 +202,10 @@ function queueRow(entry, index) {
   return button;
 }
 
-async function openReview(index) {
+async function openReview(index, navigation = null) {
+  const reviewNavigation = adminNavigationGate.ensure(navigation);
   const entry = queue[index];
-  if (!entry) return;
+  if (!entry || !isCurrentAdminNavigation(reviewNavigation)) return;
   current = entry;
   items = []; selectedTag = null; zoom = 1; rotation = 0; imageIndex = 0;
   images = [...(entry.attempt.file_paths || [])];
@@ -166,17 +219,20 @@ async function openReview(index) {
   const student = normalizeRelation(entry.assignment.profiles)[0]?.name || '학생';
   byId('reviewHead').textContent = student + ' · ' + entry.assignment.title + ' · ' + entry.attempt.attempt_no + '차 제출 · ' + waitingLabel(entry.attempt.submitted_at);
   byId('attemptBody').textContent = entry.attempt.body ? '제출 내용: ' + entry.attempt.body : '';
-  await showImage(0);
+  await showImage(0, reviewNavigation);
+  if (!isCurrentAdminNavigation(reviewNavigation)) return;
   await loadQueue(); // active 표시 갱신
+  if (!isCurrentAdminNavigation(reviewNavigation)) return;
 
   // 검토 시작 이벤트 (실패해도 검토는 진행)
-  await loadInternalNote(entry.attempt.id);
+  await loadInternalNote(entry.attempt.id, reviewNavigation);
+  if (!isCurrentAdminNavigation(reviewNavigation)) return;
 
   const { error } = await supabase.from('review_events').insert({ submission_id: entry.attempt.id, event_type: 'review_opened', actor_id: currentAdmin.id });
   if (error) console.warn('review_opened 기록 실패:', error.message);
 }
 
-async function showImage(index) {
+async function showImage(index, navigation = null) {
   const img = byId('adminImage');
   const frame = byId('adminFrame');
   showError(byId('viewerError'), '');
@@ -187,6 +243,7 @@ async function showImage(index) {
   const request = ++imageRequest;
   byId('imgIndex').textContent = (imageIndex + 1) + ' / ' + images.length;
   const { data, error } = await supabase.storage.from('submission-files').createSignedUrl(path, 60);
+  if (!isCurrentAdminNavigation(navigation)) return;
   if (request !== imageRequest || images[imageIndex] !== path) return;
   if (error) { showError(byId('viewerError'), '제출 파일을 불러오지 못했습니다. 다시 시도해 주세요.'); img.hidden = true; frame.hidden = true; return; }
   const pdf = /[.]pdf$/i.test(path);
@@ -260,9 +317,10 @@ byId('addItem').addEventListener('click', () => {
 // ── 내부 메모(원장 전용) ────────────────────────────────────────────────
 // review_internal_notes 는 admin-only RLS 라 학생 세션에서는 0행이 온다.
 // 학생 화면(student.js)은 이 테이블도 이 RPC 도 절대 호출하지 않는다.
-async function loadInternalNote(submissionId) {
+async function loadInternalNote(submissionId, navigation = null) {
   const { data, error } = await supabase.from('review_internal_notes')
     .select('note').eq('submission_id', submissionId).maybeSingle();
+  if (!isCurrentAdminNavigation(navigation)) return;
   if (error) { console.warn('내부 메모 조회 실패:', error.message); return; }
   if (current?.attempt.id === submissionId) byId('internalNote').value = data?.note || '';
 }
@@ -306,6 +364,7 @@ byId('saveInternalNote').addEventListener('click', async () => {
 // ── 확정: 중복 클릭 방지 + 트랜잭션 RPC + 다음 대기 건으로 이동 ──────────
 async function decide(status) {
   if (processing || !current) return;
+  const followUpNavigation = adminNavigationGate.begin();
   showError(byId('reviewError'), '');
   const buttons = [byId('decideRevision'), byId('decideComplete')];
   try {
@@ -336,12 +395,14 @@ async function decide(status) {
     }
     try {
       await Promise.all([loadQueue(), loadOperationsSummary()]);
+      if (!adminNavigationGate.isLatest(followUpNavigation)) return;
       if (!current) {
         const next = queue.findIndex((entry) => entry.attempt.id !== decidedId);
-        if (next >= 0) await openReview(next);
+        if (next >= 0) await openReview(next, followUpNavigation);
         else byId('noSelection').hidden = false;
       }
     } catch (error) {
+      if (!adminNavigationGate.isLatest(followUpNavigation)) return;
       console.warn('검토 처리 후 새로고침 실패:', error.message);
       showError(byId('adminError'), '처리는 완료됐지만 화면 새로고침에 실패했습니다. 페이지를 새로고침해 주세요.');
     }
@@ -643,8 +704,7 @@ function renderQuestionInbox() {
 function setQuestionStudentFilter(studentName) {
   questionStudentFilter = studentName || '';
   questionStatusFilter = 'open';
-  switchTab('questions')
-    .then(() => byId('questionsList').scrollIntoView({ behavior: 'smooth', block: 'start' }))
+  switchAndScroll('questions', 'questionsList')
     .catch((error) => showError(byId('adminError'), error.message));
 }
 byId('questionFilterClear').addEventListener('click', () => setQuestionStudentFilter(''));
@@ -765,6 +825,8 @@ async function loadUsers() {
     const role = roles.get(user.id) ?? '역할 없음';
     const roleKey = String(role || 'none').replace(/[^a-z0-9_-]/gi, '_');
     const card = document.createElement('article'); card.className = 'card admin-user-card user-role-' + roleKey;
+    card.dataset.studentName = typeof user.name === 'string' ? user.name : '';
+    card.dataset.userRole = role;
     const name = document.createElement('h3'); name.textContent = user.name;
     const badgeLine = document.createElement('p');
     badgeLine.className = 'user-badge-line';
@@ -799,7 +861,20 @@ async function loadUsers() {
     return card;
   });
   byId('users').replaceChildren(...cards);
-  byId('userListSummaryCount').textContent = cards.length ? '사용자 ' + cards.length + '명' : '사용자 없음';
+  applyUserSearch();
+}
+
+function applyUserSearch() {
+  const cards = Array.from(byId('users').querySelectorAll('.admin-user-card'));
+  let visible = 0;
+  for (const card of cards) {
+    const matches = !userSearchQuery || (card.dataset.userRole === 'student' && studentSearchMatches(card.dataset.studentName, userSearchQuery));
+    card.hidden = !matches;
+    if (matches) visible += 1;
+  }
+  byId('userListSummaryCount').textContent = userSearchQuery
+    ? `“${userSearchQuery}” 검색 결과 ${visible}명`
+    : (cards.length ? '사용자 ' + cards.length + '명' : '사용자 없음');
 }
 
 async function download(bucket, path) {
@@ -969,10 +1044,13 @@ function renderActionItems() {
   byId('actionItems').replaceChildren(...rows.map(actionCard));
 }
 async function openStudentReview(studentName) {
-  await switchTab('review');
+  const navigation = await switchTab('review');
+  if (!adminNavigationGate.isLatest(navigation)) return;
   await loadQueue();
+  if (!adminNavigationGate.isLatest(navigation)) return;
   const index = queue.findIndex((entry) => assignmentStudent(entry.assignment) === studentName);
-  if (index >= 0) await openReview(index);
+  if (index >= 0) await openReview(index, navigation);
+  if (!adminNavigationGate.isLatest(navigation)) return;
   byId('queue').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 function openStudentQuestions(studentName) {
@@ -1041,6 +1119,7 @@ function renderStudentStatusItems() {
   byId('studentStatusItems').replaceChildren(...rows.map(studentStatusCard));
 }
 function setWorkflowStudentFilter(studentName) {
+  const navigation = adminNavigationGate.begin();
   workflowStudentFilter = studentName || '';
   workflowPage = 0;
   const copy = filteredAdminListCopy('workflows', workflowStudentFilter);
@@ -1049,8 +1128,13 @@ function setWorkflowStudentFilter(studentName) {
   byId('workflowFilterClear').setAttribute('aria-label', copy.resetAriaLabel);
   byId('workflowFilterClear').hidden = copy.clearHidden;
   loadWorkflows()
-    .then(() => byId('workflows').scrollIntoView({ behavior: 'smooth', block: 'start' }))
-    .catch((error) => showError(byId('adminError'), error.message));
+    .then(() => {
+      if (!adminNavigationGate.isLatest(navigation)) return;
+      byId('workflows').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    })
+    .catch((error) => {
+      if (adminNavigationGate.isLatest(navigation)) showError(byId('adminError'), error.message);
+    });
 }
 byId('workflowFilterClear').addEventListener('click', () => setWorkflowStudentFilter(''));
 
@@ -1201,12 +1285,13 @@ async function showAdmin(user) {
     byId('login').hidden = true; byId('logout').hidden = false;
     byId('admin').hidden = true; byId('pinChange').hidden = false; return;
   }
-  await switchTab('review');
+  await switchTab('dashboard');
   await loadQueue();
   await loadOperationsSummary();
   await loadQuestionCount();
   byId('login').hidden = true; byId('logout').hidden = false;
   byId('pinChange').hidden = true; byId('admin').hidden = false;
+  document.body.classList.add('admin-authenticated');
 }
 byId('loginForm').addEventListener('submit', async (event) => {
   event.preventDefault();
