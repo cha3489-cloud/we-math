@@ -1,5 +1,5 @@
 <!doctype html><html lang=ko><head><meta charset=UTF-8><meta name=viewport content='width=device-width, initial-scale=1'><meta name=theme-color content=#102d2a><title>관리자 | 시퀀스 수학</title></head><body class=admin-portal><main class="portal portal-wide">
-<header class=portal-header><a href=../ class=brand><span class=brand-mark aria-hidden=true>S</span><span>시퀀스 수학<small>ADMIN WORKSPACE</small></span></a><button id=logout class="secondary header-action" hidden>로그아웃</button></header>
+<header id=portalHeader class=portal-header><a href=../ class=brand><span class=brand-mark aria-hidden=true>S</span><span>시퀀스 수학<small>ADMIN WORKSPACE</small></span></a><button id=logout class="secondary header-action" hidden>로그아웃</button></header>
 
 <section id=login class="panel auth-card admin-auth">
   <div class=auth-intro><p class="portal-kicker">SEQUENCE WORKSPACE</p><h1>수업보다 먼저,<br>학생의 흐름을 봅니다.</h1><p>검토가 필요한 제출을 순서대로 확인하고, 다음 행동이 분명한 피드백을 남기세요.</p><img class=auth-illustration src=/portal/login-progress.svg alt="" aria-hidden=true><div class=auth-principle><span aria-hidden=true>✓</span><strong>5분 진단 · 1조치 · 30초 기록</strong></div></div>
@@ -13,25 +13,33 @@
     <aside id=adminSidebar class=admin-sidebar aria-label="시퀀스 수학 운영 메뉴">
       <div class=admin-sidebar-brand><span class=brand-mark aria-hidden=true>S</span><span><strong>시퀀스 수학</strong><small>학생 운영 시스템</small></span><button id=adminMenuClose class=admin-menu-close type=button aria-label="운영 메뉴 닫기">×</button></div>
       <nav class=admin-sidebar-nav>
-        <p>오늘 운영</p>
         <button type=button data-admin-view=dashboard aria-current=page><span aria-hidden=true>⌂</span>홈</button>
-        <button type=button data-admin-view=review><span aria-hidden=true>✓</span>제출 검토</button>
-        <button type=button data-admin-view=manage><span aria-hidden=true>◎</span>학생별 상태</button>
-        <button type=button data-admin-view=questions><span aria-hidden=true>?</span>학생 질문</button>
-        <p>학생 운영</p>
-        <button type=button data-admin-view=manage data-admin-target=users><span aria-hidden=true>♙</span>학생 계정·명단</button>
-        <button type=button data-admin-view=manage data-admin-target=workflows><span aria-hidden=true>≡</span>과제·제출 기록</button>
+        <div class=admin-sidebar-planned><span>업무 캘린더</span><small>준비 중</small></div>
+        <button type=button data-admin-view=manage data-admin-target=users><span aria-hidden=true>♙</span>학생 관리</button>
         <div class=admin-sidebar-planned><span>출결 관리</span><small>준비 중</small></div>
-        <div class=admin-sidebar-planned><span>상담·등록</span><small>준비 중</small></div>
-        <p>수업 운영</p>
-        <a href=https://teacher.mathflat.com target=_blank rel="noopener noreferrer"><span aria-hidden=true>↗</span>매쓰플랫</a>
-        <div class=admin-sidebar-planned><span>성적·진단</span><small>준비 중</small></div>
+        <p>워크스페이스</p>
+        <button class=admin-nav-child type=button data-admin-view=manage data-admin-target=action><span aria-hidden=true>◎</span>오늘 후속 확인</button>
+        <button class=admin-nav-child type=button data-admin-view=manage data-admin-target=workflows><span aria-hidden=true>≡</span>과제·제출 기록</button>
+        <div class="admin-sidebar-planned admin-nav-child"><span>상담·등록</span><small>준비 중</small></div>
+        <p>정규 수업</p>
+        <button class=admin-nav-child type=button data-admin-view=review><span aria-hidden=true>✓</span>완성도 테스트</button>
+        <button class=admin-nav-child type=button data-admin-view=manage data-admin-target=students><span aria-hidden=true>∑</span>개인별 학습관리</button>
+        <button class=admin-nav-child type=button data-admin-view=questions><span aria-hidden=true>?</span>학생 질문</button>
+        <a class=admin-nav-child href=https://teacher.mathflat.com target=_blank rel="noopener noreferrer"><span aria-hidden=true>↗</span>매쓰플랫</a>
+        <p>운영</p>
         <div class=admin-sidebar-planned><span>교재 관리</span><small>준비 중</small></div>
+        <div class=admin-sidebar-planned><span>설정</span><small>준비 중</small></div>
       </nav>
       <div class=admin-sidebar-note><strong>실제 데이터만 표시</strong><span>가상 학생·가상 통계는 사용하지 않습니다.</span></div>
     </aside>
     <div id=adminShellMain class=admin-shell-main>
-      <button id=adminMenuToggle class="secondary admin-menu-toggle" type=button aria-expanded=false aria-controls=adminSidebar>운영 메뉴</button>
+      <header class=academy-topbar>
+        <button id=adminMenuToggle class="secondary admin-menu-toggle" type=button aria-expanded=false aria-controls=adminSidebar>메뉴</button>
+        <div class=academy-breadcrumb aria-label="현재 위치"><span id=adminCrumbGroup>홈</span><span aria-hidden=true>›</span><strong id=adminCrumbTitle>홈</strong></div>
+        <form id=adminStudentSearchForm class=academy-search role=search><button type=submit aria-label="학생 검색">⌕</button><input id=adminStudentSearch type=search aria-label="학생 이름" placeholder="학생 이름 검색" required></form>
+        <span class=academy-live-badge>실제 데이터</span>
+      </header>
+      <div class=academy-page-heading><div><h1 id=adminViewTitle>홈</h1><p id=adminViewDescription>실제 학습관리 지표와 오늘 처리할 업무를 한 화면에서 봅니다.</p></div></div>
       <section id=adminDashboard>
   <section class="workspace-header"><div><p class="portal-kicker">TODAY'S WORKSPACE</p><h1>오늘 확인할 학생</h1><p>검토할 제출과 후속 조치가 필요한 학생을 한눈에 확인합니다.</p></div><div class="admin-stats"><button id=statPrincipalCheck type=button class=admin-stat><span id=principalCheckCount>0</span><small>원장 확인 필요</small></button><button id=statSubmitted type=button class=admin-stat><span id=queueCount>0</span><small>검토 대기</small></button><button id=statRevision type=button class=admin-stat><span id=revisionCount>0</span><small>수정 대기</small></button><button id=statOverdue type=button class=admin-stat><span id=overdueCount>0</span><small>미제출 지연</small></button><button id=statQuestions type=button class=admin-stat><span id=questionCount>0</span><small>질문 미답변</small></button></div></section>
   <section id=adminTodayFlow class=admin-today-flow aria-labelledby=adminTodayFlowTitle><div><p class=eyebrow>ONE-TAP ROUTINE</p><h2 id=adminTodayFlowTitle>오늘 운영 동선</h2><p class=meta>수업 전에는 이 순서대로만 눌러도 필요한 화면으로 이동합니다.</p></div><div class=today-flow-grid><button id=todayFlowReview type=button class=today-flow-card><span>1. 제출 검토</span><strong id=todayFlowReviewCount>0건</strong><small>가장 오래된 제출부터 처리</small></button><button id=todayFlowManage type=button class=today-flow-card><span>2. 학생별 상태</span><strong id=todayFlowManageCount>후속 0건 · 학생 0명</strong><small>수정·미제출·원장확인 묶어보기</small></button><button id=todayFlowQuestions type=button class=today-flow-card><span>3. 질문 답변</span><strong id=todayFlowQuestionsCount>0건</strong><small>미답변 질문만 먼저 확인</small></button></div></section>

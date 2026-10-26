@@ -17,7 +17,7 @@ import {
   buildAnswerFilePath, isAnswerFilePathValid, canSubmitAnswer, answerErrorMessage,
 } from './answer-attachments.js';
 import { validateInternalNote } from './admin-internal-notes.js';
-import { activateAdminView, bindAdminShell, createAdminNavigationGate } from './admin-shell.js';
+import { activateAdminView, bindAdminShell, createAdminNavigationGate, studentSearchMatches } from './admin-shell.js';
 
 const byId = (id) => document.getElementById(id);
 const showError = (el, message) => { el.textContent = message || ''; };
@@ -41,6 +41,7 @@ async function cleanup(bucket, paths) { if (paths.length) await supabase.storage
 
 // ── 탭 ──────────────────────────────────────────────────────────────────
 let actionFilter = 'all';
+let userSearchQuery = '';
 let questionOpenCount = 0;
 let operationsSummary = { counts: { principal_check: 0, submitted: 0, needs_revision: 0, overdue: 0 }, actionItems: [], studentItems: [] };
 const adminNavigationGate = createAdminNavigationGate();
@@ -83,7 +84,27 @@ bindAdminShell(document, (view, target) => {
       byId('workflowHistoryPanel').open = true;
       byId('workflowHistoryPanel').scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
+    if (target === 'action') {
+      byId('actionSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+    if (target === 'students') {
+      byId('studentStatusSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
   }).catch((error) => showError(byId('adminError'), error.message));
+});
+byId('adminStudentSearchForm').addEventListener('submit', async (event) => {
+  event.preventDefault();
+  userSearchQuery = byId('adminStudentSearch').value.trim();
+  if (!userSearchQuery) return;
+  try {
+    const navigation = await switchTab('manage', 'users');
+    if (!adminNavigationGate.isLatest(navigation)) return;
+    byId('userListPanel').open = true;
+    applyUserSearch();
+    byId('userListPanel').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  } catch (error) {
+    showError(byId('adminError'), error.message);
+  }
 });
 async function switchAndScroll(tab, elementId, target = '') {
   const navigation = await switchTab(tab, target);
@@ -804,6 +825,8 @@ async function loadUsers() {
     const role = roles.get(user.id) ?? '역할 없음';
     const roleKey = String(role || 'none').replace(/[^a-z0-9_-]/gi, '_');
     const card = document.createElement('article'); card.className = 'card admin-user-card user-role-' + roleKey;
+    card.dataset.studentName = typeof user.name === 'string' ? user.name : '';
+    card.dataset.userRole = role;
     const name = document.createElement('h3'); name.textContent = user.name;
     const badgeLine = document.createElement('p');
     badgeLine.className = 'user-badge-line';
@@ -838,7 +861,20 @@ async function loadUsers() {
     return card;
   });
   byId('users').replaceChildren(...cards);
-  byId('userListSummaryCount').textContent = cards.length ? '사용자 ' + cards.length + '명' : '사용자 없음';
+  applyUserSearch();
+}
+
+function applyUserSearch() {
+  const cards = Array.from(byId('users').querySelectorAll('.admin-user-card'));
+  let visible = 0;
+  for (const card of cards) {
+    const matches = !userSearchQuery || (card.dataset.userRole === 'student' && studentSearchMatches(card.dataset.studentName, userSearchQuery));
+    card.hidden = !matches;
+    if (matches) visible += 1;
+  }
+  byId('userListSummaryCount').textContent = userSearchQuery
+    ? `“${userSearchQuery}” 검색 결과 ${visible}명`
+    : (cards.length ? '사용자 ' + cards.length + '명' : '사용자 없음');
 }
 
 async function download(bucket, path) {
@@ -1255,6 +1291,7 @@ async function showAdmin(user) {
   await loadQuestionCount();
   byId('login').hidden = true; byId('logout').hidden = false;
   byId('pinChange').hidden = true; byId('admin').hidden = false;
+  document.body.classList.add('admin-authenticated');
 }
 byId('loginForm').addEventListener('submit', async (event) => {
   event.preventDefault();

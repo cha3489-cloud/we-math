@@ -2,25 +2,31 @@ import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { JSDOM } from 'jsdom';
-import { activateAdminView, bindAdminShell, createAdminNavigationGate } from '../src/portal/admin-shell.js';
+import { activateAdminView, bindAdminShell, createAdminNavigationGate, studentSearchMatches } from '../src/portal/admin-shell.js';
 
 const root = resolve(import.meta.dirname, '..');
 const read = (path) => readFileSync(resolve(root, path), 'utf8');
 
 function shellDom() {
   const dom = new JSDOM(`
+    <header id="portalHeader"><button id="logout"></button></header>
     <button id="adminMenuToggle" aria-expanded="false"></button>
     <div id="adminShell" data-menu-open="false">
       <aside id="adminSidebar">
       <button id="adminMenuClose"></button>
       <button data-admin-view="dashboard"></button>
       <button data-admin-view="review"></button>
-      <button id="manageRoot" data-admin-view="manage"></button>
+      <button id="manageRoot" data-admin-view="manage" data-admin-target="action"></button>
+      <button id="manageStudents" data-admin-view="manage" data-admin-target="students"></button>
       <button data-admin-view="questions"></button>
       <button id="manageUsers" data-admin-view="manage" data-admin-target="users"></button>
       <button id="manageWorkflows" data-admin-view="manage" data-admin-target="workflows"></button>
       </aside>
       <div id="adminShellMain">
+        <span id="adminCrumbGroup"></span>
+        <span id="adminCrumbTitle"></span>
+        <h1 id="adminViewTitle"></h1>
+        <p id="adminViewDescription"></p>
         <main id="adminDashboard"></main>
         <section id="reviewSection"></section>
         <section id="manageSection"></section>
@@ -33,6 +39,33 @@ function shellDom() {
 }
 
 describe('academy operations shell', () => {
+  it('matches the supplied academy-system frame before exposing live workflows', () => {
+    const admin = read('admin/index.html');
+    const css = read('src/portal/portal.css');
+
+    expect(admin).toContain('class=academy-topbar');
+    expect(admin).toContain('id=adminCrumbGroup');
+    expect(admin).toContain('id=adminCrumbTitle');
+    expect(admin).toContain('id=adminViewTitle');
+    expect(admin).toContain('id=adminViewDescription');
+    expect(admin).toContain('id=adminStudentSearchForm');
+    expect(admin).toContain('id=adminStudentSearch');
+    expect(admin).toContain('placeholder="학생 이름 검색"');
+    expect(admin).toContain('워크스페이스');
+    expect(admin).toContain('정규 수업');
+    expect(admin).toContain('개인별 학습관리');
+    expect(admin).toContain('완성도 테스트');
+    expect(admin).toContain('class=admin-nav-child');
+    expect(css).toContain("font-family:'IBM Plex Sans KR'");
+    expect(css).toContain("url('/portal/fonts/ibm-plex-sans-kr-400.woff2')");
+    expect(css).not.toContain('fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR');
+    expect(css).toContain('--academy-navy:#0a1530');
+    expect(css).toContain('--academy-sky:#0ea5e9');
+    expect(css).toContain('background:#f3f6fa');
+    expect(css).toMatch(/[.]admin-shell\{[^}]*grid-template-columns:248px minmax\(0,1fr\)/);
+    expect(css).toMatch(/[.]academy-topbar\{[^}]*background:#fff/);
+  });
+
   it('ships the reference-like information architecture without fake operational metrics', () => {
     const admin = read('admin/index.html');
     const css = read('src/portal/portal.css');
@@ -41,7 +74,7 @@ describe('academy operations shell', () => {
     expect(admin).toContain('class=admin-sidebar');
     expect(admin).toContain('id=adminSidebar');
     expect(admin).toContain('학생 운영');
-    expect(admin).toContain('수업 운영');
+    expect(admin).toContain('정규 수업');
     expect(admin).toContain('준비 중');
     expect(admin).toContain('data-admin-view=dashboard');
     expect(admin).toContain('data-admin-view=review');
@@ -88,6 +121,10 @@ describe('academy operations shell', () => {
     expect(document.getElementById('questionsSection').hidden).toBe(true);
     expect(document.querySelector('[data-admin-view="manage"]').getAttribute('aria-current')).toBe('page');
     expect(document.querySelector('[data-admin-view="review"]').hasAttribute('aria-current')).toBe(false);
+    expect(document.getElementById('adminCrumbGroup').textContent).toBe('학생 운영');
+    expect(document.getElementById('adminCrumbTitle').textContent).toBe('학생별 상태');
+    expect(document.getElementById('adminViewTitle').textContent).toBe('학생별 상태');
+    expect(document.getElementById('adminViewDescription').textContent).toContain('후속 조치');
   });
 
   it('falls back to the dashboard and closes the mobile menu after navigation', () => {
@@ -122,11 +159,13 @@ describe('academy operations shell', () => {
     expect(document.getElementById('adminSidebar').hasAttribute('inert')).toBe(false);
     expect(document.getElementById('adminSidebar').hasAttribute('aria-hidden')).toBe(false);
     expect(document.getElementById('adminShellMain').hasAttribute('inert')).toBe(true);
+    expect(document.getElementById('portalHeader').hasAttribute('inert')).toBe(true);
     expect(document.activeElement).toBe(document.getElementById('adminMenuClose'));
     document.getElementById('adminMenuClose').click();
     expect(document.getElementById('adminShell').dataset.menuOpen).toBe('false');
     expect(document.getElementById('adminSidebar').hasAttribute('inert')).toBe(true);
     expect(document.getElementById('adminShellMain').hasAttribute('inert')).toBe(false);
+    expect(document.getElementById('portalHeader').hasAttribute('inert')).toBe(false);
     expect(document.activeElement).toBe(document.getElementById('adminMenuToggle'));
 
     document.getElementById('adminMenuToggle').click();
@@ -194,6 +233,25 @@ describe('academy operations shell', () => {
     expect(document.getElementById('manageRoot').hasAttribute('aria-current')).toBe(false);
     expect(document.getElementById('manageUsers').getAttribute('aria-current')).toBe('page');
     expect(document.getElementById('manageWorkflows').hasAttribute('aria-current')).toBe(false);
+  });
+
+  it('marks only the selected reference-style management destination as current', () => {
+    const dom = shellDom();
+    const document = dom.window.document;
+
+    activateAdminView(document, 'manage', 'students');
+
+    expect(document.querySelectorAll('[data-admin-view][aria-current="page"]')).toHaveLength(1);
+    expect(document.getElementById('manageStudents').getAttribute('aria-current')).toBe('page');
+    expect(document.getElementById('manageRoot').hasAttribute('aria-current')).toBe(false);
+  });
+
+  it('matches student names safely for the top-bar search', () => {
+    expect(studentSearchMatches('김민수', '민수')).toBe(true);
+    expect(studentSearchMatches('김민수', ' 김민수 ')).toBe(true);
+    expect(studentSearchMatches('김민수', '')).toBe(true);
+    expect(studentSearchMatches('김민수', '박')).toBe(false);
+    expect(studentSearchMatches(null, '김')).toBe(false);
   });
 
   it('suppresses stale continuations when a newer navigation wins', async () => {

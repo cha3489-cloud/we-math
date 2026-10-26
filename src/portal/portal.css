@@ -1,4 +1,7 @@
-@import url('https://fonts.googleapis.com/earlyaccess/nanumsquare.css');
+@font-face{font-family:'IBM Plex Sans KR';font-style:normal;font-weight:400;font-display:swap;src:url('/portal/fonts/ibm-plex-sans-kr-400.woff2') format('woff2')}
+@font-face{font-family:'IBM Plex Sans KR';font-style:normal;font-weight:500;font-display:swap;src:url('/portal/fonts/ibm-plex-sans-kr-500.woff2') format('woff2')}
+@font-face{font-family:'IBM Plex Sans KR';font-style:normal;font-weight:600;font-display:swap;src:url('/portal/fonts/ibm-plex-sans-kr-600.woff2') format('woff2')}
+@font-face{font-family:'IBM Plex Sans KR';font-style:normal;font-weight:700;font-display:swap;src:url('/portal/fonts/ibm-plex-sans-kr-700.woff2') format('woff2')}
 
 :root{
   --ink:#17211f;
@@ -266,3 +269,51 @@ a.file{display:block;margin:8px 0;color:var(--navy);font-weight:800}
   .workspace-header h1{font-size:2rem}.workspace-header>div:first-child>p:last-child{font-size:.88rem}.admin-long-list summary{grid-template-columns:1fr}.compact-admin-cards{grid-template-columns:1fr}.admin-long-list .section-heading,.admin-long-list .cards,.admin-long-list .empty-state,.admin-long-list .pager{margin-left:12px;margin-right:12px}.admin-stats{width:100%;background:var(--navy);border-color:rgba(255,255,255,.2);grid-template-columns:repeat(2,minmax(0,1fr))}.admin-stat{min-width:0;min-height:66px;padding:10px 8px;text-align:center}.admin-stat span{font-size:1.08rem}.admin-stat small{font-size:.62rem}.tabs{width:100%}.tab{flex:1;justify-content:center;padding-inline:8px;font-size:.78rem}.queue-pane,.review-workbench{border-radius:13px}.detail-pane{padding:12px}.viewer-pane{min-height:280px}.feedback-pane{padding:15px}.decide{position:sticky;bottom:4px;z-index:2;padding:6px;border-radius:12px;background:rgba(255,255,255,.92);box-shadow:0 -5px 20px rgba(23,63,58,.08);backdrop-filter:blur(8px)}.no-selection{min-height:360px}.workflow-card h3{padding-right:0}.workflow-status{position:static;width:max-content;margin:5px 0 2px}.action-section,.student-status-section{padding:14px}.student-status-card h3{padding-right:0}.action-card-actions,.student-status-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.action-card-actions button,.student-status-actions button{width:100%;min-width:0;padding-inline:8px}.action-heading{display:block}.action-heading button{margin-top:10px}.panel{padding:20px}.viewer-box iframe{width:100%;height:70vh}
 }
 @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
+
+/* 관리자: 사용자가 제공한 학생관리시스템 프레임 */
+:root{--academy-navy:#0a1530;--academy-sky:#0ea5e9;--academy-bg:#f3f6fa;--academy-line:#e5eaf1;--academy-text:#0b1220;--academy-muted:#5b6b82}
+body.admin-authenticated{--navy:var(--academy-navy);--navy-deep:var(--academy-navy);--green:#0369a1;--mint:#7dd3fc;--mint-soft:#e0f2fe;--cream:var(--academy-bg);--paper:#fff;--line:var(--academy-line);--line-strong:#cbd5e1;background:#f3f6fa;color:var(--academy-text);font-family:'IBM Plex Sans KR','Noto Sans KR',NanumSquare,system-ui,sans-serif}
+body.admin-authenticated::before,body.admin-authenticated::after{display:none}
+.admin-authenticated .portal{width:100%;max-width:none;margin:0;padding:0}
+.admin-authenticated .portal-header{position:fixed;top:8px;right:24px;z-index:65;min-height:38px;margin:0;color:var(--academy-text)}
+.admin-authenticated .portal-header .brand{display:none}
+.admin-authenticated .header-action{min-height:36px;padding:6px 11px;border-color:var(--academy-line)!important;background:#fff!important;color:var(--academy-text)!important;font-size:12px}
+.admin-authenticated .admin-shell{display:grid;grid-template-columns:248px minmax(0,1fr);gap:0;align-items:stretch;min-height:100vh;background:#f3f6fa}
+.admin-authenticated .admin-sidebar{position:sticky;top:0;z-index:40;max-height:100vh;min-height:100vh;padding:20px 12px 28px;border:0;border-radius:0;background:var(--academy-navy);box-shadow:none}
+.admin-authenticated .admin-sidebar-brand{padding:4px 10px 20px;border:0}
+.admin-authenticated .admin-sidebar-brand .brand-mark{width:36px;height:36px;border:0;border-radius:10px;background:var(--academy-sky);color:var(--academy-navy);font-family:inherit;font-size:16px;font-weight:900}
+.admin-authenticated .admin-sidebar-brand strong{font-size:15px}.admin-authenticated .admin-sidebar-brand small{color:#9fb0cc;font-size:11px;letter-spacing:0}
+.admin-authenticated .admin-sidebar-nav{gap:2px;padding:0}
+.admin-authenticated .admin-sidebar-nav>p{margin:16px 12px 6px;color:#8193b4;font-size:11px;letter-spacing:.5px;text-transform:none}
+.admin-authenticated .admin-sidebar-nav button,.admin-authenticated .admin-sidebar-nav a,.admin-authenticated .admin-sidebar-planned{grid-template-columns:20px minmax(0,1fr);gap:8px;min-height:38px;padding:0 10px;border-radius:8px;color:#c7d2e5;font-size:14px;font-weight:500}
+.admin-authenticated .admin-sidebar-nav button[aria-current=page]{background:#13254d;color:#7dd3fc}
+.admin-authenticated .admin-sidebar-nav button:hover:not(:disabled),.admin-authenticated .admin-sidebar-nav a:hover{background:#13254d}
+.admin-authenticated .admin-nav-child{margin-left:22px;width:calc(100% - 22px)!important;font-size:13px!important}
+.admin-authenticated .admin-sidebar-planned{grid-template-columns:minmax(0,1fr) auto;padding-left:38px;color:#8193b4}.admin-authenticated .admin-sidebar-planned.admin-nav-child{padding-left:10px}
+.admin-authenticated .admin-sidebar-note{margin-top:auto;border-color:#24396b;border-radius:10px;background:#13254d}.admin-authenticated .admin-sidebar-note strong{color:#7dd3fc}.admin-authenticated .admin-sidebar-note span{color:#9fb0cc}
+.admin-authenticated .admin-shell-main{min-width:0;background:#f3f6fa;padding-bottom:56px}
+.academy-topbar{display:flex;align-items:center;gap:12px;min-height:67px;padding:14px 150px 14px 32px;border-bottom:1px solid var(--academy-line);background:#fff}
+.academy-breadcrumb{display:flex;align-items:center;gap:8px;color:var(--academy-muted);font-size:13px}.academy-breadcrumb strong{color:var(--academy-text);font-weight:600}
+.academy-search{display:flex;align-items:center;gap:8px;width:240px;height:38px;margin-left:auto;padding:0 12px;border:1px solid var(--academy-line);border-radius:10px;background:#f8fafc;color:var(--academy-muted)}
+.academy-search button{display:grid;place-items:center;min-height:28px;width:28px;padding:0;border:0;border-radius:6px;background:transparent;color:var(--academy-muted);font-size:18px;box-shadow:none}.academy-search button:hover:not(:disabled){background:#e0f2fe;color:#075985;transform:none}
+.academy-search input{min-height:0;padding:0;border:0;border-radius:0;background:transparent;font-size:13px;box-shadow:none}.academy-search input:focus{box-shadow:none}
+.academy-live-badge{padding:6px 10px;border-radius:999px;background:#e0f2fe;color:#075985;font-size:12px;font-weight:600;white-space:nowrap}
+.academy-page-heading{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;padding:24px 32px 18px}.academy-page-heading h1{margin:0;font-size:26px;color:var(--academy-text);letter-spacing:-.5px}.academy-page-heading p{margin:6px 0 0;color:var(--academy-muted);font-size:13px}
+.admin-authenticated #adminDashboard{padding:0 32px 48px}.admin-authenticated #reviewSection,.admin-authenticated #manageSection,.admin-authenticated #questionsSection,.admin-authenticated #adminError{margin-left:32px;margin-right:32px}.admin-authenticated #adminQuickTabs{margin:0 32px 18px}
+.admin-authenticated .workspace-header{display:block;margin:0 0 16px;color:var(--academy-text)}.admin-authenticated .workspace-header>div:first-child{display:none}
+.admin-authenticated .admin-stats{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:14px;width:100%;min-width:0;border:0;border-radius:0;background:transparent;overflow:visible}
+.admin-authenticated .admin-stat{min-height:104px;padding:18px;border:1px solid var(--academy-line);border-radius:14px;background:#fff;color:var(--academy-text);box-shadow:none}.admin-authenticated .admin-stat:hover{border-color:#7dd3fc;background:#f0f9ff}.admin-authenticated .admin-stat span{font-size:30px;letter-spacing:-1px}.admin-authenticated .admin-stat small{color:var(--academy-muted);font-size:12px}
+.admin-authenticated .admin-today-flow,.admin-authenticated .admin-roadmap-grid article,.admin-authenticated .queue-pane,.admin-authenticated .review-workbench,.admin-authenticated .student-status-section,.admin-authenticated .admin-tools,.admin-authenticated .admin-long-list{border-color:var(--academy-line);border-radius:14px;background:#fff;box-shadow:none}
+.admin-authenticated .admin-today-flow{grid-template-columns:minmax(210px,.35fr) minmax(0,1fr);padding:20px}.admin-authenticated .today-flow-card{border-color:var(--academy-line);border-radius:10px}.admin-authenticated .today-flow-card span{color:#0369a1}
+.admin-authenticated .action-section{border-color:#fed7aa;border-radius:14px;background:#fff7ed}
+.admin-authenticated .tabs{border-color:var(--academy-line);border-radius:10px;background:#e9eef5}.admin-authenticated .tab[aria-pressed=true]{background:#fff;color:var(--academy-text);box-shadow:0 1px 3px rgba(15,23,42,.12)}
+.admin-authenticated .section-heading{margin-top:0}.admin-authenticated .section-heading .portal-kicker,.admin-authenticated .eyebrow{color:#0369a1}
+.admin-authenticated .queue-row,.admin-authenticated .card{border-color:var(--academy-line);border-radius:10px;box-shadow:none}.admin-authenticated .queue-row.active{border-color:var(--academy-sky);background:#f0f9ff;box-shadow:inset 3px 0 var(--academy-sky)}
+.admin-authenticated .workflow-status,.admin-authenticated .badge,.admin-authenticated .account-status{border-radius:6px}
+
+@media(max-width:900px){
+  .admin-authenticated .admin-shell{display:block}.admin-authenticated .admin-sidebar{position:fixed;min-height:100vh;max-height:none;border-radius:0 18px 18px 0}.academy-topbar{padding:12px 112px 12px 14px}.admin-authenticated .admin-menu-toggle{display:inline-flex;margin:0}.academy-search{display:none}.academy-page-heading{padding:20px 18px 14px}.admin-authenticated #adminDashboard{padding:0 18px 40px}.admin-authenticated #reviewSection,.admin-authenticated #manageSection,.admin-authenticated #questionsSection,.admin-authenticated #adminError{margin-left:18px;margin-right:18px}.admin-authenticated #adminQuickTabs{margin-left:18px;margin-right:18px}.admin-authenticated .admin-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.admin-authenticated .admin-today-flow{grid-template-columns:1fr}
+}
+@media(max-width:640px){
+  .admin-authenticated .portal-header{top:9px;right:10px}.academy-topbar{min-height:58px;padding-right:105px}.academy-breadcrumb{font-size:12px}.academy-live-badge{display:none}.academy-page-heading h1{font-size:23px}.admin-authenticated .admin-stat{min-height:88px;padding:14px}.admin-authenticated .admin-stat span{font-size:24px}.admin-authenticated .today-flow-grid{grid-template-columns:1fr}
+}
