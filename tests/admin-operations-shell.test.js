@@ -51,19 +51,21 @@ describe('academy operations shell', () => {
     expect(admin).toContain('id=adminStudentSearchForm');
     expect(admin).toContain('id=adminStudentSearch');
     expect(admin).toContain('placeholder="학생 이름 검색"');
-    expect(admin).toContain('워크스페이스');
-    expect(admin).toContain('정규 수업');
-    expect(admin).toContain('개인별 학습관리');
-    expect(admin).toContain('완성도 테스트');
-    expect(admin).toContain('class=admin-nav-child');
+    expect(admin).toContain('오늘 할 일');
+    expect(admin).toContain('학생·사용자');
+    expect(admin).toContain('과제·제출·재풀이');
+    expect(admin).toContain('제출 검토');
+    expect(admin).toContain('질문');
     expect(css).toContain("font-family:'IBM Plex Sans KR'");
     expect(css).toContain("url('/portal/fonts/ibm-plex-sans-kr-400.woff2')");
     expect(css).not.toContain('fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR');
-    expect(css).toContain('--academy-navy:#0a1530');
+    expect(css).not.toContain('--academy-navy:#0a1530');
     expect(css).toContain('--academy-sky:#0ea5e9');
     expect(css).toContain('background:#f3f6fa');
     expect(css).toMatch(/[.]admin-shell\{[^}]*grid-template-columns:248px minmax\(0,1fr\)/);
     expect(css).toMatch(/[.]academy-topbar\{[^}]*background:#fff/);
+    expect(css).toMatch(/[.]admin-authenticated [.]admin-sidebar\{[^}]*background:#fff/);
+    expect(css).toMatch(/[.]admin-authenticated [.]admin-sidebar-nav button\[aria-current=page\]\{[^}]*background:#e0f2fe;[^}]*color:#075985/);
   });
 
   it('ships the reference-like information architecture without fake operational metrics', () => {
@@ -73,9 +75,13 @@ describe('academy operations shell', () => {
     expect(admin).toContain('id=adminShell');
     expect(admin).toContain('class=admin-sidebar');
     expect(admin).toContain('id=adminSidebar');
-    expect(admin).toContain('학생 운영');
-    expect(admin).toContain('정규 수업');
-    expect(admin).toContain('준비 중');
+    expect(admin).toContain('실제 데이터 메뉴');
+    expect(admin).not.toContain('준비 중');
+    expect(admin).not.toContain('업무 캘린더');
+    expect(admin).not.toContain('출결 관리');
+    expect(admin).not.toContain('상담·등록');
+    expect(admin).not.toContain('교재 관리');
+    expect(admin).not.toContain('다음 구축 영역');
     expect(admin).toContain('data-admin-view=dashboard');
     expect(admin).toContain('data-admin-view=review');
     expect(admin).toContain('data-admin-view=manage');
@@ -121,10 +127,10 @@ describe('academy operations shell', () => {
     expect(document.getElementById('questionsSection').hidden).toBe(true);
     expect(document.querySelector('[data-admin-view="manage"]').getAttribute('aria-current')).toBe('page');
     expect(document.querySelector('[data-admin-view="review"]').hasAttribute('aria-current')).toBe(false);
-    expect(document.getElementById('adminCrumbGroup').textContent).toBe('학생 운영');
-    expect(document.getElementById('adminCrumbTitle').textContent).toBe('학생별 상태');
-    expect(document.getElementById('adminViewTitle').textContent).toBe('학생별 상태');
-    expect(document.getElementById('adminViewDescription').textContent).toContain('후속 조치');
+    expect(document.getElementById('adminCrumbGroup').textContent).toBe('운영');
+    expect(document.getElementById('adminCrumbTitle').textContent).toBe('오늘 후속 확인');
+    expect(document.getElementById('adminViewTitle').textContent).toBe('오늘 후속 확인');
+    expect(document.getElementById('adminViewDescription').textContent).toContain('실제 과제 상태');
   });
 
   it('falls back to the dashboard and closes the mobile menu after navigation', () => {
@@ -233,6 +239,8 @@ describe('academy operations shell', () => {
     expect(document.getElementById('manageRoot').hasAttribute('aria-current')).toBe(false);
     expect(document.getElementById('manageUsers').getAttribute('aria-current')).toBe('page');
     expect(document.getElementById('manageWorkflows').hasAttribute('aria-current')).toBe(false);
+    expect(document.getElementById('adminCrumbGroup').textContent).toBe('학생');
+    expect(document.getElementById('adminCrumbTitle').textContent).toBe('학생·사용자');
   });
 
   it('marks only the selected reference-style management destination as current', () => {
@@ -244,6 +252,18 @@ describe('academy operations shell', () => {
     expect(document.querySelectorAll('[data-admin-view][aria-current="page"]')).toHaveLength(1);
     expect(document.getElementById('manageStudents').getAttribute('aria-current')).toBe('page');
     expect(document.getElementById('manageRoot').hasAttribute('aria-current')).toBe(false);
+    expect(document.getElementById('adminCrumbTitle').textContent).toBe('학생별 학습상태');
+  });
+
+  it('labels assignment history from its real backend meaning', () => {
+    const dom = shellDom();
+    const document = dom.window.document;
+
+    activateAdminView(document, 'manage', 'workflows');
+
+    expect(document.getElementById('adminCrumbGroup').textContent).toBe('학습관리');
+    expect(document.getElementById('adminCrumbTitle').textContent).toBe('과제·제출·재풀이');
+    expect(document.getElementById('adminViewDescription').textContent).toContain('실제 배정과 제출 이력');
   });
 
   it('matches student names safely for the top-bar search', () => {
