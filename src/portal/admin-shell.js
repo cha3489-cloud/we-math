@@ -1,9 +1,14 @@
 const ADMIN_VIEWS = ['dashboard', 'review', 'manage', 'questions'];
 const ADMIN_VIEW_COPY = {
-  dashboard: ['홈', '홈', '실제 학습관리 지표와 오늘 처리할 업무를 한 화면에서 봅니다.'],
-  review: ['정규 수업', '완성도 테스트', '제출 답안과 풀이를 확인하고 피드백을 확정합니다.'],
-  manage: ['학생 운영', '학생별 상태', '학생별 과제 상태와 후속 조치를 함께 확인합니다.'],
-  questions: ['정규 수업', '학생 질문', '학생이 남긴 질문과 답변 상태를 확인합니다.'],
+  dashboard: ['운영', '오늘 할 일', '실제 제출·재풀이·질문 데이터에서 지금 처리할 항목만 봅니다.'],
+  review: ['학습관리', '제출 검토', '학생이 실제로 제출한 답안과 풀이를 확인하고 피드백을 확정합니다.'],
+  questions: ['소통', '질문', '학생이 실제로 남긴 질문과 답변 상태를 확인합니다.'],
+};
+const ADMIN_MANAGE_COPY = {
+  action: ['운영', '오늘 후속 확인', '실제 과제 상태에서 원장 확인·수정 대기·미제출 지연만 모아 봅니다.'],
+  users: ['학생', '학생·사용자', '실제 등록된 프로필의 역할과 계정 상태를 확인합니다.'],
+  workflows: ['학습관리', '과제·제출·재풀이', '실제 배정과 제출 이력, 재풀이 상태를 함께 확인합니다.'],
+  students: ['학생', '학생별 학습상태', '실제 과제·제출·질문에서 조치가 필요한 학생만 모아 봅니다.'],
 };
 
 function safeView(view) {
@@ -54,7 +59,9 @@ export function activateAdminView(document, requestedView, requestedTarget = '')
     else button.removeAttribute('aria-current');
   }
 
-  const [group, title, description] = ADMIN_VIEW_COPY[view];
+  const [group, title, description] = view === 'manage'
+    ? (ADMIN_MANAGE_COPY[target] || ADMIN_MANAGE_COPY.action)
+    : ADMIN_VIEW_COPY[view];
   const crumbGroup = document.getElementById('adminCrumbGroup');
   const crumbTitle = document.getElementById('adminCrumbTitle');
   const viewTitle = document.getElementById('adminViewTitle');
