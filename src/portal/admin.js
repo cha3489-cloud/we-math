@@ -18,6 +18,7 @@ import {
 } from './answer-attachments.js';
 import { validateInternalNote } from './admin-internal-notes.js';
 import { activateAdminView, bindAdminShell, createAdminNavigationGate, studentSearchMatches } from './admin-shell.js';
+import { areAttendanceBackendErrorsMissing, attendanceNextAction, isAttendanceBackendMissing } from './attendance.js';
 
 const byId = (id) => document.getElementById(id);
 const showError = (el, message) => { el.textContent = message || ''; };
@@ -56,16 +57,18 @@ function updateTodayFlow() {
 async function switchTab(tab, target = '') {
   const navigation = adminNavigationGate.begin();
   const dashboard = tab === 'dashboard';
+  const attendance = tab === 'attendance';
   const review = tab === 'review';
   const manage = tab === 'manage';
   const questions = tab === 'questions';
   activateAdminView(document, tab, target);
-  byId('adminQuickTabs').hidden = dashboard;
+  byId('adminQuickTabs').hidden = dashboard || attendance;
   byId('noSelection').hidden = !review || Boolean(current);
   byId('tabReview').setAttribute('aria-pressed', String(review));
   byId('tabManage').setAttribute('aria-pressed', String(manage));
   byId('tabQuestions').setAttribute('aria-pressed', String(questions));
   try {
+    if (attendance) await loadAttendanceOperations(navigation);
     if (manage) await Promise.all([loadUsers(), loadWorkflows(), loadOperationsSummary()]);
     if (questions) await loadQuestionInbox();
   } catch (error) {
@@ -789,6 +792,334 @@ async function closeQuestionEntry(questionId) {
     renderQuestionInbox();
   }
 }
+
+// ── 출결·보강 운영 ────────────────────────────────────────────────────────
+const attendanceRequestGate = createLatestRequestGate();
+let activeAttendanceNavigation = null;
+const ATTENDANCE_SELECT = 'id,student_id,scheduled_at,status,checked_in_at,checked_out_at,absence_reason,guardian_contact_status,guardian_contacted_at,note,profiles!attendance_records_student_id_fkey(name,suspended_at),makeup_plans(id,status,scheduled_at,completed_at,method,note)';
+const MAKEUP_SELECT = 'id,attendance_id,status,scheduled_at,completed_at,method,note,attendance_records!inner(id,student_id,scheduled_at,status,profiles!attendance_records_student_id_fkey(name,suspended_at))';
+const attendanceStatusCopy = { scheduled: '예정', present: '출석', late: '지각', absent: '결석', excused: '사유 결석' };
+const makeupStatusCopy = { planned: '예정', completed: '완료', cancelled: '취소' };
+const makeupMethodCopy = { in_person: '대면 보강', video: '영상 보강', assignment: '과제 대체' };
+let attendanceRows = [];
+let makeupRows = [];
+
+function dayKey(value) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '';
+  return [date.getFullYear(), String(date.getMonth() + 1).padStart(2, '0'), String(date.getDate()).padStart(2, '0')].join('-');
+}
+function attendanceProfile(row) { return normalizeRelation(row?.profiles)[0]; }
+function makeupAttendanceRecord(plan) { return normalizeRelation(plan?.attendance_records)[0]; }
+function attendanceStudentName(row) { return attendanceProfile(row)?.name || '학생'; }
+function attendanceDateText(value) { return new Date(value).toLocaleString('ko-KR', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' }); }
+function setAttendanceBackendAvailable(available) {
+  byId('attendanceBackendNotice').hidden = available;
+  for (const control of document.querySelectorAll('#attendanceRecordForm input, #attendanceRecordForm select, #attendanceRecordForm textarea, #attendanceRecordForm button, #makeupPlanForm input, #makeupPlanForm select, #makeupPlanForm textarea, #makeupPlanForm button')) {
+    control.disabled = !available;
+  }
+  if (!available) {
+    byId('attendanceList').replaceChildren();
+    byId('makeupList').replaceChildren();
+    byId('attendanceEmpty').hidden = true;
+    byId('makeupEmpty').hidden = true;
+  }
+}
+function attendanceOption(row) {
+  const option = document.createElement('option');
+  option.value = row.id;
+  option.textContent = attendanceStudentName(row) + ' · ' + attendanceDateText(row.scheduled_at);
+  return option;
+}
+function renderAttendanceStudentOptions(profiles, roles) {
+  const roleMap = new Map(normalizeRelation(roles).map((row) => [row.user_id, row.role]));
+  const students = normalizeRelation(profiles).filter((profile) => roleMap.get(profile.id) === 'student' && isActiveProfile(profile));
+  byId('attendanceStudent').replaceChildren(...students.map((student) => {
+    const option = document.createElement('option');
+    option.value = student.id;
+    option.textContent = student.name;
+    return option;
+  }));
+}
+function renderMakeupAttendanceOptions() {
+  const eligible = attendanceRows.filter((row) => {
+    if (!['absent', 'excused'].includes(row.status)) return false;
+    if (!['contacted', 'unreachable'].includes(row.guardian_contact_status)) return false;
+    const plans = normalizeRelation(row.makeup_plans);
+    return !plans.some((plan) => plan.status === 'planned' || plan.status === 'completed');
+  });
+  const select = byId('makeupAttendance');
+  select.replaceChildren(...eligible.map(attendanceOption));
+  byId('makeupSubmit').disabled = eligible.length === 0;
+}
+async function refreshAttendanceAfterCommit(message, output, navigation) {
+  if (!isCurrentAdminNavigation(navigation)) return;
+  try {
+    await loadAttendanceOperations(navigation);
+    if (isCurrentAdminNavigation(navigation)) output.textContent = message;
+  } catch (error) {
+    if (!isCurrentAdminNavigation(navigation)) return;
+    console.warn('출결·보강 처리 후 새로고침 실패:', error.message);
+    output.textContent = message + ' 화면 새로고침에는 실패했습니다. 페이지를 새로고침해 주세요.';
+  }
+}
+async function updateAttendanceRecord(recordId, patch, message, button, navigation) {
+  if (!recordId || button?.disabled || !isCurrentAdminNavigation(navigation)) return;
+  if (button) button.disabled = true;
+  showError(byId('attendanceError'), '');
+  let committed = false;
+  try {
+    const { data, error } = await supabase.from('attendance_records').update(patch).eq('id', recordId).select('id').single();
+    if (error) throw error;
+    if (!data?.id) throw new Error('수정된 출결 기록을 확인하지 못했습니다.');
+    committed = true;
+    await refreshAttendanceAfterCommit(message, byId('attendanceResult'), navigation);
+  } catch (error) {
+    if (isCurrentAdminNavigation(navigation)) {
+      showError(byId('attendanceError'), committed ? '처리는 완료됐지만 화면 새로고침에 실패했습니다.' : error.message);
+    }
+  } finally {
+    if (isCurrentAdminNavigation(navigation) && button && document.contains(button)) button.disabled = false;
+  }
+}
+function attendanceActionButton(label, handler) {
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.className = 'secondary small';
+  button.textContent = label;
+  button.addEventListener('click', () => handler(button));
+  return button;
+}
+function renderAttendanceOperations(navigation) {
+  const today = dayKey(new Date());
+  const actionableRows = attendanceRows.filter((row) => dayKey(row.scheduled_at) === today || attendanceNextAction(row) === 'guardian_contact');
+  const cards = actionableRows.map((row) => {
+    const card = document.createElement('article'); card.className = 'card attendance-card attendance-' + row.status;
+    const heading = document.createElement('h3'); heading.textContent = attendanceStudentName(row);
+    const badge = document.createElement('span'); badge.className = 'attendance-status status-' + row.status; badge.textContent = attendanceStatusCopy[row.status] || row.status;
+    const when = document.createElement('p'); when.className = 'meta'; when.textContent = attendanceDateText(row.scheduled_at);
+    card.append(heading, badge, when);
+    if (row.absence_reason) { const reason = document.createElement('p'); reason.textContent = '사유: ' + row.absence_reason; card.append(reason); }
+    if (row.guardian_contact_status) {
+      const contact = document.createElement('p');
+      contact.className = 'meta';
+      contact.textContent = '학부모 연락: ' + (row.guardian_contact_status === 'contacted' ? '완료' : '연락 안 됨 · 재연락 필요');
+      card.append(contact);
+    }
+    if (row.note) { const note = document.createElement('p'); note.className = 'attendance-private-note'; note.textContent = '원장 메모: ' + row.note; card.append(note); }
+    const actions = document.createElement('div'); actions.className = 'attendance-actions';
+    if (row.status === 'scheduled') {
+      actions.append(
+        attendanceActionButton('출석', (button) => updateAttendanceRecord(row.id, { status: 'present', checked_in_at: new Date().toISOString(), checked_out_at: null }, '출석으로 기록했습니다.', button, navigation)),
+        attendanceActionButton('지각', (button) => updateAttendanceRecord(row.id, { status: 'late', checked_in_at: new Date().toISOString(), checked_out_at: null }, '지각으로 기록했습니다.', button, navigation)),
+        attendanceActionButton('결석', (button) => updateAttendanceRecord(row.id, { status: 'absent', checked_in_at: null, checked_out_at: null }, '결석으로 기록했습니다.', button, navigation)),
+        attendanceActionButton('사유 결석', (button) => updateAttendanceRecord(row.id, { status: 'excused', checked_in_at: null, checked_out_at: null }, '사유 결석으로 기록했습니다.', button, navigation)),
+      );
+    }
+    const nextAction = attendanceNextAction(row);
+    if (nextAction === 'guardian_contact') {
+      actions.append(
+        attendanceActionButton('학부모 연락 완료', (button) => updateAttendanceRecord(row.id, {
+          guardian_contact_status: 'contacted', guardian_contacted_at: new Date().toISOString(),
+        }, '학부모 연락 완료를 기록했습니다.', button, navigation)),
+        attendanceActionButton('학부모 연락 안 됨', (button) => updateAttendanceRecord(row.id, {
+          guardian_contact_status: 'unreachable', guardian_contacted_at: new Date().toISOString(),
+        }, '연락 안 됨을 기록했습니다. 재연락 대상을 확인해 주세요.', button, navigation)),
+      );
+    } else if (nextAction === 'makeup_plan') {
+      actions.append(attendanceActionButton('보강 계획 입력', () => {
+        byId('makeupAttendance').value = row.id;
+        byId('makeupScheduledAt').focus();
+        byId('makeupPlanForm').scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }));
+    }
+    if (actions.childElementCount) card.append(actions);
+    return card;
+  });
+  byId('attendanceList').replaceChildren(...cards);
+  byId('attendanceEmpty').hidden = cards.length !== 0;
+  renderMakeupAttendanceOptions();
+}
+async function updateMakeupPlan(planId, patch, message, button, navigation) {
+  if (!planId || button?.disabled || !isCurrentAdminNavigation(navigation)) return;
+  if (button) button.disabled = true;
+  showError(byId('attendanceError'), '');
+  let committed = false;
+  try {
+    const { data, error } = await supabase.from('makeup_plans').update(patch).eq('id', planId).select('id').single();
+    if (error) throw error;
+    if (!data?.id) throw new Error('수정된 보강 계획을 확인하지 못했습니다.');
+    committed = true;
+    await refreshAttendanceAfterCommit(message, byId('makeupResult'), navigation);
+  } catch (error) {
+    if (isCurrentAdminNavigation(navigation)) {
+      showError(byId('attendanceError'), committed ? '처리는 완료됐지만 화면 새로고침에 실패했습니다.' : error.message);
+    }
+  } finally {
+    if (isCurrentAdminNavigation(navigation) && button && document.contains(button)) button.disabled = false;
+  }
+}
+function renderMakeupOperations(navigation) {
+  const cards = makeupRows.map((plan) => {
+    const attendance = makeupAttendanceRecord(plan);
+    const card = document.createElement('article'); card.className = 'card attendance-card makeup-' + plan.status;
+    const heading = document.createElement('h3'); heading.textContent = attendanceStudentName(attendance);
+    const badge = document.createElement('span'); badge.className = 'attendance-status status-' + plan.status; badge.textContent = makeupStatusCopy[plan.status] || plan.status;
+    const when = document.createElement('p'); when.className = 'meta'; when.textContent = attendanceDateText(plan.scheduled_at) + ' · ' + (makeupMethodCopy[plan.method] || plan.method);
+    card.append(heading, badge, when);
+    if (plan.note) { const note = document.createElement('p'); note.className = 'attendance-private-note'; note.textContent = '원장 메모: ' + plan.note; card.append(note); }
+    if (plan.status === 'planned') {
+      const actions = document.createElement('div'); actions.className = 'attendance-actions';
+      actions.append(
+        attendanceActionButton('보강 완료', (button) => updateMakeupPlan(plan.id, { status: 'completed', completed_at: new Date().toISOString() }, '보강 완료를 기록했습니다.', button, navigation)),
+        attendanceActionButton('계획 취소', (button) => updateMakeupPlan(plan.id, { status: 'cancelled', completed_at: null }, '보강 계획을 취소했습니다.', button, navigation)),
+      );
+      card.append(actions);
+    }
+    return card;
+  });
+  byId('makeupList').replaceChildren(...cards);
+  byId('makeupEmpty').hidden = cards.length !== 0;
+}
+async function settleAttendanceLoad(promise) {
+  try { return { data: await promise, error: null }; }
+  catch (error) { return { data: null, error }; }
+}
+function fetchAttendanceOperationsPage(rangeStart, rangeEnd) {
+  return async (cursor, pageSize) => {
+    let query = supabase.from('attendance_records').select(ATTENDANCE_SELECT)
+      .gte('scheduled_at', rangeStart.toISOString()).lt('scheduled_at', rangeEnd.toISOString())
+      .order('id').limit(pageSize);
+    if (cursor !== null) query = query.gt('id', cursor);
+    const { data, error } = await query;
+    if (error) throw error;
+    return data;
+  };
+}
+function fetchHistoricalAttendanceFollowupPage(rangeStart) {
+  return async (cursor, pageSize) => {
+    let query = supabase.from('attendance_records').select(ATTENDANCE_SELECT)
+      .lt('scheduled_at', rangeStart.toISOString())
+      .in('status', ['absent', 'excused'])
+      .order('id').limit(pageSize);
+    if (cursor !== null) query = query.gt('id', cursor);
+    const { data, error } = await query;
+    if (error) throw error;
+    return data;
+  };
+}
+async function fetchMakeupOperationsPage(cursor, pageSize) {
+  let query = supabase.from('makeup_plans').select(MAKEUP_SELECT).order('id').limit(pageSize);
+  if (cursor !== null) query = query.gt('id', cursor);
+  const { data, error } = await query;
+  if (error) throw error;
+  return data;
+}
+async function loadAttendanceOperations(navigation = null) {
+  const request = attendanceRequestGate.begin();
+  const now = new Date();
+  const rangeStart = new Date(now); rangeStart.setDate(rangeStart.getDate() - 60); rangeStart.setHours(0, 0, 0, 0);
+  const rangeEnd = new Date(now); rangeEnd.setDate(rangeEnd.getDate() + 2); rangeEnd.setHours(0, 0, 0, 0);
+  const results = await Promise.all([
+    supabase.from('profiles').select('id,name,suspended_at').order('name'),
+    supabase.from('user_roles').select('user_id,role'),
+    settleAttendanceLoad(collectKeysetPages(fetchAttendanceOperationsPage(rangeStart, rangeEnd), REMOTE_PAGE_SIZE)),
+    settleAttendanceLoad(collectKeysetPages(fetchHistoricalAttendanceFollowupPage(rangeStart), REMOTE_PAGE_SIZE)),
+    settleAttendanceLoad(collectKeysetPages(fetchMakeupOperationsPage, REMOTE_PAGE_SIZE)),
+  ]);
+  if (!attendanceRequestGate.isLatest(request) || !isCurrentAdminNavigation(navigation)) return;
+  activeAttendanceNavigation = navigation;
+  const [profilesResult, rolesResult, recentAttendanceResult, historicalAttendanceResult, makeupResult] = results;
+  if (profilesResult.error) throw profilesResult.error;
+  if (rolesResult.error) throw rolesResult.error;
+  const backendResults = [recentAttendanceResult, historicalAttendanceResult, makeupResult];
+  const backendErrors = backendResults.map((result) => result.error).filter(Boolean);
+  if (backendErrors.length) {
+    if (!areAttendanceBackendErrorsMissing(backendErrors)) {
+      throw backendErrors.find((error) => !isAttendanceBackendMissing(error)) || backendErrors[0];
+    }
+    attendanceRows = []; makeupRows = [];
+    renderAttendanceStudentOptions(profilesResult.data, rolesResult.data);
+    setAttendanceBackendAvailable(false);
+    return;
+  }
+  const attendanceById = new Map([
+    ...normalizeRelation(recentAttendanceResult.data),
+    ...normalizeRelation(historicalAttendanceResult.data),
+  ].map((row) => [row.id, row]));
+  attendanceRows = [...attendanceById.values()].sort((a, b) => new Date(a.scheduled_at) - new Date(b.scheduled_at));
+  makeupRows = normalizeRelation(makeupResult.data).sort((a, b) => new Date(b.scheduled_at) - new Date(a.scheduled_at));
+  renderAttendanceStudentOptions(profilesResult.data, rolesResult.data);
+  setAttendanceBackendAvailable(true);
+  renderAttendanceOperations(navigation);
+  renderMakeupOperations(navigation);
+}
+
+byId('attendanceRecordForm').addEventListener('submit', async (event) => {
+  event.preventDefault();
+  const navigation = activeAttendanceNavigation;
+  if (!isCurrentAdminNavigation(navigation)) return;
+  const form = event.currentTarget; const button = byId('attendanceSubmit'); const output = byId('attendanceResult');
+  const data = new FormData(form); const status = String(data.get('status') || 'scheduled');
+  const scheduled = new Date(String(data.get('scheduled_at') || ''));
+  if (!['scheduled', 'present', 'late', 'absent', 'excused'].includes(status) || Number.isNaN(scheduled.getTime())) { output.textContent = '학생·예정 일시·상태를 확인하세요.'; return; }
+  button.disabled = true; output.textContent = ''; showError(byId('attendanceError'), '');
+  let committed = false;
+  try {
+    const checkedIn = ['present', 'late'].includes(status) ? new Date().toISOString() : null;
+    const { error } = await supabase.from('attendance_records').insert({
+      student_id: data.get('student_id'), scheduled_at: scheduled.toISOString(), status,
+      checked_in_at: checkedIn, checked_out_at: null,
+      absence_reason: ['absent', 'excused'].includes(status)
+        ? (String(data.get('absence_reason') || '').trim() || null)
+        : null,
+      note: String(data.get('note') || '').trim(), created_by: currentAdmin.id, updated_by: currentAdmin.id,
+    });
+    if (error) throw error;
+    committed = true;
+    if (!isCurrentAdminNavigation(navigation)) return;
+    form.reset();
+    await refreshAttendanceAfterCommit('수업 기록을 저장했습니다.', output, navigation);
+  } catch (error) {
+    if (isCurrentAdminNavigation(navigation)) {
+      output.textContent = committed ? '수업 기록은 저장됐지만 화면 새로고침에 실패했습니다.' : error.message;
+    }
+  } finally {
+    if (isCurrentAdminNavigation(navigation)) button.disabled = false;
+  }
+});
+
+byId('makeupPlanForm').addEventListener('submit', async (event) => {
+  event.preventDefault();
+  const navigation = activeAttendanceNavigation;
+  if (!isCurrentAdminNavigation(navigation)) return;
+  const form = event.currentTarget; const button = byId('makeupSubmit'); const output = byId('makeupResult');
+  const data = new FormData(form); const attendanceId = String(data.get('attendance_id') || '');
+  const scheduled = new Date(String(data.get('scheduled_at') || ''));
+  const method = String(data.get('method') || '');
+  if (!attendanceId || Number.isNaN(scheduled.getTime()) || !['in_person', 'video', 'assignment'].includes(method)) { output.textContent = '결석 기록·보강 예정·방식을 확인하세요.'; return; }
+  button.disabled = true; output.textContent = ''; showError(byId('attendanceError'), '');
+  let committed = false;
+  try {
+    const existing = makeupRows.find((plan) => plan.attendance_id === attendanceId);
+    const payload = { status: 'planned', scheduled_at: scheduled.toISOString(), completed_at: null, method, note: String(data.get('note') || '').trim() };
+    const result = existing
+      ? await supabase.from('makeup_plans').update(payload).eq('id', existing.id).select('id').single()
+      : await supabase.from('makeup_plans').insert({ ...payload, attendance_id: attendanceId, created_by: currentAdmin.id, updated_by: currentAdmin.id }).select('id').single();
+    if (result.error) throw result.error;
+    if (!result.data?.id) throw new Error('저장된 보강 계획을 확인하지 못했습니다.');
+    committed = true;
+    if (!isCurrentAdminNavigation(navigation)) return;
+    form.reset();
+    await refreshAttendanceAfterCommit('보강 계획을 저장했습니다.', output, navigation);
+  } catch (error) {
+    if (isCurrentAdminNavigation(navigation)) {
+      output.textContent = committed ? '보강 계획은 저장됐지만 화면 새로고침에 실패했습니다.' : error.message;
+    }
+  } finally {
+    if (isCurrentAdminNavigation(navigation)) button.disabled = false;
+  }
+});
 
 // ── 계정·과제 관리 (기존 동작 유지, 관계 정규화 적용) ─────────────────────
 async function refreshAfterUserAction(action) {

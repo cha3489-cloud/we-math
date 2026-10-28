@@ -1,6 +1,7 @@
-const ADMIN_VIEWS = ['dashboard', 'review', 'manage', 'questions'];
+const ADMIN_VIEWS = ['dashboard', 'attendance', 'review', 'manage', 'questions'];
 const ADMIN_VIEW_COPY = {
   dashboard: ['운영', '오늘 할 일', '실제 제출·재풀이·질문 데이터에서 지금 처리할 항목만 봅니다.'],
+  attendance: ['수업운영', '출결·보강', '예정 수업부터 결석 연락, 보강 완료까지 실제 운영 상태를 기록합니다.'],
   review: ['학습관리', '제출 검토', '학생이 실제로 제출한 답안과 풀이를 확인하고 피드백을 확정합니다.'],
   questions: ['소통', '질문', '학생이 실제로 남긴 질문과 답변 상태를 확인합니다.'],
 };
@@ -43,6 +44,7 @@ export function activateAdminView(document, requestedView, requestedTarget = '')
   const target = view === 'manage' ? (requestedTarget || 'action') : '';
   const surfaces = {
     dashboard: document.getElementById('adminDashboard'),
+    attendance: document.getElementById('attendanceSection'),
     review: document.getElementById('reviewSection'),
     manage: document.getElementById('manageSection'),
     questions: document.getElementById('questionsSection'),

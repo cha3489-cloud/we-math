@@ -22,7 +22,7 @@ describe('admin question inbox — tab and markup', () => {
     expect(admin).toContain("const manage = tab === 'manage';");
     expect(admin).toContain("const questions = tab === 'questions';");
     expect(admin).toContain('activateAdminView(document, tab, target);');
-    expect(admin).toContain("byId('adminQuickTabs').hidden = dashboard;");
+    expect(admin).toContain("byId('adminQuickTabs').hidden = dashboard || attendance;");
   });
 
   it('loads the inbox only when the questions tab is opened, like the manage tab', () => {
