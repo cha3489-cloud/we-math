@@ -17,6 +17,8 @@
         <button type=button data-admin-view=dashboard aria-current=page><span aria-hidden=true>⌂</span>오늘 할 일</button>
         <button type=button data-admin-view=manage data-admin-target=users><span aria-hidden=true>♙</span>학생·사용자</button>
         <button type=button data-admin-view=manage data-admin-target=action><span aria-hidden=true>◎</span>오늘 후속 확인</button>
+        <p>수업운영</p>
+        <button type=button data-admin-view=attendance><span aria-hidden=true>◷</span>출결·보강</button>
         <p>학습관리</p>
         <button type=button data-admin-view=review><span aria-hidden=true>✓</span>제출 검토</button>
         <button type=button data-admin-view=manage data-admin-target=workflows><span aria-hidden=true>≡</span>과제·제출·재풀이</button>
@@ -46,6 +48,31 @@
     <aside class=queue-pane><div class="queue-toolbar"><div><p class=eyebrow>REVIEW QUEUE</p><h2>대기열</h2></div><span class=queue-order>오래된 순</span></div><p class=meta>학생을 선택하면 답안과 피드백 입력창이 함께 열립니다.</p><div id=queue class=queue></div><div id=queueEmpty class=empty-state hidden><img class=empty-illustration src=/portal/empty-state.svg alt=""><h3>검토가 모두 끝났습니다.</h3><p>새 제출이 들어오면 여기에 표시됩니다.</p></div></aside>
     <section class="review-workbench"><section id=reviewDetail class=detail-pane hidden><div id=reviewHead class=review-head></div><div class=viewer-pane><img id=adminImage alt="제출 사진" hidden><iframe id=adminFrame title="제출 PDF" hidden></iframe><!-- private-bucket short-lived signed URL; sandbox intentionally omitted so built-in PDF viewers work --><p id=noImage hidden>이 제출에는 첨부 파일이 없습니다. 제출 내용 텍스트를 확인하세요.</p><div class=viewer-controls><button type=button id=imgPrev class=secondary>← 이전</button><span id=imgIndex class=meta></span><button type=button id=imgNext class=secondary>다음 →</button><button type=button id=zoomOut class=secondary>축소</button><button type=button id=zoomIn class=secondary>확대</button><button type=button id=rotate class=secondary>회전</button></div><p id=viewerError class=error role=alert></p></div><p id=attemptBody class=attempt-body></p>
       <div class=feedback-pane><div class=feedback-heading><p class=eyebrow>STRUCTURED FEEDBACK</p><h3>확인 항목</h3><p>문제별 원인과 다음 행동을 짧게 남깁니다.</p></div><div class=item-builder><label>문제 번호<input id=problemRef maxlength=40 placeholder="예: 3번"></label><div id=tagChips class=chips role=radiogroup aria-label="확인 태그"></div><label>항목 코멘트 <span class=optional>(선택)</span><input id=itemComment maxlength=1000 placeholder="학생이 바로 이해할 수 있게 적어주세요"></label><label class=check><input type=checkbox id=redoRequired checked> 이 문제 다시 풀기</label><button type=button id=addItem class=secondary>＋ 확인 항목 추가</button></div><ul id=itemList class=item-list></ul><label>총평 <span class=optional>(선택 — 비우면 항목으로 자동 구성)</span><textarea id=overallComment maxlength=4000 placeholder="전체 풀이에서 잘한 점이나 다음 수업 참고사항"></textarea></label><label class=internal-note>내부 메모 <span class=optional>(원장 전용 · 학생에게 보이지 않습니다)</span><textarea id=internalNote maxlength=2000 placeholder="난이도 조정, 상담 필요 등 학생에게 보이면 안 되는 판단"></textarea></label><div class=internal-note-actions><button type=button id=saveInternalNote class="secondary small">메모 저장</button><span id=internalNoteStatus class=meta role=status></span></div><p id=reviewError class=error role=alert></p><p class=decision-guide>확정 후 다음 제출로 이동합니다.</p><div class=decide><button type=button id=decideRevision class=revision-action>수정 필요</button><button type=button id=decideComplete>완료 확정</button></div></div></section><div id=noSelection class=no-selection><span aria-hidden=true>←</span><h2>검토할 제출을 선택하세요.</h2><p>왼쪽 대기열에서 가장 오래된 제출부터 시작하면 됩니다.</p></div></section>
+  </section>
+
+  <section id=attendanceSection hidden class=attendance-workspace>
+    <div class=section-heading><p class="portal-kicker">ATTENDANCE & MAKEUP</p><h2>출결·보강</h2><p>예정 수업을 기록하고 결석 연락부터 보강 완료까지 실제 상태만 관리합니다.</p></div>
+    <p id=attendanceBackendNotice class=attendance-backend-notice role=status hidden>출결·보강 DB 적용 전입니다. 기존 학생·과제·질문 기능은 그대로 사용할 수 있습니다.</p>
+    <p id=attendanceError class=error role=alert></p>
+    <div class=attendance-entry-grid>
+      <section class="panel attendance-entry-panel"><h3>수업 기록 추가</h3><form id=attendanceRecordForm>
+        <label>학생<select id=attendanceStudent name=student_id required></select></label>
+        <label>예정 일시<input id=attendanceScheduledAt name=scheduled_at type=datetime-local required></label>
+        <label>초기 상태<select id=attendanceStatus name=status><option value=scheduled>예정</option><option value=present>출석</option><option value=late>지각</option><option value=absent>결석</option><option value=excused>사유 결석</option></select></label>
+        <label>결석 사유 <span class=optional>(선택)</span><input id=attendanceAbsenceReason name=absence_reason maxlength=500></label>
+        <label>원장 메모 <span class=optional>(학생에게 보이지 않음)</span><textarea id=attendanceNote name=note maxlength=1000></textarea></label>
+        <button id=attendanceSubmit type=submit>수업 기록 저장</button><p id=attendanceResult role=status></p>
+      </form></section>
+      <section class="panel attendance-entry-panel"><h3>보강 계획 추가</h3><form id=makeupPlanForm>
+        <label>결석 기록<select id=makeupAttendance name=attendance_id required></select></label>
+        <label>보강 예정<input id=makeupScheduledAt name=scheduled_at type=datetime-local required></label>
+        <label>방식<select id=makeupMethod name=method><option value=in_person>대면 보강</option><option value=video>영상 보강</option><option value=assignment>과제 대체</option></select></label>
+        <label>원장 메모 <span class=optional>(학생에게 보이지 않음)</span><textarea id=makeupNote name=note maxlength=1000></textarea></label>
+        <button id=makeupSubmit type=submit>보강 계획 저장</button><p id=makeupResult role=status></p>
+      </form></section>
+    </div>
+    <section class=attendance-list-section><div class=action-heading><div><p class=eyebrow>TODAY & FOLLOW-UP</p><h3>오늘 출결·미처리 연락</h3><p class=meta>오늘 수업 상태와 최근 결석 중 아직 연락 결과가 없는 기록을 함께 확인합니다.</p></div></div><div id=attendanceList class="cards attendance-cards" aria-live=polite></div><div id=attendanceEmpty class=empty-state hidden><h3>오늘 수업과 미처리 연락이 없습니다.</h3><p>위 입력창에서 실제 예정 수업을 추가하세요.</p></div></section>
+    <section class=attendance-list-section><div class=action-heading><div><p class=eyebrow>MAKEUP</p><h3>보강 진행</h3><p class=meta>보강 예정·완료·취소 상태를 확인합니다.</p></div></div><div id=makeupList class="cards attendance-cards" aria-live=polite></div><div id=makeupEmpty class=empty-state hidden><h3>보강 계획이 없습니다.</h3><p>결석 연락 확인 후 필요한 보강만 등록하세요.</p></div></section>
   </section>
 
   <section id=questionsSection hidden><div class=section-heading><p class="portal-kicker">STUDENT QUESTIONS</p><h2>학생 질문</h2><p>사진 없이 남긴 질문에 답하거나 정리합니다. 상태 변경은 서버 함수로만 처리됩니다.</p><div class=workflow-filter-bar><div class=tabs aria-label="질문 상태 선택"><button id=questionShowOpen type=button class=tab aria-pressed=true>미답변</button><button id=questionShowAnswered type=button class=tab aria-pressed=false>답변 완료</button></div><span id=questionFilterStatus class=meta>전체 학생 질문을 표시합니다.</span><button id=questionFilterClear type=button class="secondary small" hidden>필터 해제</button></div></div><p id=questionsError class=error role=alert></p><div id=questionsList class=cards></div><div id=questionsEmpty class=empty-state hidden><h3>답변을 기다리는 질문이 없습니다.</h3><p>학생이 새 질문을 남기면 여기에 표시됩니다.</p></div></section>
