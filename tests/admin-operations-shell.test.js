@@ -52,7 +52,8 @@ describe('academy operations shell', () => {
     expect(admin).toContain('id=adminStudentSearch');
     expect(admin).toContain('placeholder="학생 이름 검색"');
     expect(admin).toContain('오늘 할 일');
-    expect(admin).toContain('학생·사용자');
+    expect(admin).toContain('학생 관리');
+    expect(admin).toContain('계정 관리');
     expect(admin).toContain('과제·제출·재풀이');
     expect(admin).toContain('제출 검토');
     expect(admin).toContain('질문');
@@ -75,9 +76,12 @@ describe('academy operations shell', () => {
     expect(admin).toContain('id=adminShell');
     expect(admin).toContain('class=admin-sidebar');
     expect(admin).toContain('id=adminSidebar');
-    expect(admin).toContain('실제 데이터 메뉴');
+    expect(admin).toContain('학원 운영');
+    expect(admin).toContain('학생 운영');
     expect(admin).not.toContain('준비 중');
-    expect(admin).not.toContain('업무 캘린더');
+    expect(admin).toContain('업무 캘린더');
+    expect(admin).toContain('학생 관리');
+    expect(admin).toContain('퇴원 관리');
     expect(admin).not.toContain('출결 관리');
     expect(admin).not.toContain('상담·등록');
     expect(admin).not.toContain('교재 관리');
@@ -112,7 +116,7 @@ describe('academy operations shell', () => {
     expect(adminJs).toContain('await openReview(next, followUpNavigation)');
     expect(adminJs).toMatch(/function setWorkflowStudentFilter[\s\S]*const navigation = adminNavigationGate[.]begin\(\);[\s\S]*if \(!adminNavigationGate[.]isLatest\(navigation\)\) return;/);
     expect(adminJs).toContain("await switchTab('dashboard')");
-    expect(adminJs).toContain("byId('adminQuickTabs').hidden = dashboard");
+    expect(adminJs).toContain("byId('adminQuickTabs').hidden = !learningWorkflow");
   });
 
   it('shows exactly one operational view and marks its navigation item active', () => {

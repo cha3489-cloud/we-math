@@ -59,8 +59,9 @@ async function switchTab(tab, target = '') {
   const review = tab === 'review';
   const manage = tab === 'manage';
   const questions = tab === 'questions';
+  const learningWorkflow = review || manage || questions;
   activateAdminView(document, tab, target);
-  byId('adminQuickTabs').hidden = dashboard;
+  byId('adminQuickTabs').hidden = !learningWorkflow;
   byId('noSelection').hidden = !review || Boolean(current);
   byId('tabReview').setAttribute('aria-pressed', String(review));
   byId('tabManage').setAttribute('aria-pressed', String(manage));

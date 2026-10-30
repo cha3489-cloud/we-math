@@ -1,6 +1,9 @@
-const ADMIN_VIEWS = ['dashboard', 'review', 'manage', 'questions'];
+const ADMIN_VIEWS = ['dashboard', 'calendar', 'students', 'withdrawals', 'review', 'manage', 'questions'];
 const ADMIN_VIEW_COPY = {
   dashboard: ['운영', '오늘 할 일', '실제 제출·재풀이·질문 데이터에서 지금 처리할 항목만 봅니다.'],
+  calendar: ['운영', '업무 캘린더', '실제 학원 일정과 담당 업무를 날짜별로 등록하고 확인합니다.'],
+  students: ['학생', '학생 관리', '학생 운영 원본과 수강·보호자 정보를 한 명씩 관리합니다.'],
+  withdrawals: ['학생', '퇴원 관리', '퇴원·휴원 이력과 상담·복학 예정 상태를 보존합니다.'],
   review: ['학습관리', '제출 검토', '학생이 실제로 제출한 답안과 풀이를 확인하고 피드백을 확정합니다.'],
   questions: ['소통', '질문', '학생이 실제로 남긴 질문과 답변 상태를 확인합니다.'],
 };
@@ -43,6 +46,9 @@ export function activateAdminView(document, requestedView, requestedTarget = '')
   const target = view === 'manage' ? (requestedTarget || 'action') : '';
   const surfaces = {
     dashboard: document.getElementById('adminDashboard'),
+    calendar: document.getElementById('calendarSection'),
+    students: document.getElementById('studentsSection'),
+    withdrawals: document.getElementById('withdrawalsSection'),
     review: document.getElementById('reviewSection'),
     manage: document.getElementById('manageSection'),
     questions: document.getElementById('questionsSection'),
