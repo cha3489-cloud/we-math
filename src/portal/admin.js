@@ -20,9 +20,11 @@ import { validateInternalNote } from './admin-internal-notes.js';
 import { activateAdminView, bindAdminShell, createAdminNavigationGate, studentSearchMatches } from './admin-shell.js';
 import calendarData from './school-calendar-data.json';
 import { bindSchoolCalendar } from './school-calendar.js';
+import { bindStudentRegistry } from './student-registry.js';
 
 const byId = (id) => document.getElementById(id);
 bindSchoolCalendar(document, calendarData);
+bindStudentRegistry(document);
 const showError = (el, message) => { el.textContent = message || ''; };
 let currentAdmin;
 

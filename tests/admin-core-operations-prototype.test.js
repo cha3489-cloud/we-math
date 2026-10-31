@@ -22,8 +22,9 @@ function prototypeDom() {
 }
 
 describe('mockup-based core operations prototype', () => {
-  it('ships the three reference-shaped work surfaces without fabricated records or KPIs', () => {
+  it('ships the three reference-shaped work surfaces with only the explicitly approved synthetic pilot records', () => {
     const admin = read('admin/index.html');
+    const registry = read('src/portal/student-registry.js');
 
     expect(admin).toContain('data-admin-view=calendar');
     expect(admin).toContain('data-admin-view=students');
@@ -32,13 +33,16 @@ describe('mockup-based core operations prototype', () => {
     expect(admin).toContain('id=studentsSection');
     expect(admin).toContain('id=withdrawalsSection');
     expect(admin).toContain('업무 일정 등록');
-    expect(admin).toContain('학생 등록');
+    expect(admin).toContain('테스트 정보 수정');
     expect(admin).toContain('퇴원·휴원 기록');
     expect(admin).toContain('공식 학사일정 확인본');
     expect(admin).toContain('id=schoolCalendarGrid');
     expect(admin).toContain('id=calendarSchoolFilter');
-    expect(admin).toContain('등록된 학생이 없습니다.');
     expect(admin).toContain('퇴원·휴원 기록이 없습니다.');
+    expect(registry).toContain("name: '홍길동1'");
+    expect(registry).toContain("name: '홍길동2'");
+    expect(registry).toContain("name: '홍길동3'");
+    expect(registry).toContain('isTestData: true');
     expect(admin).not.toMatch(/재원생\s*96|퇴원생\s*12|김민수|이서연|박지우/);
   });
 
@@ -48,12 +52,32 @@ describe('mockup-based core operations prototype', () => {
     for (const label of ['일정 유형', '날짜', '시작 시간', '종료 시간', '연결 대상', '담당자', '진행 상태', '메모']) {
       expect(admin).toContain(label);
     }
-    for (const heading of ['학생명', '구분', '학년', '학교', '담당', '등원시간', '과정', '학부모 연락처', '학교성적']) {
+    for (const heading of ['학생명', '상태', '학년', '학교', '반', '과정', '보호자 연락처', '상세']) {
       expect(admin).toContain(`<th>${heading}</th>`);
     }
     for (const heading of ['학생명', '등록일', '마지막 수업일', '퇴원·휴원일', '재원기간', '사유', '복학 여부']) {
       expect(admin).toContain(`<th>${heading}</th>`);
     }
+  });
+
+  it('wires the synthetic registry into the student management surface without claiming database persistence', () => {
+    const admin = read('admin/index.html');
+    const adminJs = read('src/portal/admin.js');
+
+    for (const marker of [
+      'id=studentRegistrySearch',
+      'id=studentRegistryStatus',
+      'id=studentRegistryRows',
+      'id=studentRegistryDetail',
+      'id=studentRegistryForm',
+      'id=studentRegistryStatusMessage',
+      '테스트 데이터 모드',
+      '새로고침하면 초기화',
+    ]) expect(admin).toContain(marker);
+    expect(adminJs).toContain("import { bindStudentRegistry } from './student-registry.js'");
+    expect(adminJs).toContain('bindStudentRegistry(document)');
+    const studentSurface = admin.slice(admin.indexOf('<section id=studentsSection'), admin.indexOf('<section id=withdrawalsSection'));
+    expect(studentSurface).not.toContain('DB 연결 후 저장');
   });
 
   it.each([
@@ -77,6 +101,7 @@ describe('mockup-based core operations prototype', () => {
   it('styles dense desktop tables and switches to card-like rows on mobile', () => {
     const css = read('src/portal/portal.css');
 
+    expect(css).toContain('.student-registry-layout:has(.student-registry-detail[hidden]){grid-template-columns:1fr}');
     expect(css).toContain('.operations-table');
     expect(css).toContain('.operations-split');
     expect(css).toMatch(/@media\(max-width:640px\)[\s\S]*[.]operations-table thead\{display:none\}/);
