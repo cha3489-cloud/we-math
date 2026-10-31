@@ -13,9 +13,13 @@
     <aside id=adminSidebar class=admin-sidebar aria-label="시퀀스 수학 운영 메뉴">
       <div class=admin-sidebar-brand><span class=brand-mark aria-hidden=true>S</span><span><strong>시퀀스 수학</strong><small>학생 운영 시스템</small></span><button id=adminMenuClose class=admin-menu-close type=button aria-label="운영 메뉴 닫기">×</button></div>
       <nav class=admin-sidebar-nav>
-        <p>실제 데이터 메뉴</p>
+        <p>학원 운영</p>
         <button type=button data-admin-view=dashboard aria-current=page><span aria-hidden=true>⌂</span>오늘 할 일</button>
-        <button type=button data-admin-view=manage data-admin-target=users><span aria-hidden=true>♙</span>학생·사용자</button>
+        <button type=button data-admin-view=calendar><span aria-hidden=true>▦</span>업무 캘린더</button>
+        <p>학생 운영</p>
+        <button type=button data-admin-view=students><span aria-hidden=true>♙</span>학생 관리</button>
+        <button type=button data-admin-view=withdrawals><span aria-hidden=true>↪</span>퇴원 관리</button>
+        <button type=button data-admin-view=manage data-admin-target=users><span aria-hidden=true>⚙</span>계정 관리</button>
         <button type=button data-admin-view=manage data-admin-target=action><span aria-hidden=true>◎</span>오늘 후속 확인</button>
         <p>학습관리</p>
         <button type=button data-admin-view=review><span aria-hidden=true>✓</span>제출 검토</button>
@@ -41,6 +45,77 @@
       </section>
   <nav id=adminQuickTabs class=tabs aria-label="관리자 업무 선택" hidden><button id=tabReview type=button class=tab aria-pressed=false><span aria-hidden=true>01</span>과제 검토</button><button id=tabManage type=button class=tab aria-pressed=false><span aria-hidden=true>02</span>학생별 상태</button><button id=tabQuestions type=button class=tab aria-pressed=false><span aria-hidden=true>03</span>학생 질문</button></nav>
   <p id=adminError class=error role=alert></p>
+
+  <section id=calendarSection class=operations-surface hidden>
+    <div class=operations-notice><strong>공식 학사일정 확인본</strong><span>2026년 학교 일정과 2027년 공개분을 표시합니다. 2027학년도 미발표 일정은 추정하지 않았으며, 업무 일정 입력은 아직 저장되지 않습니다.</span></div>
+    <div class=operations-split>
+      <section class=operations-board aria-labelledby=calendarBoardTitle>
+        <div class=operations-toolbar><div><p class=eyebrow>SCHOOL CALENDAR</p><h2 id=calendarBoardTitle>인근 학교 학사일정</h2></div><div class=operations-toolbar-actions><button id=calendarPrev type=button class="secondary small">‹ 이전</button><strong id=calendarMonthLabel aria-live=polite>2026년 10월</strong><button id=calendarNext type=button class="secondary small">다음 ›</button></div></div>
+        <div class=calendar-filter-bar aria-label="학교 일정 필터"><select id=calendarYearFilter aria-label="연도"><option value=2026>2026년</option><option value=2027>2027년</option></select><select id=calendarSchoolFilter aria-label="학교"><option value="">전체 학교</option></select><select id=calendarTypeFilter aria-label="일정 유형"><option value="">전체 일정 유형</option><option value=중간고사>중간고사</option><option value=기말고사>기말고사</option><option value=시험>학년별 시험</option><option value=여름방학>여름방학</option><option value=겨울방학>겨울방학</option><option value=방학>방학식</option><option value=개학>개학</option><option value=학교휴업일>재량·학교휴업</option><option value=공통휴일>공통휴일</option><option value=종업>종업</option><option value=졸업>졸업</option></select></div>
+        <p id=calendarPublicationNote class=calendar-publication-note role=status></p>
+        <div class=school-calendar-scroll><div class=calendar-weekdays aria-hidden=true><span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><span>토</span><span>일</span></div>
+        <div id=schoolCalendarGrid class=school-calendar-grid aria-label="월간 학교 학사일정"></div></div>
+        <section class=school-calendar-list-panel aria-labelledby=calendarListTitle><div><p class=eyebrow>VERIFIED EVENTS</p><h3 id=calendarListTitle>이번 달 확인 일정</h3></div><div id=calendarEventList class=school-calendar-list aria-live=polite></div></section>
+      </section>
+      <aside class=operations-form-panel>
+        <div><p class=eyebrow>COVERAGE</p><h2>학교·출처 범위</h2><p>병점서로 21 기준 통학권 8개교입니다.</p></div>
+        <ul class=calendar-school-scope><li>태안초등학교</li><li>송화초등학교</li><li>화성벌말초등학교</li><li>병점중학교</li><li>병점고등학교</li><li>안화초등학교</li><li>안화중학교</li><li>안화고등학교</li></ul>
+        <div class=calendar-source-rule><strong>확정 기준</strong><p>학교 홈페이지·NEIS에 공개된 날짜만 반영하고, 2027학년도 일정은 공식 발표 후 갱신합니다.</p><span>마지막 확인: 2026-10-30</span></div>
+        <details class=calendar-work-form><summary>업무 일정 등록 양식 보기</summary><form>
+          <label>일정 유형<select><option>선택</option><option>상담</option><option>수업</option><option>테스트</option><option>행정</option><option>학부모 연락</option></select></label>
+          <div class=form-two><label>날짜<input type=date></label><label>진행 상태<select><option>예정</option><option>진행 중</option><option>완료</option><option>취소</option></select></label></div>
+          <div class=form-two><label>시작 시간<input type=time></label><label>종료 시간<input type=time></label></div>
+          <label>연결 대상<input placeholder="학생·반·학교 검색"></label><label>담당자<select><option>담당자 선택</option></select></label><label>제목<input maxlength=120 placeholder="무슨 업무인지 짧게 입력"></label><label>메모<textarea maxlength=1000 placeholder="준비물·연락 내용·후속 조치"></textarea></label>
+          <button type=button disabled>DB 연결 후 저장</button><p class=prototype-help>공식 학사일정은 읽기 전용이며, 업무 일정은 현재 저장되지 않습니다.</p>
+        </form></details>
+      </aside>
+    </div>
+  </section>
+
+  <section id=studentsSection class=operations-surface hidden>
+    <div class=operations-notice><strong>화면 시안 · 저장 안 됨</strong><span>로그인 계정과 분리된 학생 운영 원본을 새로 연결할 예정입니다.</span></div>
+    <div class=operations-split operations-split-wide>
+      <section class=operations-board aria-labelledby=studentBoardTitle>
+        <div class=operations-toolbar><div><p class=eyebrow>STUDENT DIRECTORY</p><h2 id=studentBoardTitle>학생 명단</h2></div><div class=operations-toolbar-actions><input type=search aria-label="학생 명단 검색" placeholder="이름·학교 검색"><select aria-label="재원 상태"><option>재원 전체</option><option>재원</option><option>휴원</option></select></div></div>
+        <div class=operations-table-wrap><table class=operations-table><thead><tr><th>학생명</th><th>구분</th><th>학년</th><th>학교</th><th>담당</th><th>등원시간</th><th>과정</th><th>학부모 연락처</th><th>학교성적</th></tr></thead><tbody><tr class=operations-empty-row><td colspan=9><div class=empty-symbol>♙</div><strong>등록된 학생이 없습니다.</strong><span>학생 원본 DB 연결 후 실제 학생만 표시됩니다.</span></td></tr></tbody></table></div>
+      </section>
+      <aside class=operations-form-panel>
+        <div><p class=eyebrow>NEW STUDENT</p><h2>학생 등록</h2><p>학생 상세의 기본 운영 정보입니다.</p></div>
+        <form>
+          <div class=form-two><label>학생명<input maxlength=40></label><label>구분<select><option>재원</option><option>신규</option><option>복학</option></select></label></div>
+          <div class=form-two><label>학년<select><option>학년 선택</option><option>초등</option><option>중등</option><option>고등</option></select></label><label>학교<input maxlength=80></label></div>
+          <div class=form-two><label>담당<select><option>담당자 선택</option></select></label><label>등원시간<input type=time></label></div>
+          <label>과정<input maxlength=100 placeholder="수강 과정 기준"></label>
+          <label>학부모 연락처<input type=tel inputmode=tel placeholder="010-0000-0000"></label>
+          <label>학교성적<input maxlength=120 placeholder="최근 시험·성취 수준"></label>
+          <label>운영 메모<textarea maxlength=1000 placeholder="등록 상담에서 확인한 핵심 내용"></textarea></label>
+          <button type=button disabled>DB 연결 후 저장</button><p class=prototype-help>앱 계정 발급은 학생 등록과 별도 단계로 유지합니다.</p>
+        </form>
+      </aside>
+    </div>
+  </section>
+
+  <section id=withdrawalsSection class=operations-surface hidden>
+    <div class=operations-notice><strong>화면 시안 · 저장 안 됨</strong><span>학생을 삭제하지 않고 휴원·퇴원·복학 이력을 보존하는 구조입니다.</span></div>
+    <div class=operations-split operations-split-wide>
+      <section class=operations-board aria-labelledby=withdrawalBoardTitle>
+        <div class=operations-toolbar><div><p class=eyebrow>STUDENT LIFECYCLE</p><h2 id=withdrawalBoardTitle>퇴원·휴원 대장</h2></div><div class=operations-toolbar-actions><input type=search aria-label="퇴원 학생 검색" placeholder="학생 이름 검색"><select aria-label="퇴원 유형"><option>전체 유형</option><option>퇴원</option><option>휴원</option><option>복학 예정</option></select></div></div>
+        <div class=operations-table-wrap><table class=operations-table><thead><tr><th>학생명</th><th>등록일</th><th>마지막 수업일</th><th>퇴원·휴원일</th><th>재원기간</th><th>사유</th><th>복학 여부</th></tr></thead><tbody><tr class=operations-empty-row><td colspan=7><div class=empty-symbol>↪</div><strong>퇴원·휴원 기록이 없습니다.</strong><span>상태 변경 이력이 생기면 삭제 없이 누적됩니다.</span></td></tr></tbody></table></div>
+      </section>
+      <aside class=operations-form-panel>
+        <div><p class=eyebrow>LIFECYCLE RECORD</p><h2>퇴원·휴원 기록</h2><p>처리 결과와 재연락 기준을 함께 남깁니다.</p></div>
+        <form>
+          <label>학생명<select><option>학생 선택</option></select></label>
+          <div class=form-two><label>처리 유형<select><option>퇴원</option><option>휴원</option></select></label><label>퇴원·휴원일<input type=date></label></div>
+          <div class=form-two><label>등록일<input type=date disabled></label><label>마지막 수업일<input type=date></label></div>
+          <label>사유<select><option>사유 선택</option><option>이사·거리</option><option>시간표</option><option>학습 방식</option><option>성적·만족도</option><option>비용</option><option>기타</option></select></label>
+          <label>상담 기록<textarea maxlength=1500 placeholder="확인한 사실과 안내 내용"></textarea></label>
+          <div class=form-two><label>복학 여부<select><option>미정</option><option>복학 예정</option><option>복학 의사 없음</option></select></label><label>재연락 예정일<input type=date></label></div>
+          <button type=button disabled>DB 연결 후 저장</button><p class=prototype-help>재원기간은 등록일과 처리일에서 자동 계산합니다.</p>
+        </form>
+      </aside>
+    </div>
+  </section>
 
   <section id=reviewSection class=review-layout>
     <aside class=queue-pane><div class="queue-toolbar"><div><p class=eyebrow>REVIEW QUEUE</p><h2>대기열</h2></div><span class=queue-order>오래된 순</span></div><p class=meta>학생을 선택하면 답안과 피드백 입력창이 함께 열립니다.</p><div id=queue class=queue></div><div id=queueEmpty class=empty-state hidden><img class=empty-illustration src=/portal/empty-state.svg alt=""><h3>검토가 모두 끝났습니다.</h3><p>새 제출이 들어오면 여기에 표시됩니다.</p></div></aside>

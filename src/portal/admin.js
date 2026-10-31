@@ -18,8 +18,11 @@ import {
 } from './answer-attachments.js';
 import { validateInternalNote } from './admin-internal-notes.js';
 import { activateAdminView, bindAdminShell, createAdminNavigationGate, studentSearchMatches } from './admin-shell.js';
+import calendarData from './school-calendar-data.json';
+import { bindSchoolCalendar } from './school-calendar.js';
 
 const byId = (id) => document.getElementById(id);
+bindSchoolCalendar(document, calendarData);
 const showError = (el, message) => { el.textContent = message || ''; };
 let currentAdmin;
 
@@ -59,8 +62,9 @@ async function switchTab(tab, target = '') {
   const review = tab === 'review';
   const manage = tab === 'manage';
   const questions = tab === 'questions';
+  const learningWorkflow = review || manage || questions;
   activateAdminView(document, tab, target);
-  byId('adminQuickTabs').hidden = dashboard;
+  byId('adminQuickTabs').hidden = !learningWorkflow;
   byId('noSelection').hidden = !review || Boolean(current);
   byId('tabReview').setAttribute('aria-pressed', String(review));
   byId('tabManage').setAttribute('aria-pressed', String(manage));
