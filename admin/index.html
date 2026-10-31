@@ -1,4 +1,4 @@
-<!doctype html><html lang=ko><head><meta charset=UTF-8><meta name=viewport content='width=device-width, initial-scale=1'><meta name=theme-color content=#f3f6fa><title>관리자 | 시퀀스 수학</title></head><body class=admin-portal><main class="portal portal-wide">
+<!doctype html><html lang=ko><head><meta charset=UTF-8><meta name=viewport content='width=device-width, initial-scale=1'><meta name=theme-color content=#f3f6fa><title>관리자 | 시퀀스 수학</title><link rel=icon type=image/x-icon href=/img/favicon.ico></head><body class=admin-portal><main class="portal portal-wide">
 <header id=portalHeader class=portal-header><a href=../ class=brand><span class=brand-mark aria-hidden=true>S</span><span>시퀀스 수학<small>ADMIN WORKSPACE</small></span></a><button id=logout class="secondary header-action" hidden>로그아웃</button></header>
 
 <section id=login class="panel auth-card admin-auth">
@@ -29,14 +29,14 @@
         <p>외부 도구</p>
         <a href=https://teacher.mathflat.com target=_blank rel="noopener noreferrer"><span aria-hidden=true>↗</span>매쓰플랫</a>
       </nav>
-      <div class=admin-sidebar-note><strong>실제 데이터만 표시</strong><span>가상 학생·가상 통계는 사용하지 않습니다.</span></div>
+      <div class=admin-sidebar-note><strong>운영·테스트 데이터 구분</strong><span>학생 관리의 홍길동 3명만 가상 테스트 데이터입니다.</span></div>
     </aside>
     <div id=adminShellMain class=admin-shell-main>
       <header class=academy-topbar>
         <button id=adminMenuToggle class="secondary admin-menu-toggle" type=button aria-expanded=false aria-controls=adminSidebar>메뉴</button>
         <div class=academy-breadcrumb aria-label="현재 위치"><span id=adminCrumbGroup>운영</span><span aria-hidden=true>›</span><strong id=adminCrumbTitle>오늘 할 일</strong></div>
         <form id=adminStudentSearchForm class=academy-search role=search><button type=submit aria-label="학생 검색">⌕</button><input id=adminStudentSearch type=search aria-label="학생 이름" placeholder="학생 이름 검색" required></form>
-        <span class=academy-live-badge>실제 데이터</span>
+        <span class=academy-live-badge>운영 시스템</span>
       </header>
       <div class=academy-page-heading><div><h1 id=adminViewTitle>오늘 할 일</h1><p id=adminViewDescription>실제 제출·재풀이·질문 데이터에서 지금 처리할 항목만 봅니다.</p></div></div>
       <section id=adminDashboard>
@@ -73,23 +73,23 @@
   </section>
 
   <section id=studentsSection class=operations-surface hidden>
-    <div class=operations-notice><strong>화면 시안 · 저장 안 됨</strong><span>로그인 계정과 분리된 학생 운영 원본을 새로 연결할 예정입니다.</span></div>
-    <div class=operations-split operations-split-wide>
+    <div class="operations-notice student-pilot-notice"><strong>테스트 데이터 모드</strong><span>홍길동1·2·3은 기능 검증용 가상 학생입니다. 실제 학생·보호자 정보가 아니며 새로고침하면 초기화됩니다.</span></div>
+    <p id=studentRegistryStatusMessage class=student-registry-message role=status aria-live=polite></p>
+    <div class="operations-split student-registry-layout">
       <section class=operations-board aria-labelledby=studentBoardTitle>
-        <div class=operations-toolbar><div><p class=eyebrow>STUDENT DIRECTORY</p><h2 id=studentBoardTitle>학생 명단</h2></div><div class=operations-toolbar-actions><input type=search aria-label="학생 명단 검색" placeholder="이름·학교 검색"><select aria-label="재원 상태"><option>재원 전체</option><option>재원</option><option>휴원</option></select></div></div>
-        <div class=operations-table-wrap><table class=operations-table><thead><tr><th>학생명</th><th>구분</th><th>학년</th><th>학교</th><th>담당</th><th>등원시간</th><th>과정</th><th>학부모 연락처</th><th>학교성적</th></tr></thead><tbody><tr class=operations-empty-row><td colspan=9><div class=empty-symbol>♙</div><strong>등록된 학생이 없습니다.</strong><span>학생 원본 DB 연결 후 실제 학생만 표시됩니다.</span></td></tr></tbody></table></div>
+        <div class=operations-toolbar><div><p class=eyebrow>STUDENT DIRECTORY PILOT</p><h2 id=studentBoardTitle>학생 명단</h2><strong id=studentRegistryCount class=student-registry-count aria-live=polite>0명</strong></div><div class=operations-toolbar-actions><input id=studentRegistrySearch type=search aria-label="학생 명단 검색" placeholder="이름·학교·과정 검색"><select id=studentRegistryStatus aria-label="재원 상태"><option value="">재원 상태 전체</option><option value=active>재원</option><option value=paused>휴원</option><option value=returning>복학예정</option></select></div></div>
+        <div class=operations-table-wrap><table class="operations-table student-registry-table"><thead><tr><th>학생명</th><th>상태</th><th>학년</th><th>학교</th><th>반</th><th>과정</th><th>보호자 연락처</th><th>상세</th></tr></thead><tbody id=studentRegistryRows></tbody></table></div>
+        <div id=studentRegistryEmpty class="empty-state student-registry-empty" hidden><div class=empty-symbol>♙</div><strong>조건에 맞는 테스트 학생이 없습니다.</strong><span>검색어나 재원 상태 필터를 바꿔보세요.</span></div>
       </section>
-      <aside class=operations-form-panel>
-        <div><p class=eyebrow>NEW STUDENT</p><h2>학생 등록</h2><p>학생 상세의 기본 운영 정보입니다.</p></div>
-        <form>
-          <div class=form-two><label>학생명<input maxlength=40></label><label>구분<select><option>재원</option><option>신규</option><option>복학</option></select></label></div>
-          <div class=form-two><label>학년<select><option>학년 선택</option><option>초등</option><option>중등</option><option>고등</option></select></label><label>학교<input maxlength=80></label></div>
-          <div class=form-two><label>담당<select><option>담당자 선택</option></select></label><label>등원시간<input type=time></label></div>
-          <label>과정<input maxlength=100 placeholder="수강 과정 기준"></label>
-          <label>학부모 연락처<input type=tel inputmode=tel placeholder="010-0000-0000"></label>
-          <label>학교성적<input maxlength=120 placeholder="최근 시험·성취 수준"></label>
-          <label>운영 메모<textarea maxlength=1000 placeholder="등록 상담에서 확인한 핵심 내용"></textarea></label>
-          <button type=button disabled>DB 연결 후 저장</button><p class=prototype-help>앱 계정 발급은 학생 등록과 별도 단계로 유지합니다.</p>
+      <aside id=studentRegistryDetail class="operations-form-panel student-registry-detail" hidden>
+        <div><p class=eyebrow>STUDENT DETAIL</p><h2 id=studentRegistryDetailName>학생 상세</h2><span id=studentRegistryTestBadge class=student-test-badge></span><p>학생 운영대장과 로그인 계정은 분리합니다.</p></div>
+        <form id=studentRegistryForm>
+          <div class=form-two><label>재원 상태<select name=status><option value=active>재원</option><option value=paused>휴원</option><option value=returning>복학예정</option></select></label><label>등록일<input name=registeredOn type=date></label></div>
+          <div class=form-two><label>학년<input name=grade maxlength=30></label><label>학교<input name=school maxlength=80></label></div>
+          <div class=form-two><label>반<input name=classGroup maxlength=80></label><label>과정<input name=course maxlength=100></label></div>
+          <div class=form-two><label>보호자명<input name=guardianName maxlength=40></label><label>보호자 연락처<input name=guardianPhone type=tel inputmode=tel maxlength=20></label></div>
+          <label>운영 메모<textarea name=note maxlength=1000></textarea></label>
+          <button type=submit>테스트 정보 수정</button><p class=prototype-help>현재 브라우저 안에서만 변경됩니다. 새로고침하면 초기화됩니다.</p>
         </form>
       </aside>
     </div>
