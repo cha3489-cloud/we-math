@@ -47,26 +47,27 @@
   <p id=adminError class=error role=alert></p>
 
   <section id=calendarSection class=operations-surface hidden>
-    <div class=operations-notice><strong>화면 시안 · 저장 안 됨</strong><span>일정 원본 DB 연결 전입니다. 입력 부담과 보기 순서만 확인해 주세요.</span></div>
+    <div class=operations-notice><strong>공식 학사일정 확인본</strong><span>2026년 학교 일정과 2027년 공개분을 표시합니다. 2027학년도 미발표 일정은 추정하지 않았으며, 업무 일정 입력은 아직 저장되지 않습니다.</span></div>
     <div class=operations-split>
       <section class=operations-board aria-labelledby=calendarBoardTitle>
-        <div class=operations-toolbar><div><p class=eyebrow>ACADEMY CALENDAR</p><h2 id=calendarBoardTitle>업무 일정</h2></div><div class=operations-toolbar-actions><button type=button class="secondary small" disabled>‹ 이전</button><strong>월간 보기</strong><button type=button class="secondary small" disabled>다음 ›</button></div></div>
-        <div class=calendar-filter-bar aria-label="일정 필터"><select aria-label="일정 유형"><option>전체 일정 유형</option><option>상담</option><option>수업</option><option>테스트</option><option>행정</option><option>학부모 연락</option></select><select aria-label="담당자"><option>전체 담당자</option></select><select aria-label="진행 상태"><option>전체 진행 상태</option><option>예정</option><option>진행 중</option><option>완료</option><option>취소</option></select></div>
-        <div class=calendar-weekdays aria-hidden=true><span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><span>토</span><span>일</span></div>
-        <div class=calendar-empty><div class=empty-symbol>▦</div><h3>등록된 업무 일정이 없습니다.</h3><p>일정 DB가 연결되면 날짜별 업무와 담당 상태가 이곳에 표시됩니다.</p></div>
+        <div class=operations-toolbar><div><p class=eyebrow>SCHOOL CALENDAR</p><h2 id=calendarBoardTitle>인근 학교 학사일정</h2></div><div class=operations-toolbar-actions><button id=calendarPrev type=button class="secondary small">‹ 이전</button><strong id=calendarMonthLabel aria-live=polite>2026년 10월</strong><button id=calendarNext type=button class="secondary small">다음 ›</button></div></div>
+        <div class=calendar-filter-bar aria-label="학교 일정 필터"><select id=calendarYearFilter aria-label="연도"><option value=2026>2026년</option><option value=2027>2027년</option></select><select id=calendarSchoolFilter aria-label="학교"><option value="">전체 학교</option></select><select id=calendarTypeFilter aria-label="일정 유형"><option value="">전체 일정 유형</option><option value=중간고사>중간고사</option><option value=기말고사>기말고사</option><option value=시험>학년별 시험</option><option value=여름방학>여름방학</option><option value=겨울방학>겨울방학</option><option value=방학>방학식</option><option value=개학>개학</option><option value=학교휴업일>재량·학교휴업</option><option value=공통휴일>공통휴일</option><option value=종업>종업</option><option value=졸업>졸업</option></select></div>
+        <p id=calendarPublicationNote class=calendar-publication-note role=status></p>
+        <div class=school-calendar-scroll><div class=calendar-weekdays aria-hidden=true><span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><span>토</span><span>일</span></div>
+        <div id=schoolCalendarGrid class=school-calendar-grid aria-label="월간 학교 학사일정"></div></div>
+        <section class=school-calendar-list-panel aria-labelledby=calendarListTitle><div><p class=eyebrow>VERIFIED EVENTS</p><h3 id=calendarListTitle>이번 달 확인 일정</h3></div><div id=calendarEventList class=school-calendar-list aria-live=polite></div></section>
       </section>
       <aside class=operations-form-panel>
-        <div><p class=eyebrow>NEW SCHEDULE</p><h2>업무 일정 등록</h2><p>업무를 만들 때 필요한 항목입니다.</p></div>
-        <form>
+        <div><p class=eyebrow>COVERAGE</p><h2>학교·출처 범위</h2><p>병점서로 21 기준 통학권 8개교입니다.</p></div>
+        <ul class=calendar-school-scope><li>태안초등학교</li><li>송화초등학교</li><li>화성벌말초등학교</li><li>병점중학교</li><li>병점고등학교</li><li>안화초등학교</li><li>안화중학교</li><li>안화고등학교</li></ul>
+        <div class=calendar-source-rule><strong>확정 기준</strong><p>학교 홈페이지·NEIS에 공개된 날짜만 반영하고, 2027학년도 일정은 공식 발표 후 갱신합니다.</p><span>마지막 확인: 2026-10-30</span></div>
+        <details class=calendar-work-form><summary>업무 일정 등록 양식 보기</summary><form>
           <label>일정 유형<select><option>선택</option><option>상담</option><option>수업</option><option>테스트</option><option>행정</option><option>학부모 연락</option></select></label>
           <div class=form-two><label>날짜<input type=date></label><label>진행 상태<select><option>예정</option><option>진행 중</option><option>완료</option><option>취소</option></select></label></div>
           <div class=form-two><label>시작 시간<input type=time></label><label>종료 시간<input type=time></label></div>
-          <label>연결 대상<input placeholder="학생·반·학교 검색"></label>
-          <label>담당자<select><option>담당자 선택</option></select></label>
-          <label>제목<input maxlength=120 placeholder="무슨 업무인지 짧게 입력"></label>
-          <label>메모<textarea maxlength=1000 placeholder="준비물·연락 내용·후속 조치"></textarea></label>
-          <button type=button disabled>DB 연결 후 저장</button><p class=prototype-help>지금은 저장되지 않습니다.</p>
-        </form>
+          <label>연결 대상<input placeholder="학생·반·학교 검색"></label><label>담당자<select><option>담당자 선택</option></select></label><label>제목<input maxlength=120 placeholder="무슨 업무인지 짧게 입력"></label><label>메모<textarea maxlength=1000 placeholder="준비물·연락 내용·후속 조치"></textarea></label>
+          <button type=button disabled>DB 연결 후 저장</button><p class=prototype-help>공식 학사일정은 읽기 전용이며, 업무 일정은 현재 저장되지 않습니다.</p>
+        </form></details>
       </aside>
     </div>
   </section>

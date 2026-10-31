@@ -18,8 +18,11 @@ import {
 } from './answer-attachments.js';
 import { validateInternalNote } from './admin-internal-notes.js';
 import { activateAdminView, bindAdminShell, createAdminNavigationGate, studentSearchMatches } from './admin-shell.js';
+import calendarData from './school-calendar-data.json';
+import { bindSchoolCalendar } from './school-calendar.js';
 
 const byId = (id) => document.getElementById(id);
+bindSchoolCalendar(document, calendarData);
 const showError = (el, message) => { el.textContent = message || ''; };
 let currentAdmin;
 

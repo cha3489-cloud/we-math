@@ -34,7 +34,9 @@ describe('mockup-based core operations prototype', () => {
     expect(admin).toContain('업무 일정 등록');
     expect(admin).toContain('학생 등록');
     expect(admin).toContain('퇴원·휴원 기록');
-    expect(admin).toContain('등록된 업무 일정이 없습니다.');
+    expect(admin).toContain('공식 학사일정 확인본');
+    expect(admin).toContain('id=schoolCalendarGrid');
+    expect(admin).toContain('id=calendarSchoolFilter');
     expect(admin).toContain('등록된 학생이 없습니다.');
     expect(admin).toContain('퇴원·휴원 기록이 없습니다.');
     expect(admin).not.toMatch(/재원생\s*96|퇴원생\s*12|김민수|이서연|박지우/);
@@ -55,7 +57,7 @@ describe('mockup-based core operations prototype', () => {
   });
 
   it.each([
-    ['calendar', '운영', '업무 캘린더', '실제 학원 일정'],
+    ['calendar', '운영', '업무 캘린더', '공식 학사일정'],
     ['students', '학생', '학생 관리', '학생 운영 원본'],
     ['withdrawals', '학생', '퇴원 관리', '퇴원·휴원 이력'],
   ])('activates only the %s surface and updates its heading', (view, group, title, description) => {
