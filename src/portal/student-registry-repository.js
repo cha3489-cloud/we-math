@@ -17,7 +17,7 @@ export function isMissingStudentRegistryBackend(error) {
   const code = String(error?.code || '');
   const message = `${error?.message || ''} ${error?.details || ''}`;
   if ((code === 'PGRST205' || code === '42P01') && /(?:^|[^A-Za-z0-9_$])public[.]students(?![A-Za-z0-9_$])/i.test(message)) return true;
-  return code === 'PGRST202' && /public[.](admin_create_student|admin_update_student)\b/i.test(message);
+  return code === 'PGRST202' && /(?:^|[^A-Za-z0-9_$])public[.](admin_create_student|admin_update_student)(?![A-Za-z0-9_$])/i.test(message);
 }
 
 export function normalizeStudentRegistryRow(row) {

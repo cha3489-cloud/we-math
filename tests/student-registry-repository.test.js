@@ -17,6 +17,8 @@ describe('student registry repository', () => {
     expect(isMissingStudentRegistryBackend({ code: 'PGRST205', message: "Could not find the table 'public.students_archive'" })).toBe(false);
     expect(isMissingStudentRegistryBackend({ code: '42P01', message: 'relation "public.students_private" does not exist' })).toBe(false);
     expect(isMissingStudentRegistryBackend({ code: 'PGRST202', message: 'Could not find public.other_rpc' })).toBe(false);
+    expect(isMissingStudentRegistryBackend({ code: 'PGRST202', message: 'Could not find public.admin_create_student$archive' })).toBe(false);
+    expect(isMissingStudentRegistryBackend({ code: 'PGRST202', message: 'Could not find notpublic.admin_update_student' })).toBe(false);
   });
 
   it('normalizes null, object, and array relation shapes without exposing login profile data', () => {
