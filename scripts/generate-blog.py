@@ -273,8 +273,8 @@ def vite_key(slug: str) -> str:
 def update_vite(text: str, record: dict[str, Any]) -> str:
     slug = record["slug"]
     key = vite_key(slug)
-    entry = f"{key}: resolve(__dirname, 'blog/{slug}/index.html'),"
-    fallback = rf"\s*{re.escape(key)}\s*:\s*resolve\(__dirname,\s*['\"]blog/{re.escape(slug)}/index\.html['\"]\),?"
+    entry = f"{key}: resolve(import.meta.dirname, 'blog/{slug}/index.html'),"
+    fallback = rf"\s*{re.escape(key)}\s*:\s*resolve\((?:__dirname|import\.meta\.dirname),\s*['\"]blog/{re.escape(slug)}/index\.html['\"]\),?"
     return replace_generated(text, "vite-input", slug, entry, fallback, r"input\s*:\s*\{")
 
 

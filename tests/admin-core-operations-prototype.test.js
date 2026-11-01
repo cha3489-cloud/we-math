@@ -60,24 +60,30 @@ describe('mockup-based core operations prototype', () => {
     }
   });
 
-  it('wires the synthetic registry into the student management surface without claiming database persistence', () => {
+  it('wires staged persistent storage into the student management surface without hiding fixture mode', () => {
     const admin = read('admin/index.html');
     const adminJs = read('src/portal/admin.js');
 
     for (const marker of [
+      'id=studentRegistryModeLabel',
+      'id=studentRegistryModeCopy',
+      'id=studentRegistryNewButton',
       'id=studentRegistrySearch',
       'id=studentRegistryStatus',
       'id=studentRegistryRows',
       'id=studentRegistryDetail',
       'id=studentRegistryForm',
       'id=studentRegistryStatusMessage',
+      'id=studentRegistrySubmit',
+      'name=name',
+      'name=isTestData',
       '테스트 데이터 모드',
-      '새로고침하면 초기화',
     ]) expect(admin).toContain(marker);
     expect(adminJs).toContain("import { bindStudentRegistry } from './student-registry.js'");
-    expect(adminJs).toContain('bindStudentRegistry(document)');
-    const studentSurface = admin.slice(admin.indexOf('<section id=studentsSection'), admin.indexOf('<section id=withdrawalsSection'));
-    expect(studentSurface).not.toContain('DB 연결 후 저장');
+    expect(adminJs).toContain("import { createStudentRegistryRepository } from './student-registry-repository.js'");
+    expect(adminJs).toContain('const studentRegistry = bindStudentRegistry');
+    expect(adminJs).toContain('repository: createStudentRegistryRepository(supabase)');
+    expect(adminJs).toContain('await studentRegistry.loadRemote()');
   });
 
   it.each([

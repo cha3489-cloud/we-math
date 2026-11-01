@@ -73,23 +73,25 @@
   </section>
 
   <section id=studentsSection class=operations-surface hidden>
-    <div class="operations-notice student-pilot-notice"><strong>테스트 데이터 모드</strong><span>홍길동1·2·3은 기능 검증용 가상 학생입니다. 실제 학생·보호자 정보가 아니며 새로고침하면 초기화됩니다.</span></div>
+    <div class="operations-notice student-pilot-notice"><strong id=studentRegistryModeLabel>테스트 데이터 모드</strong><span id=studentRegistryModeCopy>홍길동1·2·3은 기능 검증용 가상 학생입니다. 실제 학생·보호자 정보가 아니며 새로고침하면 초기화됩니다.</span></div>
     <p id=studentRegistryStatusMessage class=student-registry-message role=status aria-live=polite></p>
     <div class="operations-split student-registry-layout">
       <section class=operations-board aria-labelledby=studentBoardTitle>
-        <div class=operations-toolbar><div><p class=eyebrow>STUDENT DIRECTORY PILOT</p><h2 id=studentBoardTitle>학생 명단</h2><strong id=studentRegistryCount class=student-registry-count aria-live=polite>0명</strong></div><div class=operations-toolbar-actions><input id=studentRegistrySearch type=search aria-label="학생 명단 검색" placeholder="이름·학교·과정 검색"><select id=studentRegistryStatus aria-label="재원 상태"><option value="">재원 상태 전체</option><option value=active>재원</option><option value=paused>휴원</option><option value=returning>복학예정</option></select></div></div>
+        <div class=operations-toolbar><div><p class=eyebrow>STUDENT DIRECTORY</p><h2 id=studentBoardTitle>학생 명단</h2><strong id=studentRegistryCount class=student-registry-count aria-live=polite>0명</strong></div><div class=operations-toolbar-actions><button id=studentRegistryNewButton type=button class="secondary small" disabled>학생 등록</button><input id=studentRegistrySearch type=search aria-label="학생 명단 검색" placeholder="이름·학교·과정 검색"><select id=studentRegistryStatus aria-label="재원 상태"><option value="">재원 상태 전체</option><option value=active>재원</option><option value=paused>휴원</option><option value=returning>복학예정</option><option value=withdrawn>퇴원</option></select></div></div>
         <div class=operations-table-wrap><table class="operations-table student-registry-table"><thead><tr><th>학생명</th><th>상태</th><th>학년</th><th>학교</th><th>반</th><th>과정</th><th>보호자 연락처</th><th>상세</th></tr></thead><tbody id=studentRegistryRows></tbody></table></div>
-        <div id=studentRegistryEmpty class="empty-state student-registry-empty" hidden><div class=empty-symbol>♙</div><strong>조건에 맞는 테스트 학생이 없습니다.</strong><span>검색어나 재원 상태 필터를 바꿔보세요.</span></div>
+        <div id=studentRegistryEmpty class="empty-state student-registry-empty" hidden><div class=empty-symbol>♙</div><strong>조건에 맞는 학생이 없습니다.</strong><span>검색어나 재원 상태 필터를 바꿔보세요.</span></div>
       </section>
       <aside id=studentRegistryDetail class="operations-form-panel student-registry-detail" hidden>
         <div><p class=eyebrow>STUDENT DETAIL</p><h2 id=studentRegistryDetailName>학생 상세</h2><span id=studentRegistryTestBadge class=student-test-badge></span><p>학생 운영대장과 로그인 계정은 분리합니다.</p></div>
         <form id=studentRegistryForm>
-          <div class=form-two><label>재원 상태<select name=status><option value=active>재원</option><option value=paused>휴원</option><option value=returning>복학예정</option></select></label><label>등록일<input name=registeredOn type=date></label></div>
+          <label>학생명<input name=name maxlength=80 required></label>
+          <div class=form-two><label>재원 상태<select name=status><option value=active>재원</option><option value=paused>휴원</option><option value=returning>복학예정</option><option value=withdrawn>퇴원</option></select></label><label>등록일<input name=registeredOn type=date></label></div>
           <div class=form-two><label>학년<input name=grade maxlength=30></label><label>학교<input name=school maxlength=80></label></div>
           <div class=form-two><label>반<input name=classGroup maxlength=80></label><label>과정<input name=course maxlength=100></label></div>
           <div class=form-two><label>보호자명<input name=guardianName maxlength=40></label><label>보호자 연락처<input name=guardianPhone type=tel inputmode=tel maxlength=20></label></div>
           <label>운영 메모<textarea name=note maxlength=1000></textarea></label>
-          <button type=submit>테스트 정보 수정</button><p class=prototype-help>현재 브라우저 안에서만 변경됩니다. 새로고침하면 초기화됩니다.</p>
+          <label class=check><input name=isTestData type=checkbox> 가상 테스트 학생으로 등록</label>
+          <button id=studentRegistrySubmit type=submit>테스트 정보 수정</button><p id=studentRegistryPersistenceHelp class=prototype-help>현재 브라우저 안에서만 변경됩니다. 새로고침하면 초기화됩니다.</p>
         </form>
       </aside>
     </div>

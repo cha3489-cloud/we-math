@@ -21,10 +21,13 @@ import { activateAdminView, bindAdminShell, createAdminNavigationGate, studentSe
 import calendarData from './school-calendar-data.json';
 import { bindSchoolCalendar } from './school-calendar.js';
 import { bindStudentRegistry } from './student-registry.js';
+import { createStudentRegistryRepository } from './student-registry-repository.js';
 
 const byId = (id) => document.getElementById(id);
 bindSchoolCalendar(document, calendarData);
-bindStudentRegistry(document);
+const studentRegistry = bindStudentRegistry(document, undefined, {
+  repository: createStudentRegistryRepository(supabase),
+});
 const showError = (el, message) => { el.textContent = message || ''; };
 let currentAdmin;
 
@@ -1290,6 +1293,11 @@ async function showAdmin(user) {
   if (profile.must_change_pin) {
     byId('login').hidden = true; byId('logout').hidden = false;
     byId('admin').hidden = true; byId('pinChange').hidden = false; return;
+  }
+  try {
+    await studentRegistry.loadRemote();
+  } catch (registryError) {
+    console.error('학생 운영대장 로드 실패:', registryError.message);
   }
   await switchTab('dashboard');
   await loadQueue();
