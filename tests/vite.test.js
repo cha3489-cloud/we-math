@@ -28,7 +28,7 @@ describe('Vite multi-page build', () => {
     const generatedBlocks = source.match(/generated-vite-input:[^\n]*:start[\s\S]*?generated-vite-input:[^\n]*:end/g) ?? [];
     // The blog generator rewrites these blocks, so an entry placed inside one would be lost.
     for (const block of generatedBlocks) expect(block).not.toContain('tablet');
-    expect(source).toContain("tablet: resolve(__dirname, 'tablet/index.html')");
+    expect(source).toContain("tablet: resolve(import.meta.dirname, 'tablet/index.html')");
   });
 
   it('includes public Supabase configuration when Cloudflare build env is empty', async () => {
