@@ -2,6 +2,7 @@ import './style.css';
 import { signIn, signOut, onAuthChange, getProfile } from './auth.js';
 import { validateLoginInput, authErrorMessage } from './portal/domain.js';
 import { supabase } from './portal/client.js';
+import { initMathLearningCheck } from './math-learning-check.js';
 
 // ── Nav 스크롤 ─────────────────────────────────
 function initNav() {
@@ -145,7 +146,7 @@ function initForm() {
       sessionStorage.setItem(submissionStorageKey, submissionId);
       showToast('✅ 상담 신청이 접수되었습니다. 확인 후 연락드리겠습니다.');
     } catch (error) {
-      showToast('❌ 상담 신청이 접수되지 않았습니다. 잠시 후 다시 시도해주세요. 전화 상담도 가능합니다.', 6000);
+      showToast('❌ 상담 신청이 접수되지 않았습니다. 잠시 후 다시 시도하거나 010-2496-4031로 문자를 남겨주세요.', 6000);
     } finally {
       submitButton.disabled = false;
       submitButton.removeAttribute('aria-busy');
@@ -227,6 +228,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initCounters();
   initTabs();
   initForm();
+  initMathLearningCheck();
   initFAQ();
   initScrollTop();
   initAuth();

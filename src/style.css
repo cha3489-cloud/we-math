@@ -1099,11 +1099,17 @@ footer {
   padding: 14px 24px; font-size: 14px; font-weight: 500;
   box-shadow: var(--shadow-lg);
   z-index: 9999;
-  transition: transform .4s cubic-bezier(.34, 1.56, .64, 1);
+  opacity: 0;
+  visibility: hidden;
+  transition: transform .4s cubic-bezier(.34, 1.56, .64, 1), opacity .2s ease, visibility .2s ease;
   pointer-events: none; white-space: nowrap;
   border-radius: var(--radius-sm);
 }
-.toast.show { transform: translateX(-50%) translateY(0); }
+.toast.show {
+  transform: translateX(-50%) translateY(0);
+  opacity: 1;
+  visibility: visible;
+}
 
 /* ══ FAQ ══════════════════════════════════════ */
 #faq {
@@ -1896,6 +1902,158 @@ footer {
 .consultation-page .contact-form-card {
   box-shadow: 0 16px 50px rgba(22, 24, 27, .06);
 }
+.consultation-paths {
+  width: min(100%, 1080px);
+  margin: 0 auto 72px;
+}
+.consultation-paths-heading {
+  max-width: 700px;
+  margin-bottom: 28px;
+}
+.consultation-paths-heading h1 {
+  margin: 10px 0 14px;
+  font-size: clamp(32px, 5vw, 52px);
+  line-height: 1.1;
+  letter-spacing: -.05em;
+}
+.consultation-paths-heading > p:last-child {
+  color: var(--ink-600);
+  line-height: 1.75;
+}
+.consultation-path-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+.consultation-path-card {
+  min-width: 0;
+  min-height: 236px;
+  padding: 28px;
+  border: 1px solid var(--ink-200);
+  border-radius: var(--radius-lg);
+  background: var(--pure);
+  color: var(--ink-900);
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 14px;
+  box-shadow: var(--shadow-sm);
+}
+button.consultation-path-card {
+  width: 100%;
+  font: inherit;
+  cursor: pointer;
+}
+.consultation-path-card-primary {
+  border-color: var(--ink-900);
+  background: var(--ink-900);
+  color: var(--pure);
+}
+.consultation-path-card:not(.consultation-path-card-disabled):hover,
+.consultation-path-card:not(.consultation-path-card-disabled):focus-visible {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+.consultation-path-number {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: .12em;
+  color: var(--accent);
+}
+.consultation-path-card-primary .consultation-path-number { color: #b9d4ff; }
+.consultation-path-card strong { font-size: 21px; letter-spacing: -.025em; }
+.consultation-path-card > span:not(.consultation-path-number) {
+  color: var(--ink-600);
+  font-size: 14px;
+  line-height: 1.7;
+}
+.consultation-path-card-primary > span:not(.consultation-path-number) { color: rgba(255, 255, 255, .7); }
+.consultation-path-card b { margin-top: auto; font-size: 13px; }
+.consultation-path-card-disabled {
+  background: var(--ink-100);
+  color: var(--ink-500);
+  box-shadow: none;
+}
+.consultation-path-card-disabled b {
+  padding: 7px 10px;
+  border-radius: 999px;
+  background: var(--ink-200);
+}
+.math-check-dialog {
+  width: min(760px, calc(100vw - 32px));
+  max-height: calc(100dvh - 32px);
+  margin: auto;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-lg);
+  background: var(--pure);
+  color: var(--ink-900);
+  overflow: hidden;
+  box-shadow: 0 28px 90px rgba(0, 0, 0, .28);
+}
+.math-check-dialog::backdrop { background: rgba(22, 24, 27, .72); }
+.math-check-panel { max-height: calc(100dvh - 32px); padding: 36px; overflow-y: auto; }
+.math-check-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 24px; }
+.math-check-header h2 { margin: 8px 0 8px; font-size: 34px; letter-spacing: -.04em; }
+.math-check-header > div > p:last-child { color: var(--ink-600); line-height: 1.6; }
+.math-check-close {
+  flex: 0 0 auto;
+  width: 44px;
+  height: 44px;
+  border: 1px solid var(--ink-200);
+  border-radius: 50%;
+  background: var(--pure);
+  color: var(--ink-900);
+  font-size: 25px;
+  cursor: pointer;
+}
+.math-check-privacy {
+  margin: 24px 0;
+  padding: 14px 16px;
+  border-left: 3px solid var(--accent);
+  background: var(--ink-050);
+  color: var(--ink-600);
+  font-size: 12px;
+  line-height: 1.7;
+}
+.math-check-form fieldset { margin: 0; padding: 22px 0; border: 0; border-top: 1px solid var(--ink-200); }
+.math-check-form legend { width: 100%; margin-bottom: 14px; font-size: 15px; font-weight: 700; line-height: 1.55; }
+.math-check-form legend span { margin-right: 8px; color: var(--accent); font-family: var(--font-mono); font-size: 10px; }
+.math-check-options { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.math-check-options label {
+  min-width: 0;
+  padding: 12px 10px;
+  border: 1px solid var(--ink-200);
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  text-align: center;
+  cursor: pointer;
+}
+.math-check-options label:has(input:checked) { border-color: var(--ink-900); background: var(--ink-900); color: var(--pure); }
+.math-check-options input { margin-right: 5px; accent-color: var(--accent); }
+.math-check-submit {
+  width: 100%;
+  min-height: 52px;
+  margin-top: 8px;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: var(--accent);
+  color: var(--pure);
+  font: inherit;
+  font-weight: 750;
+  cursor: pointer;
+}
+.math-check-result {
+  margin-top: 28px;
+  padding: 26px;
+  border-radius: var(--radius-md);
+  background: var(--ink-900);
+  color: var(--pure);
+}
+.math-check-result h3 { margin: 8px 0 12px; font-size: 25px; }
+.math-check-result > p, .math-check-result li { color: rgba(255, 255, 255, .76); line-height: 1.7; }
+.math-check-result ul { margin: 16px 0; padding-left: 20px; }
 
 @media (max-width: 860px) {
   .home-contact-heading {
@@ -1903,6 +2061,8 @@ footer {
     flex-direction: column;
   }
   .home-contact-grid { grid-template-columns: 1fr; }
+  .consultation-path-grid { grid-template-columns: 1fr; }
+  .consultation-path-card { min-height: 190px; }
   .consultation-main { padding-top: 36px; }
   .consultation-page-shell { grid-template-columns: 1fr; }
   .consultation-page-intro { position: static; padding-top: 0; }
@@ -1912,9 +2072,16 @@ footer {
   .consultation-topbar { min-height: 64px; }
   .consultation-back { font-size: 11px; }
   .consultation-main { padding: 28px 16px 64px; }
+  .consultation-paths { margin-bottom: 52px; }
+  .consultation-path-card { min-height: 0; padding: 22px; }
   .consultation-page-intro h1 { font-size: 36px; }
   .consultation-page .contact-form-card { padding: 30px 20px; }
   .consultation-page .form-row { grid-template-columns: 1fr; }
+  .math-check-dialog { width: calc(100vw - 16px); max-height: calc(100dvh - 16px); }
+  .math-check-panel { max-height: calc(100dvh - 16px); padding: 24px 18px; }
+  .math-check-header h2 { font-size: 28px; }
+  .math-check-options { grid-template-columns: 1fr; }
+  .math-check-options label { text-align: left; }
 }
 
 
