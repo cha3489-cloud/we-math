@@ -12,4 +12,23 @@ describe('Supabase migration workflow CLI', () => {
     expect(workflow.match(/npx supabase db push/g) || []).toHaveLength(2);
     expect(workflow).not.toMatch(/npx supabase@(?:latest|3(?:[.\s]|$))/);
   });
+
+  it('links through the IPv4 pooler before using the linked project', () => {
+    expect(workflow.match(/npx supabase link/g) || []).toHaveLength(1);
+    expect(workflow).toMatch(/npx supabase link[\s\S]*--project-ref "\$SUPABASE_PROJECT_REF"[\s\S]*--password "\$SUPABASE_DB_PASSWORD"/);
+    expect(workflow.match(/npx supabase db push \\\n\s+--linked/g) || []).toHaveLength(2);
+    expect(workflow).not.toMatch(/npx supabase db push[\s\S]{0,160}--project-ref/);
+    expect(workflow).not.toContain('--skip-pooler');
+
+    const secretCheckIndex = workflow.indexOf('- name: Check required secrets');
+    const linkIndex = workflow.indexOf('- name: Link project through the IPv4 pooler');
+    const dryRunIndex = workflow.indexOf('- name: Show pending migrations (dry run)');
+    const applyIndex = workflow.indexOf('- name: Apply migrations');
+    expect(secretCheckIndex).toBeGreaterThan(-1);
+    expect(linkIndex).toBeGreaterThan(secretCheckIndex);
+    expect(dryRunIndex).toBeGreaterThan(linkIndex);
+    expect(applyIndex).toBeGreaterThan(dryRunIndex);
+    expect(workflow).toContain('if [ "${{ inputs.confirm }}" != "APPLY" ]');
+    expect(workflow).toContain("if: ${{ inputs.mode == 'apply' }}");
+  });
 });
