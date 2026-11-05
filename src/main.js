@@ -2,6 +2,7 @@ import './style.css';
 import { signIn, signOut, onAuthChange, getProfile } from './auth.js';
 import { validateLoginInput, authErrorMessage } from './portal/domain.js';
 import { supabase } from './portal/client.js';
+import { initMathLearningCheck } from './math-learning-check.js';
 
 // ── Nav 스크롤 ─────────────────────────────────
 function initNav() {
@@ -227,6 +228,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initCounters();
   initTabs();
   initForm();
+  initMathLearningCheck();
   initFAQ();
   initScrollTop();
   initAuth();
