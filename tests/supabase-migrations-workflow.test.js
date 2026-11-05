@@ -12,4 +12,11 @@ describe('Supabase migration workflow CLI', () => {
     expect(workflow.match(/npx supabase db push/g) || []).toHaveLength(2);
     expect(workflow).not.toMatch(/npx supabase@(?:latest|3(?:[.\s]|$))/);
   });
+
+  it('links through the IPv4 pooler before using the linked project', () => {
+    expect(workflow.match(/npx supabase link/g) || []).toHaveLength(1);
+    expect(workflow).toMatch(/npx supabase link[\s\S]*--project-ref "\$SUPABASE_PROJECT_REF"[\s\S]*--password "\$SUPABASE_DB_PASSWORD"/);
+    expect(workflow.match(/npx supabase db push \\\n\s+--linked/g) || []).toHaveLength(2);
+    expect(workflow).not.toMatch(/npx supabase db push[\s\S]{0,160}--project-ref/);
+  });
 });
