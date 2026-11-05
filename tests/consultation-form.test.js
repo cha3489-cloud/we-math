@@ -71,14 +71,27 @@ describe('consultation form UI', () => {
     expect(source.indexOf('if (error) throw error')).toBeLessThan(source.indexOf('form.reset();'));
     expect(source).toContain('catch (error)');
     expect(source).toContain('접수되지 않았습니다');
-    expect(source).toContain('전화 상담도 가능합니다');
+    expect(source).toContain('문자를 남겨주세요');
+    expect(source).not.toContain('전화 상담도 가능합니다');
   });
 
-  it('shows a direct phone fallback near the form for parents if online intake is unavailable', () => {
+  it('offers contact times only from 1pm onward', () => {
+    const html = read('consultation/index.html');
+    const select = html.match(/<select id="f-contact-time"[\s\S]*?<\/select>/)?.[0] ?? '';
+    expect(select).not.toContain('오전 9시 ~ 12시');
+    expect(select).not.toContain('점심시간(12시 ~ 1시)');
+    expect(select).toContain('오후 1시 ~ 6시');
+    expect(select).toContain('저녁 6시 이후');
+  });
+
+  it('sets expectations for text-first phone consultation and a two-session daily limit', () => {
     const html = read('consultation/index.html');
     expect(html).toContain('id="consultation-fallback"');
-    expect(html).toContain('href="tel:010-2496-4031"');
-    expect(html).toContain('온라인 접수가 어렵다면');
+    expect(html).toContain('href="sms:010-2496-4031"');
+    expect(html).toContain('1인 원장으로 운영');
+    expect(html).toContain('문자를 남겨주시면 순차적으로 연락드리겠습니다');
+    expect(html).toContain('상담 품질을 위해 하루 최대 2회만 진행');
+    expect(html).not.toContain('전화 상담도 가능합니다');
   });
 
   it('uses only Notion-compatible option labels', () => {
