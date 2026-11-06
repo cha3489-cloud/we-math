@@ -42,6 +42,12 @@ describe('시퀀스 수학 블로그', () => {
     expect(blog).toContain('https://sequencemath.co.kr/blog/');
   });
 
+  it('블로그에도 12월 개원 예정과 확인된 학원 위치를 안내한다', () => {
+    const blog = read('blog/index.html');
+    expect(blog).toContain('2026년 12월 개원 예정');
+    expect(blog).toContain('경기도 화성시 병점구 병점서로 21, 상가1동 203호');
+  });
+
   it('첫 글은 독립 canonical과 교육용 구조화 데이터를 제공한다', () => {
     const article = read('blog/choosing-math-academy/index.html');
     expect(article).toContain('https://sequencemath.co.kr/blog/choosing-math-academy/');
