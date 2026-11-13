@@ -132,6 +132,7 @@ export function buildNotionPage(databaseId: string, input: ValidatedConsultation
 
 export type HabitDiagnosticInput = {
   kind?: unknown;
+  questionnaireVersion?: unknown;
   respondent?: unknown;
   grade?: unknown;
   studentName?: unknown;
@@ -146,6 +147,7 @@ export type HabitDiagnosticInput = {
 
 export type ValidatedHabitDiagnostic = {
   kind: 'habit-diagnostic';
+  questionnaireVersion: 'habit-v1' | 'habit-v2';
   respondent: 'parent' | 'student';
   grade: string;
   studentName: string;
@@ -196,6 +198,10 @@ export function evaluateHabitDiagnostic(answers: Array<number | 'u'>) {
 export function validateHabitDiagnosticInput(input: HabitDiagnosticInput): ValidatedHabitDiagnostic {
   if (String(input.website ?? '').trim()) throw new Error('접수할 수 없습니다.');
   if (input.kind !== 'habit-diagnostic') throw new Error('접수 유형이 올바르지 않습니다.');
+  const questionnaireVersion = input.questionnaireVersion ?? 'habit-v1';
+  if (questionnaireVersion !== 'habit-v1' && questionnaireVersion !== 'habit-v2') {
+    throw new Error('문항 버전이 올바르지 않습니다.');
+  }
   if (input.respondent !== 'parent' && input.respondent !== 'student') throw new Error('응답자를 선택해주세요.');
   const grade = text(input.grade, '학년', 10);
   if (!habitGrades.has(grade)) throw new Error('학년 선택값이 올바르지 않습니다.');
@@ -220,7 +226,7 @@ export function validateHabitDiagnosticInput(input: HabitDiagnosticInput): Valid
     throw new Error('접수 식별자가 올바르지 않습니다.');
   }
   return {
-    kind: 'habit-diagnostic', respondent: input.respondent, grade, studentName, parentPhone,
+    kind: 'habit-diagnostic', questionnaireVersion, respondent: input.respondent, grade, studentName, parentPhone,
     answers, privacyConsent: true, marketingConsent: input.marketingConsent === true,
     guardianConsent: input.guardianConsent === true, submissionId,
   };
@@ -233,7 +239,7 @@ export function buildHabitDiagnosticNotionPage(databaseId: string, input: Valida
   const weakLabels = result.weak.map((key) => habitDomainLabels[key]).join(', ');
   const detail = [
     `[수학 공부 습관 진단] ${result.level.step}단계 ${result.level.name} · 종합 ${result.total}점`,
-    '문항 버전: habit-v1',
+    `문항 버전: ${input.questionnaireVersion}`,
     `응답자: ${input.respondent === 'parent' ? '학부모' : '학생'} · 실제 학년: ${input.grade}`,
     `영역별: ${scoreLine}`,
     `우선 확인: ${weakLabels}`,

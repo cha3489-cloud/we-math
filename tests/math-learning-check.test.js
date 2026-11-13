@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { JSDOM } from 'jsdom';
-import { evaluateMathLearningCheck, initMathLearningCheck } from '../src/math-learning-check.js';
+import { HABIT_QUESTIONS, QUESTIONNAIRE_VERSION, evaluateMathLearningCheck, initMathLearningCheck } from '../src/math-learning-check.js';
 import { supabase } from '../src/portal/client.js';
 
 vi.mock('../src/portal/client.js', () => ({
@@ -28,6 +28,44 @@ describe('math habit diagnostic', () => {
     vi.spyOn(globalThis.crypto, 'randomUUID').mockReturnValue('4f61bbcc-577d-4da8-a96c-0f83d50331d6');
     globalThis.sessionStorage = dom.window.sessionStorage;
     supabase.functions.invoke.mockReset();
+  });
+
+  it('uses concrete observable wording without exam-only or unclear expressions', () => {
+    expect(QUESTIONNAIRE_VERSION).toBe('habit-v2');
+    expect(HABIT_QUESTIONS.map(({ student }) => student)).toEqual([
+      '새 개념을 배우면 공식만 외우지 않고, 공식이 왜 성립하는지 이해하려고 한다.',
+      '수업에서 배운 개념을 교재를 보지 않고 내 말로 설명할 수 있다.',
+      '전에 풀어본 문제와 같은 방법으로 풀 수 있어도, 숫자나 조건이 다르게 제시되면 풀이를 시작하지 못하는 경우가 많다.',
+      '수업에서 배운 문제를 7일 안에 다시 풀어본다.',
+      '같은 단원의 중요한 문제를 날짜를 달리해 2번 이상 풀어본다.',
+      '한 번 맞힌 문제는 풀이 과정을 다시 확인하거나 다시 풀어보지 않는다.',
+      '틀린 문제는 해설을 확인한 뒤, 해설을 덮고 다시 혼자 풀어본다.',
+      "틀린 이유를 '개념을 몰랐음·계산 실수·조건 해석 실수'처럼 구분해 표시하거나 기록한다.",
+      '이전에 틀린 문제와 같은 이유로 비슷한 문제를 다시 틀리는 경우가 많다.',
+      '모르는 문제를 만나면 바로 묻지 않고 최소 5분은 혼자 고민한다.',
+      '풀이가 막히면 5분 동안 시도하기 전에 해설이나 정답부터 확인한다.',
+      '답만 적지 않고, 답을 얻는 데 필요한 식이나 풀이 순서를 함께 쓴다.',
+      '매주 정해 둔 요일과 시간에 수학 공부를 한다.',
+      '수학 공부를 시작하기 전에 그날 풀 분량이나 공부 시간을 정한다.',
+      '제출일이 있는 수학 숙제는 주로 마감 직전에 몰아서 한다.',
+    ]);
+    expect(HABIT_QUESTIONS.map(({ parent }) => parent)).toEqual([
+      '아이는 새 개념을 배우면 공식만 외우지 않고, 공식이 왜 성립하는지 이해하려고 한다.',
+      '아이는 수업에서 배운 개념을 교재를 보지 않고 자기 말로 설명할 수 있다.',
+      '아이는 전에 풀어본 문제와 같은 방법으로 풀 수 있어도, 숫자나 조건이 다르게 제시되면 풀이를 시작하지 못하는 경우가 많다.',
+      '아이는 수업에서 배운 문제를 7일 안에 다시 풀어본다.',
+      '아이는 같은 단원의 중요한 문제를 날짜를 달리해 2번 이상 풀어본다.',
+      '아이는 한 번 맞힌 문제는 풀이 과정을 다시 확인하거나 다시 풀어보지 않는다.',
+      '아이는 틀린 문제의 해설을 확인한 뒤, 해설을 덮고 다시 혼자 풀어본다.',
+      "아이는 틀린 이유를 '개념을 몰랐음·계산 실수·조건 해석 실수'처럼 구분해 표시하거나 기록한다.",
+      '아이는 이전에 틀린 문제와 같은 이유로 비슷한 문제를 다시 틀리는 경우가 많다.',
+      '아이는 모르는 문제를 만나면 바로 묻지 않고 최소 5분은 혼자 고민한다.',
+      '아이는 풀이가 막히면 5분 동안 시도하기 전에 해설이나 정답부터 확인한다.',
+      '아이는 답만 적지 않고, 답을 얻는 데 필요한 식이나 풀이 순서를 함께 쓴다.',
+      '아이는 매주 정해 둔 요일과 시간에 수학 공부를 한다.',
+      '아이는 수학 공부를 시작하기 전에 그날 풀 분량이나 공부 시간을 정한다.',
+      '아이는 제출일이 있는 수학 숙제를 주로 마감 직전에 몰아서 한다.',
+    ]);
   });
 
   it('scores all five domains and reverses negative questions', () => {
@@ -84,7 +122,7 @@ describe('math habit diagnostic', () => {
     await Promise.resolve();
 
     expect(supabase.functions.invoke).toHaveBeenCalledWith('consultation-intake', expect.objectContaining({
-      body: expect.objectContaining({ kind: 'habit-diagnostic', grade: '중2', answers: Array(15).fill(3) }),
+      body: expect.objectContaining({ kind: 'habit-diagnostic', questionnaireVersion: 'habit-v2', grade: '중2', answers: Array(15).fill(3) }),
     }));
     expect(document.querySelector('.hd-saved')?.textContent).toContain('상담 자료 저장 완료');
     vi.useRealTimers();
