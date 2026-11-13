@@ -86,13 +86,13 @@ describe('consultation form UI', () => {
     expect(select).toContain('저녁 6시 이후');
   });
 
-  it('sets expectations for text-first phone consultation and a two-session daily limit', () => {
+  it('sets expectations for text-first phone consultation without a daily limit', () => {
     const html = read('consultation/index.html');
     expect(html).toContain('id="consultation-fallback"');
     expect(html).toContain('href="sms:010-2496-4031"');
     expect(html).toContain('1인 원장으로 운영');
     expect(html).toContain('문자를 남겨주시면 순차적으로 연락드리겠습니다');
-    expect(html).toContain('상담 품질을 위해 하루 최대 2회만 진행');
+    expect(html).not.toContain('상담 품질을 위해 하루 최대 2회만 진행');
     expect(html).not.toContain('전화 상담도 가능합니다');
   });
 
