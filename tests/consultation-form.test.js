@@ -21,17 +21,19 @@ describe('consultation form UI', () => {
     expect(consultation).toContain('href="/"');
   });
 
-  it('offers a real math check and clearly marks Kakao consultation as unavailable until launch', () => {
+  it('offers a saved 15-question habit diagnostic and clearly marks Kakao consultation as unavailable until launch', () => {
     const html = read('consultation/index.html');
     expect(html).toContain('id="consultation-paths"');
     expect(html).toContain('id="openMathCheck"');
-    expect(html).toContain('수학학습 점검');
+    expect(html).toContain('수학 공부 습관 진단');
+    expect(html).toContain('15개 질문');
     expect(html).toContain('카카오톡 채널 상담');
     expect(html).toContain('채널 준비 중');
     expect(html).not.toMatch(/href="https:\/\/pf[.]kakao[.]com\//);
     expect(html).toContain('id="mathCheckDialog"');
     expect(html).toContain('aria-modal="true"');
-    expect(html).toContain('답변은 전송되거나 저장되지 않습니다');
+    expect(html).toContain('id="habitDiagnosticWidget"');
+    expect(html).not.toContain('답변은 전송되거나 저장되지 않습니다');
   });
 
   it('keeps an empty toast fully hidden until a status message is shown', () => {
