@@ -8,6 +8,12 @@ on:
       - 'supabase/functions/_shared/**'
       - 'supabase/config.toml'
   workflow_dispatch:
+    inputs:
+      restore_inactive:
+        description: '중지된 프로젝트를 명시적으로 복구한 뒤 배포'
+        required: false
+        default: false
+        type: boolean
 
 permissions:
   contents: read
@@ -36,6 +42,26 @@ jobs:
       - name: Check deployment credential
         run: |
           test -n "${SUPABASE_ACCESS_TOKEN:-}" || { echo 'Missing SUPABASE_ACCESS_TOKEN' >&2; exit 1; }
+      - name: Restore inactive project when explicitly requested
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.restore_inactive == true }}
+        run: |
+          set -euo pipefail
+          api="https://api.supabase.com/v1/projects/$SUPABASE_PROJECT_REF"
+          auth="Authorization: Bearer $SUPABASE_ACCESS_TOKEN"
+          status="$(curl -fsS -H "$auth" "$api" | jq -r '.status')"
+          if [ "$status" = "INACTIVE" ]; then
+            curl -fsS -X POST -H "$auth" "$api/restore" >/dev/null
+          fi
+          for attempt in $(seq 1 80); do
+            status="$(curl -fsS -H "$auth" "$api" | jq -r '.status')"
+            echo "Project status: $status"
+            if [ "$status" = "ACTIVE_HEALTHY" ]; then
+              exit 0
+            fi
+            sleep 15
+          done
+          echo "Project did not become healthy before timeout" >&2
+          exit 1
       - name: Deploy consultation-intake
         run: |
           npx supabase functions deploy consultation-intake \

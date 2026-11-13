@@ -13,5 +13,9 @@ describe('consultation intake function deployment', () => {
     expect(workflow).toContain('npx supabase functions deploy consultation-intake');
     expect(workflow).toContain('--project-ref "$SUPABASE_PROJECT_REF"');
     expect(workflow).toContain('npx --yes deno check supabase/functions/consultation-intake/index.ts');
+    expect(workflow).toContain("inputs.restore_inactive == true");
+    expect(workflow).toContain('https://api.supabase.com/v1/projects/$SUPABASE_PROJECT_REF');
+    expect(workflow).toContain('curl -fsS -X POST -H "$auth" "$api/restore"');
+    expect(workflow).toContain('if [ "$status" = "ACTIVE_HEALTHY" ]');
   });
 });
