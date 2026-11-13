@@ -1,21 +1,23 @@
 import { supabase } from './portal/client.js';
 
+export const QUESTIONNAIRE_VERSION = 'habit-v2';
+
 export const HABIT_QUESTIONS = [
-  { domain: 'concept', student: '새 개념을 배우면 공식만 외우기보다 왜 그렇게 되는지까지 이해하려고 한다.', parent: '아이가 새 개념을 배우면 공식만 외우기보다 왜 그런지를 이해하려고 한다.' },
-  { domain: 'concept', student: '오늘 배운 개념을 친구에게 내 말로 설명할 수 있다.', parent: '오늘 배운 내용을 물어보면 아이가 자기 말로 설명할 수 있다.' },
-  { domain: 'concept', reverse: true, student: '아는 유형인데도 숫자나 표현이 조금 바뀌면 손을 못 대는 경우가 많다.', parent: '아는 유형인데도 숫자나 표현이 조금 바뀌면 틀렸다고 하는 경우가 많다.' },
-  { domain: 'repeat', student: '수업에서 배운 내용을 그 주 안에 다시 풀어본다.', parent: '수업에서 배운 내용을 그 주 안에 다시 복습한다.' },
-  { domain: 'repeat', student: '시험 범위의 문제를 2번 이상 반복해서 풀어본다.', parent: '시험 범위의 문제를 2번 이상 반복해서 풀어본다.' },
-  { domain: 'repeat', reverse: true, student: '한 번 풀어서 맞힌 문제는 다시 보지 않는다.', parent: '한 번 맞힌 문제는 다시 보지 않고 넘어간다.' },
-  { domain: 'wrong', student: '틀린 문제는 해설을 읽고 끝내지 않고 다시 혼자 풀어본다.', parent: '틀린 문제를 해설만 보고 끝내지 않고 다시 혼자 풀어본다.' },
-  { domain: 'wrong', student: '틀린 이유를 개념 부족, 계산 실수, 문제 읽기 중 하나로 구분해서 기록한다.', parent: '틀린 이유를 개념 부족, 계산 실수, 문제 읽기 중 하나로 구분해서 정리한다.' },
-  { domain: 'wrong', reverse: true, student: '같은 실수로 같은 유형을 또 틀린 적이 많다.', parent: '같은 실수로 같은 유형을 반복해서 틀린다.' },
-  { domain: 'self', student: '모르는 문제를 만나면 최소 5분은 스스로 고민해 본다.', parent: '모르는 문제를 만나면 바로 묻기보다 스스로 충분히 고민해 본다.' },
-  { domain: 'self', reverse: true, student: '막히면 바로 해설이나 정답부터 확인한다.', parent: '막히면 바로 해설이나 정답부터 확인하는 편이다.' },
-  { domain: 'self', student: '답만 쓰지 않고 풀이 과정을 식으로 정리해서 쓴다.', parent: '답만 쓰지 않고 풀이 과정을 식으로 정리해서 쓴다.' },
-  { domain: 'routine', student: '정해진 요일과 시간에 수학 공부를 한다.', parent: '정해진 요일과 시간에 꾸준히 수학 공부를 한다.' },
-  { domain: 'routine', student: '시험 3~4주 전부터 계획을 세워 준비한다.', parent: '시험 3~4주 전부터 계획을 세워 준비한다.' },
-  { domain: 'routine', reverse: true, student: '숙제는 주로 마감 직전에 몰아서 한다.', parent: '숙제를 주로 마감 직전에 몰아서 한다.' },
+  { domain: 'concept', student: '새 개념을 배우면 공식만 외우지 않고, 공식이 왜 성립하는지 이해하려고 한다.', parent: '아이는 새 개념을 배우면 공식만 외우지 않고, 공식이 왜 성립하는지 이해하려고 한다.' },
+  { domain: 'concept', student: '수업에서 배운 개념을 교재를 보지 않고 내 말로 설명할 수 있다.', parent: '아이는 수업에서 배운 개념을 교재를 보지 않고 자기 말로 설명할 수 있다.' },
+  { domain: 'concept', reverse: true, student: '전에 풀어본 문제와 같은 방법으로 풀 수 있어도, 숫자나 조건이 다르게 제시되면 풀이를 시작하지 못하는 경우가 많다.', parent: '아이는 전에 풀어본 문제와 같은 방법으로 풀 수 있어도, 숫자나 조건이 다르게 제시되면 풀이를 시작하지 못하는 경우가 많다.' },
+  { domain: 'repeat', student: '수업에서 배운 문제를 7일 안에 다시 풀어본다.', parent: '아이는 수업에서 배운 문제를 7일 안에 다시 풀어본다.' },
+  { domain: 'repeat', student: '같은 단원의 중요한 문제를 날짜를 달리해 2번 이상 풀어본다.', parent: '아이는 같은 단원의 중요한 문제를 날짜를 달리해 2번 이상 풀어본다.' },
+  { domain: 'repeat', reverse: true, student: '한 번 맞힌 문제는 풀이 과정을 다시 확인하거나 다시 풀어보지 않는다.', parent: '아이는 한 번 맞힌 문제는 풀이 과정을 다시 확인하거나 다시 풀어보지 않는다.' },
+  { domain: 'wrong', student: '틀린 문제는 해설을 확인한 뒤, 해설을 덮고 다시 혼자 풀어본다.', parent: '아이는 틀린 문제의 해설을 확인한 뒤, 해설을 덮고 다시 혼자 풀어본다.' },
+  { domain: 'wrong', student: "틀린 이유를 '개념을 몰랐음·계산 실수·조건 해석 실수'처럼 구분해 표시하거나 기록한다.", parent: "아이는 틀린 이유를 '개념을 몰랐음·계산 실수·조건 해석 실수'처럼 구분해 표시하거나 기록한다." },
+  { domain: 'wrong', reverse: true, student: '이전에 틀린 문제와 같은 이유로 비슷한 문제를 다시 틀리는 경우가 많다.', parent: '아이는 이전에 틀린 문제와 같은 이유로 비슷한 문제를 다시 틀리는 경우가 많다.' },
+  { domain: 'self', student: '모르는 문제를 만나면 바로 묻지 않고 최소 5분은 혼자 고민한다.', parent: '아이는 모르는 문제를 만나면 바로 묻지 않고 최소 5분은 혼자 고민한다.' },
+  { domain: 'self', reverse: true, student: '풀이가 막히면 5분 동안 시도하기 전에 해설이나 정답부터 확인한다.', parent: '아이는 풀이가 막히면 5분 동안 시도하기 전에 해설이나 정답부터 확인한다.' },
+  { domain: 'self', student: '답만 적지 않고, 답을 얻는 데 필요한 식이나 풀이 순서를 함께 쓴다.', parent: '아이는 답만 적지 않고, 답을 얻는 데 필요한 식이나 풀이 순서를 함께 쓴다.' },
+  { domain: 'routine', student: '매주 정해 둔 요일과 시간에 수학 공부를 한다.', parent: '아이는 매주 정해 둔 요일과 시간에 수학 공부를 한다.' },
+  { domain: 'routine', student: '수학 공부를 시작하기 전에 그날 풀 분량이나 공부 시간을 정한다.', parent: '아이는 수학 공부를 시작하기 전에 그날 풀 분량이나 공부 시간을 정한다.' },
+  { domain: 'routine', reverse: true, student: '제출일이 있는 수학 숙제는 주로 마감 직전에 몰아서 한다.', parent: '아이는 제출일이 있는 수학 숙제를 주로 마감 직전에 몰아서 한다.' },
 ];
 
 const DOMAIN_CONTENT = {
@@ -288,6 +290,7 @@ export function initMathLearningCheck() {
     sessionStorage.setItem(STORAGE_KEY, submissionId);
     const body = {
       kind: 'habit-diagnostic',
+      questionnaireVersion: QUESTIONNAIRE_VERSION,
       respondent: state.respondent,
       grade: state.grade,
       studentName: document.getElementById('habitStudentName').value,
