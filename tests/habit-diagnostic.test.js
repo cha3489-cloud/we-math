@@ -12,7 +12,7 @@ const read = (path) => readFileSync(resolve(root, path), 'utf8');
 
 const validInput = {
   kind: 'habit-diagnostic',
-  questionnaireVersion: 'habit-v2',
+  questionnaireVersion: 'habit-v3',
   respondent: 'parent',
   grade: '중2',
   studentName: ' 김학생 ',
@@ -37,7 +37,7 @@ describe('15-question habit diagnostic intake', () => {
 
   it('validates identity, consent, the exact answer count and answer allowlist', () => {
     expect(validateHabitDiagnosticInput(validInput)).toMatchObject({
-      kind: 'habit-diagnostic', questionnaireVersion: 'habit-v2', respondent: 'parent', grade: '중2',
+      kind: 'habit-diagnostic', questionnaireVersion: 'habit-v3', respondent: 'parent', grade: '중2',
       studentName: '김학생', parentPhone: '01012345678',
       answers: validInput.answers, privacyConsent: true,
     });
@@ -49,7 +49,7 @@ describe('15-question habit diagnostic intake', () => {
     expect(() => validateHabitDiagnosticInput({ ...validInput, privacyConsent: false })).toThrow('개인정보');
     expect(() => validateHabitDiagnosticInput({ ...validInput, respondent: 'unknown' })).toThrow('응답자');
     expect(validateHabitDiagnosticInput({ ...validInput, questionnaireVersion: undefined }).questionnaireVersion).toBe('habit-v1');
-    expect(() => validateHabitDiagnosticInput({ ...validInput, questionnaireVersion: 'habit-v3' })).toThrow('문항 버전');
+    expect(() => validateHabitDiagnosticInput({ ...validInput, questionnaireVersion: 'habit-v4' })).toThrow('문항 버전');
   });
 
   it('scores unknown answers neutrally even on reverse questions', () => {
@@ -81,7 +81,7 @@ describe('15-question habit diagnostic intake', () => {
     expect(page.properties['학년'].select.name).toBe('중학교 2학년');
     expect(page.properties['접수 경로'].select.name).toBe('홈페이지');
     expect(detail).toContain('반복 설계형');
-    expect(detail).toContain('문항 버전: habit-v2');
+    expect(detail).toContain('문항 버전: habit-v3');
     expect(detail).toContain('반복·복습 67');
     expect(detail).toContain('응답: 4,4,1,3,3,2,4,3,1,3,2,3,4,3,1');
     expect(detail).toContain(validInput.submissionId);

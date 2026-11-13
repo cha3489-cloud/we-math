@@ -147,7 +147,7 @@ export type HabitDiagnosticInput = {
 
 export type ValidatedHabitDiagnostic = {
   kind: 'habit-diagnostic';
-  questionnaireVersion: 'habit-v1' | 'habit-v2';
+  questionnaireVersion: 'habit-v1' | 'habit-v2' | 'habit-v3';
   respondent: 'parent' | 'student';
   grade: string;
   studentName: string;
@@ -199,7 +199,7 @@ export function validateHabitDiagnosticInput(input: HabitDiagnosticInput): Valid
   if (String(input.website ?? '').trim()) throw new Error('접수할 수 없습니다.');
   if (input.kind !== 'habit-diagnostic') throw new Error('접수 유형이 올바르지 않습니다.');
   const questionnaireVersion = input.questionnaireVersion ?? 'habit-v1';
-  if (questionnaireVersion !== 'habit-v1' && questionnaireVersion !== 'habit-v2') {
+  if (questionnaireVersion !== 'habit-v1' && questionnaireVersion !== 'habit-v2' && questionnaireVersion !== 'habit-v3') {
     throw new Error('문항 버전이 올바르지 않습니다.');
   }
   if (input.respondent !== 'parent' && input.respondent !== 'student') throw new Error('응답자를 선택해주세요.');
