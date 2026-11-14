@@ -805,8 +805,8 @@ async function closeQuestionEntry(questionId) {
 // ── 출결·보강 운영 ────────────────────────────────────────────────────────
 const attendanceRequestGate = createLatestRequestGate();
 let activeAttendanceNavigation = null;
-const ATTENDANCE_SELECT = 'id,student_id,scheduled_at,status,checked_in_at,checked_out_at,absence_reason,guardian_contact_status,guardian_contacted_at,note,profiles!attendance_records_student_id_fkey(name,suspended_at),makeup_plans(id,status,scheduled_at,completed_at,method,note)';
-const MAKEUP_SELECT = 'id,attendance_id,status,scheduled_at,completed_at,method,note,attendance_records!inner(id,student_id,scheduled_at,status,profiles!attendance_records_student_id_fkey(name,suspended_at))';
+const ATTENDANCE_SELECT = 'id,student_id,scheduled_at,status,checked_in_at,checked_out_at,absence_reason,guardian_contact_status,guardian_contacted_at,note,students!attendance_records_student_id_fkey(name,status),makeup_plans(id,status,scheduled_at,completed_at,method,note)';
+const MAKEUP_SELECT = 'id,attendance_id,status,scheduled_at,completed_at,method,note,attendance_records!inner(id,student_id,scheduled_at,status,students!attendance_records_student_id_fkey(name,status))';
 const attendanceStatusCopy = { scheduled: '예정', present: '출석', late: '지각', absent: '결석', excused: '사유 결석' };
 const makeupStatusCopy = { planned: '예정', completed: '완료', cancelled: '취소' };
 const makeupMethodCopy = { in_person: '대면 보강', video: '영상 보강', assignment: '과제 대체' };
@@ -818,7 +818,7 @@ function dayKey(value) {
   if (Number.isNaN(date.getTime())) return '';
   return [date.getFullYear(), String(date.getMonth() + 1).padStart(2, '0'), String(date.getDate()).padStart(2, '0')].join('-');
 }
-function attendanceProfile(row) { return normalizeRelation(row?.profiles)[0]; }
+function attendanceProfile(row) { return normalizeRelation(row?.students)[0]; }
 function makeupAttendanceRecord(plan) { return normalizeRelation(plan?.attendance_records)[0]; }
 function attendanceStudentName(row) { return attendanceProfile(row)?.name || '학생'; }
 function attendanceDateText(value) { return new Date(value).toLocaleString('ko-KR', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' }); }
@@ -840,9 +840,8 @@ function attendanceOption(row) {
   option.textContent = attendanceStudentName(row) + ' · ' + attendanceDateText(row.scheduled_at);
   return option;
 }
-function renderAttendanceStudentOptions(profiles, roles) {
-  const roleMap = new Map(normalizeRelation(roles).map((row) => [row.user_id, row.role]));
-  const students = normalizeRelation(profiles).filter((profile) => roleMap.get(profile.id) === 'student' && isActiveProfile(profile));
+function renderAttendanceStudentOptions(rows) {
+  const students = normalizeRelation(rows).filter((student) => ['active', 'returning'].includes(student.status));
   byId('attendanceStudent').replaceChildren(...students.map((student) => {
     const option = document.createElement('option');
     option.value = student.id;
@@ -872,13 +871,13 @@ async function refreshAttendanceAfterCommit(message, output, navigation) {
     output.textContent = message + ' 화면 새로고침에는 실패했습니다. 페이지를 새로고침해 주세요.';
   }
 }
-async function updateAttendanceRecord(recordId, patch, message, button, navigation) {
+async function updateAttendanceRecord(recordId, expectedStatus, patch, message, button, navigation) {
   if (!recordId || button?.disabled || !isCurrentAdminNavigation(navigation)) return;
   if (button) button.disabled = true;
   showError(byId('attendanceError'), '');
   let committed = false;
   try {
-    const { data, error } = await supabase.from('attendance_records').update(patch).eq('id', recordId).select('id').single();
+    const { data, error } = await supabase.from('attendance_records').update(patch).eq('id', recordId).eq('status', expectedStatus).select('id').single();
     if (error) throw error;
     if (!data?.id) throw new Error('수정된 출결 기록을 확인하지 못했습니다.');
     committed = true;
@@ -901,7 +900,10 @@ function attendanceActionButton(label, handler) {
 }
 function renderAttendanceOperations(navigation) {
   const today = dayKey(new Date());
-  const actionableRows = attendanceRows.filter((row) => dayKey(row.scheduled_at) === today || attendanceNextAction(row) === 'guardian_contact');
+  const actionableRows = attendanceRows.filter((row) => {
+    const nextAction = attendanceNextAction(row);
+    return dayKey(row.scheduled_at) === today || ['guardian_contact', 'makeup_plan'].includes(nextAction);
+  });
   const cards = actionableRows.map((row) => {
     const card = document.createElement('article'); card.className = 'card attendance-card attendance-' + row.status;
     const heading = document.createElement('h3'); heading.textContent = attendanceStudentName(row);
@@ -919,19 +921,19 @@ function renderAttendanceOperations(navigation) {
     const actions = document.createElement('div'); actions.className = 'attendance-actions';
     if (row.status === 'scheduled') {
       actions.append(
-        attendanceActionButton('출석', (button) => updateAttendanceRecord(row.id, { status: 'present', checked_in_at: new Date().toISOString(), checked_out_at: null }, '출석으로 기록했습니다.', button, navigation)),
-        attendanceActionButton('지각', (button) => updateAttendanceRecord(row.id, { status: 'late', checked_in_at: new Date().toISOString(), checked_out_at: null }, '지각으로 기록했습니다.', button, navigation)),
-        attendanceActionButton('결석', (button) => updateAttendanceRecord(row.id, { status: 'absent', checked_in_at: null, checked_out_at: null }, '결석으로 기록했습니다.', button, navigation)),
-        attendanceActionButton('사유 결석', (button) => updateAttendanceRecord(row.id, { status: 'excused', checked_in_at: null, checked_out_at: null }, '사유 결석으로 기록했습니다.', button, navigation)),
+        attendanceActionButton('출석', (button) => updateAttendanceRecord(row.id, row.status, { status: 'present', checked_in_at: new Date().toISOString(), checked_out_at: null }, '출석으로 기록했습니다.', button, navigation)),
+        attendanceActionButton('지각', (button) => updateAttendanceRecord(row.id, row.status, { status: 'late', checked_in_at: new Date().toISOString(), checked_out_at: null }, '지각으로 기록했습니다.', button, navigation)),
+        attendanceActionButton('결석', (button) => updateAttendanceRecord(row.id, row.status, { status: 'absent', checked_in_at: null, checked_out_at: null }, '결석으로 기록했습니다.', button, navigation)),
+        attendanceActionButton('사유 결석', (button) => updateAttendanceRecord(row.id, row.status, { status: 'excused', checked_in_at: null, checked_out_at: null }, '사유 결석으로 기록했습니다.', button, navigation)),
       );
     }
     const nextAction = attendanceNextAction(row);
     if (nextAction === 'guardian_contact') {
       actions.append(
-        attendanceActionButton('학부모 연락 완료', (button) => updateAttendanceRecord(row.id, {
+        attendanceActionButton('학부모 연락 완료', (button) => updateAttendanceRecord(row.id, row.status, {
           guardian_contact_status: 'contacted', guardian_contacted_at: new Date().toISOString(),
         }, '학부모 연락 완료를 기록했습니다.', button, navigation)),
-        attendanceActionButton('학부모 연락 안 됨', (button) => updateAttendanceRecord(row.id, {
+        attendanceActionButton('학부모 연락 안 됨', (button) => updateAttendanceRecord(row.id, row.status, {
           guardian_contact_status: 'unreachable', guardian_contacted_at: new Date().toISOString(),
         }, '연락 안 됨을 기록했습니다. 재연락 대상을 확인해 주세요.', button, navigation)),
       );
@@ -949,13 +951,13 @@ function renderAttendanceOperations(navigation) {
   byId('attendanceEmpty').hidden = cards.length !== 0;
   renderMakeupAttendanceOptions();
 }
-async function updateMakeupPlan(planId, patch, message, button, navigation) {
+async function updateMakeupPlan(planId, expectedStatus, patch, message, button, navigation) {
   if (!planId || button?.disabled || !isCurrentAdminNavigation(navigation)) return;
   if (button) button.disabled = true;
   showError(byId('attendanceError'), '');
   let committed = false;
   try {
-    const { data, error } = await supabase.from('makeup_plans').update(patch).eq('id', planId).select('id').single();
+    const { data, error } = await supabase.from('makeup_plans').update(patch).eq('id', planId).eq('status', expectedStatus).select('id').single();
     if (error) throw error;
     if (!data?.id) throw new Error('수정된 보강 계획을 확인하지 못했습니다.');
     committed = true;
@@ -980,8 +982,8 @@ function renderMakeupOperations(navigation) {
     if (plan.status === 'planned') {
       const actions = document.createElement('div'); actions.className = 'attendance-actions';
       actions.append(
-        attendanceActionButton('보강 완료', (button) => updateMakeupPlan(plan.id, { status: 'completed', completed_at: new Date().toISOString() }, '보강 완료를 기록했습니다.', button, navigation)),
-        attendanceActionButton('계획 취소', (button) => updateMakeupPlan(plan.id, { status: 'cancelled', completed_at: null }, '보강 계획을 취소했습니다.', button, navigation)),
+        attendanceActionButton('보강 완료', (button) => updateMakeupPlan(plan.id, plan.status, { status: 'completed', completed_at: new Date().toISOString() }, '보강 완료를 기록했습니다.', button, navigation)),
+        attendanceActionButton('계획 취소', (button) => updateMakeupPlan(plan.id, plan.status, { status: 'cancelled', completed_at: null }, '보강 계획을 취소했습니다.', button, navigation)),
       );
       card.append(actions);
     }
@@ -994,10 +996,10 @@ async function settleAttendanceLoad(promise) {
   try { return { data: await promise, error: null }; }
   catch (error) { return { data: null, error }; }
 }
-function fetchAttendanceOperationsPage(rangeStart, rangeEnd) {
+function fetchAttendanceOperationsPage(rangeStart) {
   return async (cursor, pageSize) => {
     let query = supabase.from('attendance_records').select(ATTENDANCE_SELECT)
-      .gte('scheduled_at', rangeStart.toISOString()).lt('scheduled_at', rangeEnd.toISOString())
+      .gte('scheduled_at', rangeStart.toISOString())
       .order('id').limit(pageSize);
     if (cursor !== null) query = query.gt('id', cursor);
     const { data, error } = await query;
@@ -1028,19 +1030,16 @@ async function loadAttendanceOperations(navigation = null) {
   const request = attendanceRequestGate.begin();
   const now = new Date();
   const rangeStart = new Date(now); rangeStart.setDate(rangeStart.getDate() - 60); rangeStart.setHours(0, 0, 0, 0);
-  const rangeEnd = new Date(now); rangeEnd.setDate(rangeEnd.getDate() + 2); rangeEnd.setHours(0, 0, 0, 0);
   const results = await Promise.all([
-    supabase.from('profiles').select('id,name,suspended_at').order('name'),
-    supabase.from('user_roles').select('user_id,role'),
-    settleAttendanceLoad(collectKeysetPages(fetchAttendanceOperationsPage(rangeStart, rangeEnd), REMOTE_PAGE_SIZE)),
+    supabase.from('students').select('id,name,status').order('name'),
+    settleAttendanceLoad(collectKeysetPages(fetchAttendanceOperationsPage(rangeStart), REMOTE_PAGE_SIZE)),
     settleAttendanceLoad(collectKeysetPages(fetchHistoricalAttendanceFollowupPage(rangeStart), REMOTE_PAGE_SIZE)),
     settleAttendanceLoad(collectKeysetPages(fetchMakeupOperationsPage, REMOTE_PAGE_SIZE)),
   ]);
   if (!attendanceRequestGate.isLatest(request) || !isCurrentAdminNavigation(navigation)) return;
   activeAttendanceNavigation = navigation;
-  const [profilesResult, rolesResult, recentAttendanceResult, historicalAttendanceResult, makeupResult] = results;
-  if (profilesResult.error) throw profilesResult.error;
-  if (rolesResult.error) throw rolesResult.error;
+  const [studentsResult, recentAttendanceResult, historicalAttendanceResult, makeupResult] = results;
+  if (studentsResult.error) throw studentsResult.error;
   const backendResults = [recentAttendanceResult, historicalAttendanceResult, makeupResult];
   const backendErrors = backendResults.map((result) => result.error).filter(Boolean);
   if (backendErrors.length) {
@@ -1048,7 +1047,7 @@ async function loadAttendanceOperations(navigation = null) {
       throw backendErrors.find((error) => !isAttendanceBackendMissing(error)) || backendErrors[0];
     }
     attendanceRows = []; makeupRows = [];
-    renderAttendanceStudentOptions(profilesResult.data, rolesResult.data);
+    renderAttendanceStudentOptions(studentsResult.data);
     setAttendanceBackendAvailable(false);
     return;
   }
@@ -1058,7 +1057,7 @@ async function loadAttendanceOperations(navigation = null) {
   ].map((row) => [row.id, row]));
   attendanceRows = [...attendanceById.values()].sort((a, b) => new Date(a.scheduled_at) - new Date(b.scheduled_at));
   makeupRows = normalizeRelation(makeupResult.data).sort((a, b) => new Date(b.scheduled_at) - new Date(a.scheduled_at));
-  renderAttendanceStudentOptions(profilesResult.data, rolesResult.data);
+  renderAttendanceStudentOptions(studentsResult.data);
   setAttendanceBackendAvailable(true);
   renderAttendanceOperations(navigation);
   renderMakeupOperations(navigation);
@@ -1113,7 +1112,7 @@ byId('makeupPlanForm').addEventListener('submit', async (event) => {
     const existing = makeupRows.find((plan) => plan.attendance_id === attendanceId);
     const payload = { status: 'planned', scheduled_at: scheduled.toISOString(), completed_at: null, method, note: String(data.get('note') || '').trim() };
     const result = existing
-      ? await supabase.from('makeup_plans').update(payload).eq('id', existing.id).select('id').single()
+      ? await supabase.from('makeup_plans').update(payload).eq('id', existing.id).eq('status', existing.status).select('id').single()
       : await supabase.from('makeup_plans').insert({ ...payload, attendance_id: attendanceId, created_by: currentAdmin.id, updated_by: currentAdmin.id }).select('id').single();
     if (result.error) throw result.error;
     if (!result.data?.id) throw new Error('저장된 보강 계획을 확인하지 못했습니다.');

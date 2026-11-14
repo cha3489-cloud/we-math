@@ -4,6 +4,7 @@ import { resolve } from 'node:path';
 
 const root = resolve(import.meta.dirname, '..');
 const migrationPath = 'supabase/migrations/20261028000000_attendance_makeup_operations.sql';
+const registryAlignmentPath = 'supabase/migrations/20261114000000_attendance_student_registry_alignment.sql';
 const read = (path) => readFileSync(resolve(root, path), 'utf8');
 const executable = (sql) => sql.split('\n').filter((line) => !line.trim().startsWith('--')).join('\n');
 
@@ -33,6 +34,13 @@ describe('attendance and makeup operations', () => {
     expect(sql).toMatch(/grant update [(][^)]*status[^)]*[)]\s*on table public[.]attendance_records to authenticated/i);
     expect(code).not.toMatch(/grant[^;]*delete[^;]*attendance_records/i);
     expect(code).not.toMatch(/attendance records[^;]*for delete/i);
+  });
+
+  it('aligns attendance ownership to the operational student registry after that registry exists', () => {
+    expect(existsSync(resolve(root, registryAlignmentPath))).toBe(true);
+    const sql = read(registryAlignmentPath);
+    expect(sql).toMatch(/drop constraint attendance_records_student_id_fkey/i);
+    expect(sql).toMatch(/foreign key [(]student_id[)] references public[.]students[(]id[)] on delete restrict/i);
   });
 
   it('stores one guarded makeup plan per absence and preserves an admin-only audit trail', () => {
@@ -67,6 +75,9 @@ describe('attendance and makeup operations', () => {
     expect(sql).toMatch(/attendance events visible to admins[\s\S]*for select to authenticated\s+using [(]public[.]is_admin[(][)][)]/i);
     expect(sql).toMatch(/record_attendance_event[\s\S]*jsonb_build_object/i);
     expect(sql).toMatch(/record_makeup_event[\s\S]*jsonb_build_object/i);
+    expect(sql).toMatch(/record_attendance_event[\s\S]*'before'[\s\S]*to_jsonb[(]old[)][\s\S]*'after'[\s\S]*to_jsonb[(]new[)]/i);
+    expect(sql).toMatch(/record_makeup_event[\s\S]*'before'[\s\S]*to_jsonb[(]old[)][\s\S]*'after'[\s\S]*to_jsonb[(]new[)]/i);
+    expect(sql).toMatch(/validate_attendance_transition[\s\S]*old[.]status = 'scheduled'[\s\S]*new[.]status not in [(]'present', 'late', 'absent', 'excused'[)]/i);
     expect(sql).toMatch(/revoke all on table public[.]attendance_events from public, anon, authenticated/i);
     expect(sql).toMatch(/grant select on table public[.]attendance_events to authenticated/i);
     expect(code).not.toMatch(/grant[^;]*(insert|update|delete)[^;]*attendance_events/i);
@@ -104,6 +115,8 @@ describe('attendance and makeup operations', () => {
     expect(adminJs).toContain('attendanceNextAction');
     expect(adminJs).toContain('학부모 연락 완료');
     expect(adminJs).toContain('학부모 연락 안 됨');
+    expect(adminJs).toContain("supabase.from('students').select('id,name,status')");
+    expect(adminJs).toContain('students!attendance_records_student_id_fkey(name,status)');
 
     const { activateAdminView } = await import('../src/portal/admin-shell.js');
     const { JSDOM } = await import('jsdom');
@@ -141,14 +154,16 @@ describe('attendance and makeup operations', () => {
     expect(adminJs).not.toMatch(/refreshAttendanceAfterCommit[\s\S]{0,160}adminNavigationGate[.]begin[(][)]/);
     expect(adminJs).toMatch(/updateAttendanceRecord[\s\S]*select[(]'id'[)][\s\S]*single[(][)][\s\S]*if [(]!data[?][.]id[)]/);
     expect(adminJs).toMatch(/updateMakeupPlan[\s\S]*select[(]'id'[)][\s\S]*single[(][)][\s\S]*if [(]!data[?][.]id[)]/);
-    expect(adminJs).toMatch(/const actionableRows = attendanceRows[.]filter[\s\S]*dayKey[(]row[.]scheduled_at[)] === today \|\| attendanceNextAction[(]row[)] === 'guardian_contact'/);
+    expect(adminJs).toMatch(/const actionableRows = attendanceRows[.]filter[\s\S]*['"]guardian_contact['"][\s\S]*['"]makeup_plan['"]/);
     expect(adminJs).toContain('collectKeysetPages(fetchAttendanceOperationsPage');
     expect(adminJs).toContain('collectKeysetPages(fetchHistoricalAttendanceFollowupPage');
     expect(adminJs).toContain('collectKeysetPages(fetchMakeupOperationsPage');
     expect(adminJs).toMatch(/new Map[(][\s\S]*recentAttendanceResult[.]data[\s\S]*historicalAttendanceResult[.]data/);
     expect(adminJs).toMatch(/loadAttendanceOperations[(]navigation = null[)][\s\S]*await Promise[.]all[\s\S]*!attendanceRequestGate[.]isLatest[(]request[)] \|\| !isCurrentAdminNavigation[(]navigation[)]/);
-    expect(adminJs).toMatch(/updateAttendanceRecord[(]recordId,[\s\S]*from[(]'attendance_records'[)][.]update[(]patch[)][.]eq[(]'id', recordId[)]/);
-    expect(adminJs).toMatch(/updateMakeupPlan[(]planId,[\s\S]*from[(]'makeup_plans'[)][.]update[(]patch[)][.]eq[(]'id', planId[)]/);
+    expect(adminJs).toMatch(/updateAttendanceRecord[(]recordId, expectedStatus,[\s\S]*from[(]'attendance_records'[)][.]update[(]patch[)][.]eq[(]'id', recordId[)][.]eq[(]'status', expectedStatus[)]/);
+    expect(adminJs).toMatch(/updateMakeupPlan[(]planId, expectedStatus,[\s\S]*from[(]'makeup_plans'[)][.]update[(]patch[)][.]eq[(]'id', planId[)][.]eq[(]'status', expectedStatus[)]/);
+    expect(adminJs).toMatch(/fetchAttendanceOperationsPage[(]rangeStart[)][\s\S]*[.]gte[(]'scheduled_at',[\s\S]*[.]order[(]'id'[)]/);
+    expect(adminJs).not.toMatch(/fetchAttendanceOperationsPage[\s\S]{0,500}[.]lt[(]'scheduled_at'/);
     expect(adminJs).toContain("'처리는 완료됐지만 화면 새로고침에 실패했습니다.'");
   });
 

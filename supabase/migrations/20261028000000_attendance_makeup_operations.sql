@@ -65,6 +65,31 @@ create policy "admins update attendance records"
   using (public.is_admin())
   with check (public.is_admin());
 
+create or replace function public.validate_attendance_transition()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  if old.status = 'scheduled'
+     and new.status is distinct from old.status
+     and new.status not in ('present', 'late', 'absent', 'excused') then
+    raise exception 'invalid attendance transition' using errcode = '23514';
+  end if;
+  if old.status <> 'scheduled'
+     and new.status is distinct from old.status then
+    raise exception 'final attendance status is immutable' using errcode = '23514';
+  end if;
+  return new;
+end;
+$$;
+
+revoke all on function public.validate_attendance_transition() from public, anon, authenticated;
+create trigger validate_attendance_transition
+  before update of status on public.attendance_records
+  for each row execute function public.validate_attendance_transition();
+
 create or replace function public.touch_attendance_record()
 returns trigger
 language plpgsql
@@ -281,10 +306,8 @@ begin
     case when tg_op = 'INSERT' then 'attendance_created' else 'attendance_updated' end,
     auth.uid(),
     jsonb_build_object(
-      'status', new.status,
-      'scheduled_at', new.scheduled_at,
-      'guardian_contact_status', new.guardian_contact_status,
-      'guardian_contacted_at', new.guardian_contacted_at
+      'before', case when tg_op = 'UPDATE' then to_jsonb(old) else null end,
+      'after', to_jsonb(new)
     )
   );
   return new;
@@ -305,10 +328,8 @@ begin
     case when tg_op = 'INSERT' then 'makeup_created' else 'makeup_updated' end,
     auth.uid(),
     jsonb_build_object(
-      'status', new.status,
-      'scheduled_at', new.scheduled_at,
-      'completed_at', new.completed_at,
-      'method', new.method
+      'before', case when tg_op = 'UPDATE' then to_jsonb(old) else null end,
+      'after', to_jsonb(new)
     )
   );
   return new;
