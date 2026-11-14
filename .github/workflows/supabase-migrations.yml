@@ -69,6 +69,7 @@ jobs:
           set -euo pipefail
           npx supabase db push \
             --linked \
+            --include-all \
             --password "$SUPABASE_DB_PASSWORD" \
             --dry-run
 
@@ -82,6 +83,7 @@ jobs:
           fi
           npx supabase db push \
             --linked \
+            --include-all \
             --password "$SUPABASE_DB_PASSWORD"
 
       - name: Next step

@@ -17,6 +17,7 @@ describe('Supabase migration workflow CLI', () => {
     expect(workflow.match(/npx supabase link/g) || []).toHaveLength(1);
     expect(workflow).toMatch(/npx supabase link[\s\S]*--project-ref "\$SUPABASE_PROJECT_REF"[\s\S]*--password "\$SUPABASE_DB_PASSWORD"/);
     expect(workflow.match(/npx supabase db push \\\n\s+--linked/g) || []).toHaveLength(2);
+    expect(workflow.match(/npx supabase db push[\s\S]{0,180}--include-all/g) || []).toHaveLength(2);
     expect(workflow).not.toMatch(/npx supabase db push[\s\S]{0,160}--project-ref/);
     expect(workflow).not.toContain('--skip-pooler');
 
