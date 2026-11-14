@@ -1,7 +1,10 @@
 import {
+  buildHabitDiagnosticNotionPage,
   buildNotionPage,
   submissionMarker,
+  validateHabitDiagnosticInput,
   validateConsultationInput,
+  type ValidatedHabitDiagnostic,
   type ValidatedConsultation,
 } from './domain.ts';
 import { isAllowedOrigin, productionOrigin } from '../_shared/origin.ts';
@@ -146,13 +149,16 @@ Deno.serve(async (request) => {
   const contentLength = Number(request.headers.get('content-length') ?? '0');
   if (contentLength > maxBodyBytes) return response(origin, { error: '요청 내용이 너무 큽니다.' }, 413);
 
-  let input: ValidatedConsultation;
+  let input: ValidatedConsultation | ValidatedHabitDiagnostic;
   try {
     const rawBody = await request.text();
     if (new TextEncoder().encode(rawBody).length > maxBodyBytes) {
       return response(origin, { error: '요청 내용이 너무 큽니다.' }, 413);
     }
-    input = validateConsultationInput(JSON.parse(rawBody));
+    const parsed = JSON.parse(rawBody);
+    input = parsed?.kind === 'habit-diagnostic'
+      ? validateHabitDiagnosticInput(parsed)
+      : validateConsultationInput(parsed);
   } catch (error) {
     const message = error instanceof Error ? error.message : '입력 내용을 확인해주세요.';
     return response(origin, { error: message }, 400);
@@ -217,7 +223,9 @@ Deno.serve(async (request) => {
     const notionResponse = await fetch(notionUrl, {
       method: 'POST',
       headers: notionHeaders(notionKey),
-      body: JSON.stringify(buildNotionPage(databaseId, input)),
+      body: JSON.stringify('answers' in input
+        ? buildHabitDiagnosticNotionPage(databaseId, input)
+        : buildNotionPage(databaseId, input)),
       signal: AbortSignal.timeout(notionTimeoutMs),
     });
     if (!notionResponse.ok) {

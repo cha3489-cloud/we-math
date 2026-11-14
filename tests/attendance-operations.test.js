@@ -185,6 +185,9 @@ describe('attendance and makeup operations', () => {
     expect(isAttendanceBackendMissing({ code: 'PGRST205', message: "Could not find the table 'public.attendance_records'" })).toBe(true);
     expect(isAttendanceBackendMissing(permissionDenied)).toBe(false);
     expect(isAttendanceBackendMissing({ code: '42P01', message: 'relation "public.other_table" does not exist' })).toBe(false);
+    expect(isAttendanceBackendMissing({ code: '42P01', message: 'relation "public.attendance_records_archive" does not exist' })).toBe(false);
+    expect(isAttendanceBackendMissing({ code: 'PGRST205', message: "Could not find the table 'notpublic.makeup_plans'" })).toBe(false);
+    expect(isAttendanceBackendMissing({ code: '42P01', message: 'relation "public.makeup_plans$archive" does not exist' })).toBe(false);
     expect(isAttendanceBackendMissing(null)).toBe(false);
     expect(areAttendanceBackendErrorsMissing([missingAttendance, missingMakeup])).toBe(true);
     expect(areAttendanceBackendErrorsMissing([missingAttendance, permissionDenied])).toBe(false);

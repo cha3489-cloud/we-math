@@ -103,6 +103,7 @@ class GenerateBlogTests(unittest.TestCase):
         rss = (self.root / "public/rss.xml").read_text(encoding="utf-8")
         self.assertEqual(index.count('href="/blog/fraction-learning/"'), 1)
         self.assertEqual(vite.count("'blog/fraction-learning/index.html'"), 1)
+        self.assertIn("resolve(import.meta.dirname, 'blog/fraction-learning/index.html')", vite)
         self.assertIn("// generated-vite-input:fraction-learning:end\n", vite)
         self.assertNotIn("// generated-vite-input:fraction-learning:end main:", vite)
         syntax = subprocess.run(

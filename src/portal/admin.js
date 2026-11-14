@@ -19,8 +19,16 @@ import {
 import { validateInternalNote } from './admin-internal-notes.js';
 import { activateAdminView, bindAdminShell, createAdminNavigationGate, studentSearchMatches } from './admin-shell.js';
 import { areAttendanceBackendErrorsMissing, attendanceNextAction, isAttendanceBackendMissing } from './attendance.js';
+import calendarData from './school-calendar-data.json';
+import { bindSchoolCalendar } from './school-calendar.js';
+import { bindStudentRegistry } from './student-registry.js';
+import { createStudentRegistryRepository } from './student-registry-repository.js';
 
 const byId = (id) => document.getElementById(id);
+bindSchoolCalendar(document, calendarData);
+const studentRegistry = bindStudentRegistry(document, undefined, {
+  repository: createStudentRegistryRepository(supabase),
+});
 const showError = (el, message) => { el.textContent = message || ''; };
 let currentAdmin;
 
@@ -61,8 +69,9 @@ async function switchTab(tab, target = '') {
   const review = tab === 'review';
   const manage = tab === 'manage';
   const questions = tab === 'questions';
+  const learningWorkflow = review || manage || questions;
   activateAdminView(document, tab, target);
-  byId('adminQuickTabs').hidden = dashboard || attendance;
+  byId('adminQuickTabs').hidden = !learningWorkflow;
   byId('noSelection').hidden = !review || Boolean(current);
   byId('tabReview').setAttribute('aria-pressed', String(review));
   byId('tabManage').setAttribute('aria-pressed', String(manage));
@@ -1615,6 +1624,11 @@ async function showAdmin(user) {
   if (profile.must_change_pin) {
     byId('login').hidden = true; byId('logout').hidden = false;
     byId('admin').hidden = true; byId('pinChange').hidden = false; return;
+  }
+  try {
+    await studentRegistry.loadRemote();
+  } catch (registryError) {
+    console.error('학생 운영대장 로드 실패:', registryError.message);
   }
   await switchTab('dashboard');
   await loadQueue();

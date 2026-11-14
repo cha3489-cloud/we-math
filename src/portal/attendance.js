@@ -1,4 +1,8 @@
 const ATTENDANCE_BACKEND_TABLES = ['attendance_records', 'makeup_plans', 'attendance_events'];
+const POSTGRES_IDENTIFIER_CHAR = 'A-Za-z0-9_$';
+const ATTENDANCE_BACKEND_RELATIONS = ATTENDANCE_BACKEND_TABLES.map((table) => (
+  new RegExp(`(?:^|[^${POSTGRES_IDENTIFIER_CHAR}])public[.]${table}(?![${POSTGRES_IDENTIFIER_CHAR}])`)
+));
 
 function relationRows(value) {
   if (Array.isArray(value)) return value.filter(Boolean);
@@ -20,7 +24,7 @@ export function attendanceNextAction(record) {
 export function isAttendanceBackendMissing(error) {
   if (!error || !['42P01', 'PGRST205'].includes(error.code)) return false;
   const message = typeof error.message === 'string' ? error.message : '';
-  return ATTENDANCE_BACKEND_TABLES.some((table) => message.includes(table));
+  return ATTENDANCE_BACKEND_RELATIONS.some((relation) => relation.test(message));
 }
 
 export function areAttendanceBackendErrorsMissing(errors) {

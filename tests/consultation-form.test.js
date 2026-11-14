@@ -21,6 +21,27 @@ describe('consultation form UI', () => {
     expect(consultation).toContain('href="/"');
   });
 
+  it('offers a saved 15-question habit diagnostic and clearly marks Kakao consultation as unavailable until launch', () => {
+    const html = read('consultation/index.html');
+    expect(html).toContain('id="consultation-paths"');
+    expect(html).toContain('id="openMathCheck"');
+    expect(html).toContain('수학 공부 습관 진단');
+    expect(html).toContain('15개 질문');
+    expect(html).toContain('카카오톡 채널 상담');
+    expect(html).toContain('채널 준비 중');
+    expect(html).not.toMatch(/href="https:\/\/pf[.]kakao[.]com\//);
+    expect(html).toContain('id="mathCheckDialog"');
+    expect(html).toContain('aria-modal="true"');
+    expect(html).toContain('id="habitDiagnosticWidget"');
+    expect(html).not.toContain('답변은 전송되거나 저장되지 않습니다');
+  });
+
+  it('keeps an empty toast fully hidden until a status message is shown', () => {
+    const css = read('src/style.css');
+    expect(css).toMatch(/\.toast \{[\s\S]*?opacity: 0;[\s\S]*?visibility: hidden;/);
+    expect(css).toMatch(/\.toast\.show \{[\s\S]*?opacity: 1;[\s\S]*?visibility: visible;/);
+  });
+
   it('collects the five diagnostic fields and explicit privacy consent in a real form', () => {
     const html = read('consultation/index.html');
     expect(html).toContain('<form class="contact-form-card');
@@ -52,14 +73,27 @@ describe('consultation form UI', () => {
     expect(source.indexOf('if (error) throw error')).toBeLessThan(source.indexOf('form.reset();'));
     expect(source).toContain('catch (error)');
     expect(source).toContain('접수되지 않았습니다');
-    expect(source).toContain('전화 상담도 가능합니다');
+    expect(source).toContain('문자를 남겨주세요');
+    expect(source).not.toContain('전화 상담도 가능합니다');
   });
 
-  it('shows a direct phone fallback near the form for parents if online intake is unavailable', () => {
+  it('offers contact times only from 1pm onward', () => {
+    const html = read('consultation/index.html');
+    const select = html.match(/<select id="f-contact-time"[\s\S]*?<\/select>/)?.[0] ?? '';
+    expect(select).not.toContain('오전 9시 ~ 12시');
+    expect(select).not.toContain('점심시간(12시 ~ 1시)');
+    expect(select).toContain('오후 1시 ~ 6시');
+    expect(select).toContain('저녁 6시 이후');
+  });
+
+  it('sets expectations for text-first phone consultation without a daily limit', () => {
     const html = read('consultation/index.html');
     expect(html).toContain('id="consultation-fallback"');
-    expect(html).toContain('href="tel:010-2496-4031"');
-    expect(html).toContain('온라인 접수가 어렵다면');
+    expect(html).toContain('href="sms:010-2496-4031"');
+    expect(html).toContain('1인 원장으로 운영');
+    expect(html).toContain('문자를 남겨주시면 순차적으로 연락드리겠습니다');
+    expect(html).not.toContain('상담 품질을 위해 하루 최대 2회만 진행');
+    expect(html).not.toContain('전화 상담도 가능합니다');
   });
 
   it('uses only Notion-compatible option labels', () => {

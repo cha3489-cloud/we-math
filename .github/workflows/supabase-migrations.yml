@@ -57,11 +57,18 @@ jobs:
             exit 1
           fi
 
+      - name: Link project through the IPv4 pooler
+        run: |
+          set -euo pipefail
+          npx supabase link \
+            --project-ref "$SUPABASE_PROJECT_REF" \
+            --password "$SUPABASE_DB_PASSWORD"
+
       - name: Show pending migrations (dry run)
         run: |
           set -euo pipefail
           npx supabase db push \
-            --project-ref "$SUPABASE_PROJECT_REF" \
+            --linked \
             --password "$SUPABASE_DB_PASSWORD" \
             --dry-run
 
@@ -74,7 +81,7 @@ jobs:
             exit 1
           fi
           npx supabase db push \
-            --project-ref "$SUPABASE_PROJECT_REF" \
+            --linked \
             --password "$SUPABASE_DB_PASSWORD"
 
       - name: Next step
