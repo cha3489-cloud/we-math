@@ -52,7 +52,7 @@ describe('attendance and makeup operations', () => {
     expect(sql).toMatch(/status text not null default 'planned'[\s\S]*check [(]status in [(]'planned', 'completed', 'cancelled'[)]/i);
     expect(sql).toMatch(/method text not null[\s\S]*in_person[\s\S]*video[\s\S]*assignment/i);
     expect(sql).toMatch(/guardian_contact_status text[\s\S]*contacted[\s\S]*unreachable/i);
-    expect(sql).toMatch(/validate_makeup_plan[\s\S]*attendance_contact_status is null or attendance_contact_status not in [(]'contacted', 'unreachable'[)]/i);
+    expect(sql).toMatch(/validate_makeup_plan[\s\S]*attendance_contact_status is distinct from 'contacted'/i);
     expect(sql).toMatch(/validate_makeup_plan[\s\S]*attendance_status not in [(]'absent', 'excused'[)]/i);
     expect(sql).toMatch(/old[.]status = 'completed'[\s\S]*new[.]status is distinct from old[.]status[\s\S]*new[.]scheduled_at is distinct from old[.]scheduled_at[\s\S]*new[.]completed_at is distinct from old[.]completed_at[\s\S]*new[.]method is distinct from old[.]method/i);
     expect(sql).toMatch(/old[.]status = 'cancelled'[\s\S]*new[.]status = 'completed'/i);
@@ -78,6 +78,11 @@ describe('attendance and makeup operations', () => {
     expect(sql).toMatch(/record_attendance_event[\s\S]*'before'[\s\S]*to_jsonb[(]old[)][\s\S]*'after'[\s\S]*to_jsonb[(]new[)]/i);
     expect(sql).toMatch(/record_makeup_event[\s\S]*'before'[\s\S]*to_jsonb[(]old[)][\s\S]*'after'[\s\S]*to_jsonb[(]new[)]/i);
     expect(sql).toMatch(/validate_attendance_transition[\s\S]*old[.]status = 'scheduled'[\s\S]*new[.]status not in [(]'present', 'late', 'absent', 'excused'[)]/i);
+    expect(sql).toMatch(/validate_attendance_transition[\s\S]*old[.]guardian_contact_status = 'contacted'[\s\S]*new[.]guardian_contact_status is distinct from old[.]guardian_contact_status/i);
+    expect(sql).toMatch(/prepare_attendance_insert[\s\S]*new[.]id := gen_random_uuid[(][)][\s\S]*new[.]created_at := now[(][)]/i);
+    expect(sql).toMatch(/prepare_makeup_insert[\s\S]*new[.]id := gen_random_uuid[(][)][\s\S]*new[.]created_at := now[(][)]/i);
+    expect(sql).toMatch(/reject_attendance_event_change[\s\S]*raise exception 'attendance audit rows are immutable'/i);
+    expect(sql).toMatch(/before update or delete on public[.]attendance_events/i);
     expect(sql).toMatch(/revoke all on table public[.]attendance_events from public, anon, authenticated/i);
     expect(sql).toMatch(/grant select on table public[.]attendance_events to authenticated/i);
     expect(code).not.toMatch(/grant[^;]*(insert|update|delete)[^;]*attendance_events/i);
@@ -154,16 +159,19 @@ describe('attendance and makeup operations', () => {
     expect(adminJs).not.toMatch(/refreshAttendanceAfterCommit[\s\S]{0,160}adminNavigationGate[.]begin[(][)]/);
     expect(adminJs).toMatch(/updateAttendanceRecord[\s\S]*select[(]'id'[)][\s\S]*single[(][)][\s\S]*if [(]!data[?][.]id[)]/);
     expect(adminJs).toMatch(/updateMakeupPlan[\s\S]*select[(]'id'[)][\s\S]*single[(][)][\s\S]*if [(]!data[?][.]id[)]/);
-    expect(adminJs).toMatch(/const actionableRows = attendanceRows[.]filter[\s\S]*['"]guardian_contact['"][\s\S]*['"]makeup_plan['"]/);
+    expect(adminJs).toMatch(/const actionableRows = attendanceRows[.]filter[\s\S]*['"]check_in['"][\s\S]*['"]guardian_contact['"][\s\S]*['"]makeup_plan['"]/);
     expect(adminJs).toContain('collectKeysetPages(fetchAttendanceOperationsPage');
     expect(adminJs).toContain('collectKeysetPages(fetchHistoricalAttendanceFollowupPage');
     expect(adminJs).toContain('collectKeysetPages(fetchMakeupOperationsPage');
     expect(adminJs).toMatch(/new Map[(][\s\S]*recentAttendanceResult[.]data[\s\S]*historicalAttendanceResult[.]data/);
     expect(adminJs).toMatch(/loadAttendanceOperations[(]navigation = null[)][\s\S]*await Promise[.]all[\s\S]*!attendanceRequestGate[.]isLatest[(]request[)] \|\| !isCurrentAdminNavigation[(]navigation[)]/);
     expect(adminJs).toMatch(/updateAttendanceRecord[(]recordId, expectedStatus,[\s\S]*from[(]'attendance_records'[)][.]update[(]patch[)][.]eq[(]'id', recordId[)][.]eq[(]'status', expectedStatus[)]/);
+    expect(adminJs).toContain("query = query.is('guardian_contact_status', expectedContactStatus)");
     expect(adminJs).toMatch(/updateMakeupPlan[(]planId, expectedStatus,[\s\S]*from[(]'makeup_plans'[)][.]update[(]patch[)][.]eq[(]'id', planId[)][.]eq[(]'status', expectedStatus[)]/);
     expect(adminJs).toMatch(/fetchAttendanceOperationsPage[(]rangeStart[)][\s\S]*[.]gte[(]'scheduled_at',[\s\S]*[.]order[(]'id'[)]/);
     expect(adminJs).not.toMatch(/fetchAttendanceOperationsPage[\s\S]{0,500}[.]lt[(]'scheduled_at'/);
+    expect(adminJs).toMatch(/fetchHistoricalAttendanceFollowupPage[\s\S]*[.]in[(]'status', \['scheduled', 'absent', 'excused'\][)]/);
+    expect(adminJs).toMatch(/loadAttendanceOperations[(]navigation = null[)][\s\S]*activeAttendanceNavigation = null[\s\S]*replaceChildren[(][)]/);
     expect(adminJs).toContain("'처리는 완료됐지만 화면 새로고침에 실패했습니다.'");
   });
 
@@ -176,7 +184,7 @@ describe('attendance and makeup operations', () => {
     expect(attendanceNextAction({ status: 'absent', guardian_contact_status: null, guardian_contacted_at: null, makeup_plans: [] })).toBe('guardian_contact');
     expect(attendanceNextAction({ status: 'absent', guardian_contact_status: null, guardian_contacted_at: '2026-10-28T10:00:00Z', makeup_plans: [] })).toBe('guardian_contact');
     expect(attendanceNextAction({ status: 'absent', guardian_contact_status: 'contacted', guardian_contacted_at: '2026-10-28T10:00:00Z', makeup_plans: [] })).toBe('makeup_plan');
-    expect(attendanceNextAction({ status: 'absent', guardian_contact_status: 'unreachable', guardian_contacted_at: '2026-10-28T10:00:00Z', makeup_plans: [] })).toBe('makeup_plan');
+    expect(attendanceNextAction({ status: 'absent', guardian_contact_status: 'unreachable', guardian_contacted_at: '2026-10-28T10:00:00Z', makeup_plans: [] })).toBe('guardian_contact');
     expect(attendanceNextAction({
       status: 'absent', guardian_contact_status: 'contacted',
       guardian_contacted_at: '2026-10-28T10:00:00Z', makeup_plans: [{ status: 'planned' }],

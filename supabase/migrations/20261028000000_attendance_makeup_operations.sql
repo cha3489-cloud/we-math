@@ -1,8 +1,7 @@
 -- Sequence Math attendance source of truth.
 -- Repository-only until the production migration gate is approved.
--- Attendance is an academy business record: once a profile has records, physical
--- account deletion is intentionally blocked by ON DELETE RESTRICT. Use the
--- existing suspend/reactivate workflow instead of deleting the profile.
+-- Attendance is an academy business record linked to the operational students ledger.
+-- Account profiles remain only for authenticated actor attribution.
 
 create table public.attendance_records (
   id uuid primary key default gen_random_uuid(),
@@ -81,14 +80,52 @@ begin
      and new.status is distinct from old.status then
     raise exception 'final attendance status is immutable' using errcode = '23514';
   end if;
+  if old.guardian_contact_status = 'contacted'
+     and new.guardian_contact_status is distinct from old.guardian_contact_status then
+    raise exception 'completed guardian contact is immutable' using errcode = '23514';
+  end if;
+  if old.guardian_contact_status = 'unreachable'
+     and new.guardian_contact_status is distinct from old.guardian_contact_status
+     and new.guardian_contact_status is distinct from 'contacted' then
+    raise exception 'unreachable contact may only advance to contacted' using errcode = '23514';
+  end if;
+  if old.guardian_contact_status is not null
+     and new.guardian_contact_status is not distinct from old.guardian_contact_status
+     and new.guardian_contacted_at is distinct from old.guardian_contacted_at then
+    raise exception 'guardian contact timestamp is immutable without a new outcome' using errcode = '23514';
+  end if;
   return new;
 end;
 $$;
 
 revoke all on function public.validate_attendance_transition() from public, anon, authenticated;
 create trigger validate_attendance_transition
-  before update of status on public.attendance_records
+  before update of status, guardian_contact_status, guardian_contacted_at on public.attendance_records
   for each row execute function public.validate_attendance_transition();
+
+create or replace function public.prepare_attendance_insert()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  if auth.uid() is null or not public.is_admin() then
+    raise exception 'admin required' using errcode = '42501';
+  end if;
+  new.id := gen_random_uuid();
+  new.created_by := auth.uid();
+  new.updated_by := auth.uid();
+  new.created_at := now();
+  new.updated_at := now();
+  return new;
+end;
+$$;
+
+revoke all on function public.prepare_attendance_insert() from public, anon, authenticated;
+create trigger prepare_attendance_insert
+  before insert on public.attendance_records
+  for each row execute function public.prepare_attendance_insert();
 
 create or replace function public.touch_attendance_record()
 returns trigger
@@ -167,6 +204,30 @@ create policy "admins update makeup plans"
   using (public.is_admin())
   with check (public.is_admin());
 
+create or replace function public.prepare_makeup_insert()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  if auth.uid() is null or not public.is_admin() then
+    raise exception 'admin required' using errcode = '42501';
+  end if;
+  new.id := gen_random_uuid();
+  new.created_by := auth.uid();
+  new.updated_by := auth.uid();
+  new.created_at := now();
+  new.updated_at := now();
+  return new;
+end;
+$$;
+
+revoke all on function public.prepare_makeup_insert() from public, anon, authenticated;
+create trigger prepare_makeup_insert
+  before insert on public.makeup_plans
+  for each row execute function public.prepare_makeup_insert();
+
 create or replace function public.validate_makeup_plan()
 returns trigger
 language plpgsql
@@ -191,7 +252,7 @@ begin
   if attendance_status not in ('absent', 'excused') then
     raise exception 'makeup requires an absence' using errcode = '23514';
   end if;
-  if attendance_contact_status is null or attendance_contact_status not in ('contacted', 'unreachable') then
+  if attendance_contact_status is distinct from 'contacted' then
     raise exception 'guardian contact outcome required' using errcode = '23514';
   end if;
   if tg_op = 'UPDATE'
@@ -292,6 +353,22 @@ create policy "attendance events visible to admins"
   on public.attendance_events
   for select to authenticated
   using (public.is_admin());
+
+create or replace function public.reject_attendance_event_change()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  raise exception 'attendance audit rows are immutable' using errcode = '42501';
+end;
+$$;
+
+revoke all on function public.reject_attendance_event_change() from public, anon, authenticated;
+create trigger reject_attendance_event_change
+  before update or delete on public.attendance_events
+  for each row execute function public.reject_attendance_event_change();
 
 create or replace function public.record_attendance_event()
 returns trigger

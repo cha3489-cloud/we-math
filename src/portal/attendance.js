@@ -13,7 +13,7 @@ export function attendanceNextAction(record) {
   if (!record || typeof record !== 'object') return null;
   if (record.status === 'scheduled') return 'check_in';
   if (record.status !== 'absent' && record.status !== 'excused') return null;
-  if (!record.guardian_contact_status) return 'guardian_contact';
+  if (!record.guardian_contact_status || record.guardian_contact_status === 'unreachable') return 'guardian_contact';
 
   const plans = relationRows(record.makeup_plans);
   if (plans.some((plan) => plan?.status === 'completed')) return null;
