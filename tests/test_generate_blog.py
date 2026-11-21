@@ -116,6 +116,7 @@ class GenerateBlogTests(unittest.TestCase):
         self.assertEqual(sitemap.count("<loc>https://sequencemath.co.kr/blog/fraction-learning/</loc>"), 1)
         self.assertEqual(rss.count("<link>https://sequencemath.co.kr/blog/fraction-learning/</link>"), 1)
         self.assertEqual(rss.count("<guid isPermaLink=\"true\">https://sequencemath.co.kr/blog/fraction-learning/</guid>"), 1)
+        self.assertIn("<lastBuildDate>Fri, 07 Aug 2026 09:00:00 +0900</lastBuildDate>", rss)
 
         first = self.snapshots()
         self.assertEqual(self.generator.generate(self.root, copy.deepcopy(RECORD)), [])

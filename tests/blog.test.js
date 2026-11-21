@@ -112,6 +112,36 @@ describe('시퀀스 수학 블로그', () => {
     expect(pngSize('public/img/blog/homework-routine-recovery-og.png')).toEqual({ width: 1200, height: 630 });
   });
 
+  it('예비중1 겨울방학 글을 목록·빌드·사이트맵과 실제 이미지 3장으로 공개한다', () => {
+    const slug = '2026-11-21-pre-middle-winter-math-basics';
+    const url = `https://sequencemath.co.kr/blog/${slug}/`;
+    const inputs = config.build.rollupOptions.input;
+    const blog = read('blog/index.html');
+    const sitemap = read('public/sitemap.xml');
+    const rss = read('public/rss.xml');
+
+    expect(inputs).toHaveProperty('blog20261121PreMiddleWinterMathBasics');
+    expect(blog).toContain(`/blog/${slug}/`);
+    expect(blog).toContain('병점 예비중1, 겨울방학에 꼭 챙겨야 할 3가지');
+    expect(sitemap).toContain(url);
+    expect(rss).toContain(url);
+
+    const article = read(`blog/${slug}/index.html`);
+    expect(article).toContain('"@type": "BlogPosting"');
+    expect(article).toContain('초등 5·6학년');
+    expect(article).toContain('식 쓰기');
+    expect(article).toContain('자기 말로 설명');
+    expect(article).not.toContain('두 달만 연습하면');
+    expect(article).not.toContain('완전히 이해했을 때');
+    expect(article.match(/<figure class="article-image">/g)).toHaveLength(3);
+    for (const index of [1, 2, 3]) {
+      const image = `public/img/blog/${slug}-inline-0${index}.png`;
+      expect(article).toContain(`/img/blog/${slug}-inline-0${index}.png`);
+      expect(existsSync(resolve(root, image))).toBe(true);
+      expect(pngSize(image)).toEqual({ width: 1200, height: 630 });
+    }
+  });
+
   it('생성 글의 이미지 삽입 마커를 승인된 PNG figure 이미지로 렌더링한다', () => {
     const generatedSlugs = [
       '2026-08-08-algebraic-expression-parentheses',
