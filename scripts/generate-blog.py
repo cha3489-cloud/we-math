@@ -304,7 +304,8 @@ def update_rss(text: str, record: dict[str, Any]) -> str:
       <pubDate>{pub_date}</pubDate>
     </item>'''
     fallback = rf"\s*<item>.*?<link>{re.escape(url)}</link>.*?</item>\s*"
-    return replace_generated(text, "rss-item", slug, block, fallback, r'<atom:link\b[^>]*/>')
+    updated = replace_generated(text, "rss-item", slug, block, fallback, r'<atom:link\b[^>]*/>')
+    return re.sub(r"<lastBuildDate>.*?</lastBuildDate>", f"<lastBuildDate>{pub_date}</lastBuildDate>", updated, count=1)
 
 
 def atomic_write(path: Path, content: str) -> None:
