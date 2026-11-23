@@ -1,0 +1,75 @@
+name: Deploy operations edge functions
+
+# Deploys attendance-code and parent-message-dispatch only after a merge to main (or an explicit
+# manual dispatch), and only after the full test suite and Deno type checks pass.
+# ATTENDANCE_CODE_HMAC_SECRET is configured out-of-band as a Supabase function secret; this
+# workflow checks that it exists by name and never sets, reads, or prints its value.
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'supabase/functions/attendance-code/**'
+      - 'supabase/functions/parent-message-dispatch/**'
+      - 'supabase/functions/_shared/**'
+      - 'supabase/config.toml'
+      - '.github/workflows/supabase-operations-functions.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: supabase-operations-functions
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Run test suite
+        run: npm test
+      - name: Type-check edge functions
+        run: |
+          set -euo pipefail
+          npx --yes deno check supabase/functions/attendance-code/index.ts
+          npx --yes deno check supabase/functions/parent-message-dispatch/index.ts
+
+  deploy:
+    needs: verify
+    runs-on: ubuntu-latest
+    environment: production
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_PROJECT_REF: tcpitbsrfouwmfkkdqhg
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Check deployment credential
+        run: |
+          test -n "${SUPABASE_ACCESS_TOKEN:-}" || { echo 'Missing SUPABASE_ACCESS_TOKEN' >&2; exit 1; }
+      - name: Require the attendance HMAC function secret by name
+        run: |
+          set -euo pipefail
+          names="$(npx supabase secrets list --project-ref "$SUPABASE_PROJECT_REF" -o json | jq -r '.[].name')"
+          if ! grep -qx 'ATTENDANCE_CODE_HMAC_SECRET' <<<"$names"; then
+            echo 'ATTENDANCE_CODE_HMAC_SECRET is not configured; refusing to deploy attendance-code' >&2
+            exit 1
+          fi
+      - name: Deploy attendance-code
+        run: |
+          npx supabase functions deploy attendance-code \
+            --project-ref "$SUPABASE_PROJECT_REF"
+      - name: Deploy parent-message-dispatch
+        run: |
+          npx supabase functions deploy parent-message-dispatch \
+            --project-ref "$SUPABASE_PROJECT_REF"

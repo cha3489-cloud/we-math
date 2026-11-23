@@ -1,0 +1,45 @@
+@font-face { font-family: 'IBM Plex Sans KR'; font-style: normal; font-weight: 400; font-display: swap; src: url('/portal/fonts/ibm-plex-sans-kr-400.woff2') format('woff2'); }
+@font-face { font-family: 'IBM Plex Sans KR'; font-style: normal; font-weight: 500; font-display: swap; src: url('/portal/fonts/ibm-plex-sans-kr-500.woff2') format('woff2'); }
+@font-face { font-family: 'IBM Plex Sans KR'; font-style: normal; font-weight: 600; font-display: swap; src: url('/portal/fonts/ibm-plex-sans-kr-600.woff2') format('woff2'); }
+@font-face { font-family: 'IBM Plex Sans KR'; font-style: normal; font-weight: 700; font-display: swap; src: url('/portal/fonts/ibm-plex-sans-kr-700.woff2') format('woff2'); }
+:root { color-scheme: light; font-family: 'IBM Plex Sans KR', system-ui, sans-serif; }
+*, *::before, *::after { box-sizing: border-box; }
+body.plan-app { margin: 0; min-height: 100vh; background: #f3f6fa; color: #14213d; line-height: 1.55; }
+.plan { max-width: 760px; margin: 0 auto; padding: 24px 20px 40px; }
+.plan button, .plan input { font-family: inherit; }
+.plan-header { display: flex; align-items: center; gap: 12px; }
+.plan-header h1 { font-size: 1.35rem; margin: 0; overflow-wrap: anywhere; }
+.brand-mark { display: inline-grid; place-items: center; flex: 0 0 auto; width: 40px; height: 40px; border-radius: 12px; background: #173f3a; color: #fff; font-weight: 700; }
+.plan-panel { margin-top: 20px; background: #fff; border-radius: 20px; padding: 24px; box-shadow: 0 8px 24px rgba(20, 33, 61, .08); }
+.plan-panel h2 { font-size: 1.5rem; margin: 0 0 16px; overflow-wrap: anywhere; }
+.plan-panel p { overflow-wrap: anywhere; }
+#planSetupForm { display: grid; gap: 10px; }
+#planSetupForm input { width: 100%; min-height: 52px; font-size: 1rem; padding: 10px 12px; border: 1px solid #c4ceda; border-radius: 12px; }
+.plan-primary, .plan-secondary { min-height: 52px; padding: 0 20px; font-size: 1.05rem; font-weight: 600; border-radius: 14px; border: 0; cursor: pointer; }
+.plan-primary { background: #173f3a; color: #fff; }
+.plan-secondary { background: #e4e9f0; color: #14213d; }
+.plan-error { color: #a4262c; min-height: 1.5em; margin: 0; }
+.plan-status { padding: 20px; border-radius: 16px; background: #eef4f2; }
+.plan-status[data-state=error] { background: #fff6e8; }
+.plan-status-title { font-size: 1.25rem; font-weight: 700; margin: 0 0 6px; }
+.plan-status-detail { margin: 0; color: #3d4a5c; }
+.plan-items { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; counter-reset: plan; }
+.plan-item { display: grid; gap: 4px; padding: 16px 18px; border: 1px solid #dde4ec; border-radius: 16px; background: #fbfcfd; counter-increment: plan; }
+.plan-item-kind { font-size: .9rem; font-weight: 600; color: #1d6b5f; }
+.plan-item-kind::before { content: counter(plan) '. '; }
+.plan-item-title { font-size: 1.2rem; overflow-wrap: anywhere; }
+.plan-item-body { margin: 0; color: #3d4a5c; white-space: pre-wrap; overflow-wrap: anywhere; }
+.plan-item-state { justify-self: start; font-size: .9rem; font-weight: 600; padding: 2px 10px; border-radius: 999px; background: #e3f1ec; color: #1d6b5f; }
+.plan-item[data-item-type=note] { background: #f6f7fb; }
+.plan-note { color: #6a4b12; margin: 12px 0 0; }
+.plan-note:empty { display: none; }
+.plan-device-menu { margin-top: 28px; color: #4a5568; }
+.plan-device-menu summary { cursor: pointer; min-height: 44px; display: flex; align-items: center; }
+.plan button:focus-visible, .plan input:focus-visible, .plan summary:focus-visible, .plan h1:focus-visible { outline: 4px solid #f2a541; outline-offset: 3px; }
+@media (max-width: 480px) {
+  .plan { padding: 16px 12px 32px; }
+  .plan-panel { padding: 18px 16px; border-radius: 16px; }
+  .plan-panel h2 { font-size: 1.3rem; }
+  .plan-primary, .plan-secondary { width: 100%; }
+  .plan-item { padding: 14px; }
+}

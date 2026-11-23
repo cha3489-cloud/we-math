@@ -328,3 +328,26 @@ body.admin-authenticated::before,body.admin-authenticated::after{display:none}
 @media(max-width:640px){
   .admin-authenticated .portal-header{top:9px;right:10px}.academy-topbar{min-height:58px;padding-right:105px}.academy-breadcrumb{font-size:12px}.academy-live-badge{display:none}.academy-page-heading h1{font-size:23px}.admin-authenticated .admin-stat{min-height:88px;padding:14px}.admin-authenticated .admin-stat span{font-size:24px}.admin-authenticated .today-flow-grid{grid-template-columns:1fr}.attendance-cards{grid-template-columns:1fr}.attendance-list-section{padding:14px}.attendance-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.attendance-actions button{width:100%;min-width:0}.admin-authenticated .operations-surface{margin-inline:12px}.operations-notice{align-items:flex-start;flex-direction:column;gap:3px}.operations-toolbar{align-items:flex-start;flex-direction:column}.operations-toolbar-actions{width:100%;flex-wrap:wrap}.operations-toolbar-actions input,.operations-toolbar-actions select{flex:1;min-width:120px}.calendar-filter-bar{grid-template-columns:1fr}.calendar-weekdays,.school-calendar-grid{min-width:700px}.calendar-empty{min-height:300px}.school-calendar-list-item{grid-template-columns:1fr;gap:5px}.school-calendar-list-item a{justify-self:start}.calendar-school-scope{grid-template-columns:1fr}.form-two{grid-template-columns:1fr}.operations-table-wrap{overflow:visible}.operations-table{display:block;min-width:0}.operations-table thead{display:none}.operations-table tbody{display:block}.operations-table tr{display:grid;margin:0;border:0}.operations-table td{display:block}.student-registry-table td{display:grid;grid-template-columns:112px minmax(0,1fr);align-items:center;gap:10px;padding:9px 12px}.student-registry-table td::before{content:attr(data-label);color:#64748b;font-size:11px;font-weight:700}.student-registry-table td:last-child button{width:100%}.operations-empty-row td{height:300px;padding:60px 20px}
 }
+
+/* 오늘 출결 현황 (입구 출석 태블릿) */
+.today-ops { margin: 0 0 24px; }
+.today-ops-counts { display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 8px; margin: 12px 0; }
+.today-ops-stat { display: grid; gap: 2px; text-align: left; min-height: 64px; }
+.today-ops-stat[aria-pressed=true] { outline: 2px solid currentColor; }
+.today-ops-count { font-size: 1.4rem; font-weight: 800; }
+.today-ops-list article h4 { margin: 0 0 4px; overflow-wrap: anywhere; }
+.today-ops-list p, .today-ops-secret { overflow-wrap: anywhere; }
+.today-ops-secret:not(:empty) { padding: 10px 12px; border-radius: 10px; background: #fff4e0; font-weight: 700; }
+.today-ops-action, .today-ops-plan { display: grid; gap: 10px; margin: 12px 0; }
+.today-ops-options, .today-ops-plan-items { margin: 6px 0; padding-left: 20px; }
+.today-ops-progress { display: grid; gap: 6px; }
+.today-ops-progress h5 { margin: 0; }
+.today-ops-progress-form { display: flex; flex-wrap: wrap; gap: 8px; align-items: end; }
+.today-ops-progress-form label { flex: 1 1 220px; }
+.today-ops-setup form { display: grid; gap: 8px; margin-top: 12px; }
+.today-ops-more { justify-self: start; margin-top: 8px; }
+#todayOpsScheduleList li { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+#todayOpsDeviceList li { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; overflow-wrap: anywhere; }
+.today-ops-device.device-kind-learning-plan { border-left: 3px solid #0369a1; padding-left: 6px; }
+#todayOpsDeviceAssignSelect { max-width: 100%; }
+.today-ops-template-body { white-space: pre-wrap; overflow-wrap: anywhere; margin: 4px 0; font: inherit; }
