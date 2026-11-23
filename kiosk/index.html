@@ -1,0 +1,38 @@
+<!doctype html><html lang=ko><head><meta charset=UTF-8><meta name=viewport content='width=device-width, initial-scale=1, viewport-fit=cover'><meta name=robots content=noindex><meta name=theme-color content=#173f3a><title>출석 | 시퀀스 수학</title></head><body class=kiosk-app><main class=kiosk>
+<header class=kiosk-header><span class=brand-mark aria-hidden=true>S</span><h1>시퀀스 수학 출석</h1></header>
+
+<section id=kioskSetup class=kiosk-panel hidden aria-labelledby=kioskSetupTitle>
+  <h2 id=kioskSetupTitle>출석 기기 등록</h2>
+  <p>관리자 화면에서 발급한 기기 등록 코드를 한 번만 입력하세요. 학생 명단과 출석번호는 이 기기에 저장하지 않습니다.</p>
+  <form id=kioskSetupForm novalidate>
+    <label>기기 등록 코드<input id=kioskSetupToken autocomplete=off spellcheck=false inputmode=text required></label>
+    <button type=submit class=kiosk-primary>등록</button>
+    <p id=kioskSetupError class=kiosk-error role=alert></p>
+  </form>
+</section>
+
+<section id=kioskChoice class=kiosk-panel aria-labelledby=kioskChoiceTitle>
+  <h2 id=kioskChoiceTitle>먼저 업무를 선택해 주세요</h2>
+  <div class=kiosk-choice-grid>
+    <button id=kioskCheckIn type=button class="kiosk-choice kiosk-choice-in" data-action=check_in>등원하기</button>
+    <button id=kioskCheckOut type=button class="kiosk-choice kiosk-choice-out" data-action=check_out>하원하기</button>
+  </div>
+</section>
+
+<section id=kioskKeypadPanel class=kiosk-panel hidden aria-labelledby=kioskModeTitle>
+  <h2 id=kioskModeTitle>6자리 번호를 눌러주세요</h2>
+  <output id=kioskCodeDisplay class=kiosk-code tabindex=-1 aria-live=polite aria-label="입력한 자리 수">○○○○○○</output>
+  <div id=kioskKeypad class=kiosk-keypad role=group aria-label="출석번호 숫자 키패드"></div>
+  <div class=kiosk-actions>
+    <button id=kioskBack type=button class=kiosk-secondary>처음으로</button>
+    <button id=kioskSubmit type=button class=kiosk-primary disabled>확인</button>
+  </div>
+</section>
+
+<section id=kioskResult class=kiosk-panel hidden role=status aria-live=assertive>
+  <h2 id=kioskResultTitle></h2>
+  <p id=kioskResultDetail class=kiosk-result-detail></p>
+  <p id=kioskResultHint class=kiosk-result-hint></p>
+  <button id=kioskResultDone type=button class=kiosk-secondary>처음으로</button>
+</section>
+</main><script type=module src=/src/kiosk/main.js></script></body></html>
