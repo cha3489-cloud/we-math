@@ -9,6 +9,12 @@
     <xhtml:link rel="alternate" hreflang="ko" href="https://sequencemath.co.kr/" />
   </url>
   <url>
+    <loc>https://sequencemath.co.kr/tuition/</loc>
+    <lastmod>2026-11-27</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
     <loc>https://sequencemath.co.kr/blog/</loc>
     <lastmod>2026-08-06</lastmod>
     <changefreq>weekly</changefreq>
