@@ -7,6 +7,9 @@ export const legacyHomepageAssetAliases = Object.freeze({
   'assets/analytics-CCXdMH2W.css': 'analytics.css',
   'assets/analytics-DWUTgIc7.js': 'analytics.js',
   'assets/main-aJufcXEs.js': 'main.js',
+  'assets/analytics-B_2EYieq.css': 'analytics.css',
+  'assets/analytics-CVS_znIt.js': 'analytics.js',
+  'assets/main-CkfseJab.js': 'main.js',
 });
 
 export function inlineHomepageCss(html, stylesheetHref, css) {
