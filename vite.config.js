@@ -1,6 +1,8 @@
 import { defineConfig } from 'vite';
 import { resolve } from 'node:path';
-export default defineConfig({ root: '.', base: './', build: { outDir: 'dist', emptyOutDir: true, rollupOptions: { input: {
+import { homepageAssetResilience } from './scripts/homepage-asset-resilience.js';
+
+export default defineConfig({ root: '.', base: './', plugins: [homepageAssetResilience()], build: { outDir: 'dist', emptyOutDir: true, rollupOptions: { input: {
 // generated-vite-input:2026-11-21-pre-middle-winter-math-basics:start
 blog20261121PreMiddleWinterMathBasics: resolve(import.meta.dirname, 'blog/2026-11-21-pre-middle-winter-math-basics/index.html'),
 // generated-vite-input:2026-11-21-pre-middle-winter-math-basics:end
