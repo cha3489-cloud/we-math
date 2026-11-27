@@ -189,10 +189,10 @@ ul, ol { list-style: none; }
 }
 .btn-white:hover { opacity: .88; transform: translateY(-1px); }
 
-/* 스크롤 리빌 */
+/* 스크롤 리빌 — 인앱 브라우저에서 JS가 막혀도 본문은 기본 표시 */
 .reveal {
-  opacity: 0;
-  transform: translateY(24px);
+  opacity: 1;
+  transform: none;
   transition: opacity .6s ease, transform .6s ease;
 }
 .reveal.visible { opacity: 1; transform: none; }
