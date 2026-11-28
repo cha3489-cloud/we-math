@@ -4,6 +4,7 @@ import './tablet.css';
 import { invokeAuthenticated, isMissingFeedbackSourceColumn, supabase } from '../portal/client.js';
 import { validateLoginInput, validatePin, authErrorMessage, createLatestRequestGate, STATUS_META, assignmentStatus, assessImageQuality } from '../portal/domain.js';
 import { currentUserOrNull, signIn, signOut } from '../auth.js';
+import { createLearningPlanController } from './learning-plan-view.js';
 import {
   todaySections, todaySummary, totalAssignmentCount, dueLabel, applyKeypadInput, maskPin, greeting, dailyQuote, formatElapsedSeconds,
   assignmentDetail, submissionSummaryLabel, findAssignment,
@@ -759,7 +760,17 @@ async function loadToday(user) {
   currentAssignments = result.data || [];
   renderToday(profile, currentAssignments);
   applyRoute();
+  loadLearningPlan();
 }
+
+// 관리자 화면과 같은 daily_learning_plans 스냅샷을 서버 함수로만 읽는다.
+// 로그아웃 뒤 늦게 끝난 제출/조회는 이전 학생 계획을 다시 채우지 못한다.
+const learningPlan = createLearningPlanController(document, {
+  loadPlan: () => supabase.rpc('student_today_learning_plan'),
+  submitItem: (itemId) => supabase.rpc('student_submit_learning_item', { p_item_id: itemId }),
+  currentUser: () => currentUserId,
+});
+function loadLearningPlan() { return learningPlan.load(); }
 
 // 로그인된 상태에서만 hash 경로를 해석한다. 없는 과제를 가리키면 오늘 화면으로 되돌린다.
 function applyRoute() {
@@ -998,6 +1009,8 @@ byId('pinChangeForm').addEventListener('submit', async (event) => {
 
 // ── 로그아웃 / 세션 복구 ─────────────────────────────────────────────────
 byId('logout').addEventListener('click', async () => {
+  // Invalidate in-flight plan reads/submits and remove prior-student content before any await.
+  learningPlan.reset();
   currentAssignments = [];
   currentUserId = null;
   currentDetailId = null;

@@ -19,15 +19,20 @@ import {
 import { validateInternalNote } from './admin-internal-notes.js';
 import { activateAdminView, bindAdminShell, createAdminNavigationGate, studentSearchMatches } from './admin-shell.js';
 import { areAttendanceBackendErrorsMissing, attendanceNextAction, isAttendanceBackendMissing } from './attendance.js';
+import { bindTodayOperations } from './kiosk-operations.js';
 import calendarData from './school-calendar-data.json';
 import { bindSchoolCalendar } from './school-calendar.js';
 import { bindStudentRegistry } from './student-registry.js';
 import { createStudentRegistryRepository } from './student-registry-repository.js';
+import { createAttendanceCodeIssuer } from './attendance-code.js';
 
 const byId = (id) => document.getElementById(id);
 bindSchoolCalendar(document, calendarData);
+// Attendance numbers are issued only through the authenticated attendance-code Edge Function.
+const issueAttendanceCode = createAttendanceCodeIssuer(invokeAuthenticated);
 const studentRegistry = bindStudentRegistry(document, undefined, {
   repository: createStudentRegistryRepository(supabase),
+  issueAttendanceCode,
 });
 const showError = (el, message) => { el.textContent = message || ''; };
 let currentAdmin;
@@ -57,12 +62,29 @@ const adminNavigationGate = createAdminNavigationGate();
 function isCurrentAdminNavigation(navigation) {
   return navigation === null || adminNavigationGate.isLatest(navigation);
 }
+// 오늘 할 일 상단: 입구 출석·미처리 후속·알림 실패·보강 초안 (같은 대상 집합에서 집계)
+let todayOperations = null;
+let todayOperationsNavigation = null;
+function refreshTodayOperations(navigation) {
+  todayOperationsNavigation = navigation;
+  if (!todayOperations) {
+    todayOperations = bindTodayOperations(document, {
+      client: supabase,
+      issueAttendanceCode,
+      isCurrent: () => isCurrentAdminNavigation(todayOperationsNavigation),
+    });
+    return todayOperations.ready;
+  }
+  return todayOperations.refresh();
+}
 function updateTodayFlow() {
   byId('todayFlowReviewCount').textContent = String(operationsSummary.counts.submitted) + '건';
   byId('todayFlowManageCount').textContent = '후속 ' + operationsSummary.actionItems.length + '건 · 학생 ' + operationsSummary.studentItems.length + '명';
   byId('todayFlowQuestionsCount').textContent = String(questionOpenCount) + '건';
 }
 async function switchTab(tab, target = '') {
+  studentRegistry.clearSecret();
+  todayOperations?.clearSecret();
   const navigation = adminNavigationGate.begin();
   const dashboard = tab === 'dashboard';
   const attendance = tab === 'attendance';
@@ -77,6 +99,7 @@ async function switchTab(tab, target = '') {
   byId('tabManage').setAttribute('aria-pressed', String(manage));
   byId('tabQuestions').setAttribute('aria-pressed', String(questions));
   try {
+    if (dashboard) await refreshTodayOperations(navigation);
     if (attendance) await loadAttendanceOperations(navigation);
     if (manage) await Promise.all([loadUsers(), loadWorkflows(), loadOperationsSummary()]);
     if (questions) await loadQuestionInbox();
@@ -1671,7 +1694,20 @@ byId('pinChangeForm').addEventListener('submit', async (event) => {
     form.reset(); await showAdmin(result.user);
   } catch (error) { showError(output, authErrorMessage(error)); } finally { button.disabled = false; }
 });
-byId('logout').addEventListener('click', async () => { await signOut(); location.reload(); });
+// Tear down realtime channels and polling before the admin session ends.
+// The DOM bindings stay attached, so the instance is not re-created after teardown; both
+// callers end the page (logout reloads, non-bfcache pagehide unloads).
+function teardownTodayOperations() { todayOperations?.destroy(); }
+// One-time attendance numbers never survive navigation, logout or any pagehide (bfcache included).
+function clearAttendanceSecrets() {
+  studentRegistry.clearSecret();
+  todayOperations?.clearSecret();
+}
+window.addEventListener('pagehide', (event) => {
+  clearAttendanceSecrets();
+  if (!event.persisted) teardownTodayOperations();
+});
+byId('logout').addEventListener('click', async () => { clearAttendanceSecrets(); teardownTodayOperations(); await signOut(); location.reload(); });
 
 try {
   const currentUser = await currentUserOrNull();

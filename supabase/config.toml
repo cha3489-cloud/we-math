@@ -416,6 +416,11 @@ enabled = true
 [functions.admin-users]
 verify_jwt = false
 
+# Public kiosk op uses only the publishable key; the admin issue op verifies the JWT and
+# is_admin() inside the function with a user-scoped client.
+[functions.attendance-code]
+verify_jwt = false
+
 [functions.change-pin]
 verify_jwt = false
 
@@ -423,4 +428,7 @@ verify_jwt = false
 verify_jwt = false
 
 [functions.notion-learning-sync]
+verify_jwt = false
+
+[functions.parent-message-dispatch]
 verify_jwt = false

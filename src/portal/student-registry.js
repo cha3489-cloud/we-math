@@ -97,6 +97,10 @@ export function bindStudentRegistry(document, initialStudents = TEST_STUDENTS, o
   const rows = document.getElementById('studentRegistryRows');
   if (!rows) return null;
   const repository = options.repository || null;
+  const issueAttendanceCode = typeof options.issueAttendanceCode === 'function' ? options.issueAttendanceCode : null;
+  const codeSection = document.getElementById('studentRegistryAttendanceCode');
+  const issueCodeButton = document.getElementById('studentRegistryIssueCode');
+  const codeSecret = document.getElementById('studentRegistryCodeSecret');
   const search = document.getElementById('studentRegistrySearch');
   const statusFilter = document.getElementById('studentRegistryStatus');
   const count = document.getElementById('studentRegistryCount');
@@ -118,6 +122,8 @@ export function bindStudentRegistry(document, initialStudents = TEST_STUDENTS, o
     mode: 'fixture',
     pending: Promise.resolve(),
     loadGeneration: 0,
+    orphanSecret: false,
+    secretEpoch: 0,
   };
 
   const setFixtureMode = (copy = '홍길동1·2·3은 기능 검증용 가상 학생입니다. 실제 정보가 아니며 새로고침하면 초기화됩니다.') => {
@@ -136,10 +142,33 @@ export function bindStudentRegistry(document, initialStudents = TEST_STUDENTS, o
     if (newButton) newButton.disabled = false;
   };
 
+  // The plaintext attendance number is shown once, outside the roster, and cleared on any navigation.
+  // The raw number never goes to the general status message; without a secret container it is not shown.
+  // Clearing also bumps secretEpoch so every in-flight issuance response is discarded on arrival.
+  const clearCodeSecret = () => {
+    state.secretEpoch += 1;
+    if (codeSecret) codeSecret.textContent = '';
+    state.orphanSecret = false;
+  };
+  const showCodeSecret = (student, code) => {
+    if (!codeSecret) return false;
+    codeSecret.textContent = `${student?.name || '학생'} 출석번호: ${code} · 학생에게 직접 전달하세요. 이 화면을 벗어나면 다시 볼 수 없습니다.`;
+    return true;
+  };
+  const syncCodeSection = () => {
+    const canIssue = Boolean(state.mode === 'persistent' && state.formMode === 'edit' && state.selectedId);
+    if (issueCodeButton) issueCodeButton.disabled = !canIssue;
+    if (!codeSection) return;
+    // orphanSecret: the code was issued but the roster refresh failed, so no saved detail is selectable.
+    codeSection.hidden = !(canIssue || state.orphanSecret);
+  };
+
   const closeDetail = () => {
     state.selectedId = null;
     state.formMode = 'edit';
     detail.hidden = true;
+    clearCodeSecret();
+    syncCodeSection();
   };
 
   const populateForm = (student) => {
@@ -168,6 +197,8 @@ export function bindStudentRegistry(document, initialStudents = TEST_STUDENTS, o
     populateForm(student);
     if (submitButton) submitButton.textContent = state.mode === 'persistent' ? '학생 정보 저장' : '테스트 정보 수정';
     detail.hidden = false;
+    clearCodeSecret();
+    syncCodeSection();
   };
 
   const openCreate = () => {
@@ -187,6 +218,8 @@ export function bindStudentRegistry(document, initialStudents = TEST_STUDENTS, o
     }
     if (submitButton) submitButton.textContent = '학생 등록';
     detail.hidden = false;
+    clearCodeSecret();
+    syncCodeSection();
   };
 
   const render = () => {
@@ -250,29 +283,100 @@ export function bindStudentRegistry(document, initialStudents = TEST_STUDENTS, o
     }
   };
 
+  const issueFor = async (studentId) => {
+    if (!issueAttendanceCode) throw new Error('출석번호 발급 기능이 연결되지 않았습니다.');
+    return issueAttendanceCode(studentId);
+  };
+  const reason = (error) => error?.message || '알 수 없는 오류';
+
+  // onLoaded runs after the list arrives but before replaceFromServer clears (and re-epochs) the secret,
+  // so a caller can tell whether an outside clearSecret happened while the request was in flight.
+  const refreshList = async (onLoaded = () => {}) => {
+    try {
+      const students = await repository.list();
+      onLoaded();
+      setPersistentMode();
+      replaceFromServer(students);
+      return true;
+    } catch {
+      return false;
+    }
+  };
+
   const savePersistent = async (mode, targetId, payload) => {
+    clearCodeSecret();
+    syncCodeSection();
+    const epoch = state.secretEpoch;
     if (submitButton) submitButton.disabled = true;
     try {
-      if (mode === 'create') await repository.create(payload);
-      else await repository.update(targetId, payload);
-      try {
-        const students = await repository.list();
-        setPersistentMode();
-        replaceFromServer(students);
-        message.textContent = mode === 'create' ? '학생을 등록했습니다.' : '학생 정보를 수정했습니다.';
-      } catch (refreshError) {
-        message.textContent = `${mode === 'create' ? '등록' : '수정'}은 완료됐지만 목록 새로고침에 실패했습니다. 페이지를 새로고침해 주세요.`;
+      if (mode !== 'create') {
+        await repository.update(targetId, payload);
+        message.textContent = await refreshList()
+          ? '학생 정보를 수정했습니다.'
+          : '수정은 완료됐지만 목록 새로고침에 실패했습니다. 페이지를 새로고침해 주세요.';
+        return;
+      }
+      const createdId = await repository.create(payload);
+      // Registration is committed at this point. Code issuance is a separate step whose failure
+      // must be reported as a partial success, never hidden and never rolled into "저장 실패".
+      let issued = null;
+      let issueError = null;
+      try { issued = await issueFor(createdId); } catch (error) { issueError = error; }
+      let current = epoch === state.secretEpoch;
+      const refreshed = await refreshList(() => { current = current && epoch === state.secretEpoch; });
+      // Navigation/logout/pagehide (clearSecret) or another intent superseded this one: the number was
+      // issued server-side but must never reach any DOM, and stale success/failure copy is not posted.
+      if (!current || (!refreshed && epoch !== state.secretEpoch)) return;
+      const created = refreshed ? state.students.find((student) => student.id === createdId) : null;
+      if (created) openDetail(created.id);
+      const refreshNote = refreshed ? '' : ' 목록 새로고침에 실패했습니다. 페이지를 새로고침해 주세요.';
+      if (issued) {
+        const shown = showCodeSecret(created || payload, issued.code);
+        if (shown && !created) { state.orphanSecret = true; syncCodeSection(); }
+        message.textContent = shown
+          ? `학생을 등록하고 첫 출석번호를 발급했습니다.${refreshNote}`
+          : `학생을 등록하고 첫 출석번호를 발급했지만 이 화면에 표시할 수 없습니다. 학생 상세에서 재발급해 주세요.${refreshNote}`;
+      } else {
+        message.textContent = `학생은 등록됐지만 출석번호 발급에 실패했습니다. 학생 상세의 '출석번호 발급' 버튼으로 다시 발급해 주세요. (${reason(issueError)})${refreshNote}`;
       }
     } catch (error) {
-      message.textContent = `학생 정보를 저장하지 못했습니다: ${error?.message || '알 수 없는 오류'}`;
+      message.textContent = `학생 정보를 저장하지 못했습니다: ${reason(error)}`;
     } finally {
       if (submitButton) submitButton.disabled = false;
+    }
+  };
+
+  const issueFromDetail = async () => {
+    const student = state.mode === 'persistent' && state.formMode === 'edit'
+      ? state.students.find((entry) => entry.id === state.selectedId)
+      : null;
+    if (!student) return;
+    if (issueCodeButton) issueCodeButton.disabled = true;
+    clearCodeSecret();
+    const epoch = state.secretEpoch;
+    // Any clearSecret (navigation/logout/pagehide), detail change or newer issuance bumps the epoch;
+    // a response for a superseded intent writes nothing — no number, no stale success/failure copy.
+    const isCurrent = () => epoch === state.secretEpoch && state.selectedId === student.id;
+    message.textContent = '';
+    try {
+      const issued = await issueFor(student.id);
+      if (!isCurrent()) return;
+      showCodeSecret(student, issued.code);
+      message.textContent = issued.issue_kind === 'rotated'
+        ? '출석번호를 재발급했습니다. 이전 번호는 즉시 폐기됐습니다.'
+        : '출석번호를 발급했습니다.';
+    } catch (error) {
+      if (!isCurrent()) return;
+      message.textContent = `출석번호를 발급하지 못했습니다. 다시 시도해 주세요. (${reason(error)})`;
+    } finally {
+      if (isCurrent()) syncCodeSection();
     }
   };
 
   search.addEventListener('input', render);
   statusFilter.addEventListener('change', render);
   if (newButton) newButton.addEventListener('click', openCreate);
+  if (issueCodeButton) issueCodeButton.addEventListener('click', () => { state.pending = issueFromDetail(); });
   form.addEventListener('submit', (event) => {
     event.preventDefault();
     const mode = state.formMode;
@@ -299,6 +403,7 @@ export function bindStudentRegistry(document, initialStudents = TEST_STUDENTS, o
     render,
     openDetail,
     loadRemote,
+    clearSecret: () => { clearCodeSecret(); syncCodeSection(); },
     whenIdle: () => state.pending,
   };
 }

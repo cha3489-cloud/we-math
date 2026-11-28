@@ -42,6 +42,80 @@
       </header>
       <div class=academy-page-heading><div><h1 id=adminViewTitle>오늘 할 일</h1><p id=adminViewDescription>실제 제출·재풀이·질문 데이터에서 지금 처리할 항목만 봅니다.</p></div></div>
       <section id=adminDashboard>
+    <section id=todayOpsSection class=today-ops aria-labelledby=todayOpsTitle>
+      <div class=action-heading><div><p class=eyebrow>TODAY · ENTRANCE KIOSK</p><h3 id=todayOpsTitle>오늘 출결 현황</h3><p class=meta>입구 출석 태블릿·수동 처리·학부모 알림을 같은 대상 기준으로 집계합니다. 지난 날짜의 미처리 업무도 함께 표시합니다.</p></div><button id=todayOpsRefresh type=button class="secondary small">새로고침</button></div>
+      <p id=todayOpsNotice class=attendance-backend-notice role=status hidden>출석 태블릿·알림 DB 적용 전입니다. 기존 출결 기록은 아래에서 그대로 사용할 수 있습니다.</p>
+      <p id=todayOpsError class=error role=alert></p>
+      <p id=todayOpsResult role=status aria-live=polite></p>
+      <p id=todayOpsSecret class=today-ops-secret role=status aria-live=polite></p>
+      <div id=todayOpsCounts class=today-ops-counts role=group aria-label="오늘 출결 집계"></div>
+      <div id=todayOpsList class="cards attendance-cards today-ops-list" aria-live=polite></div>
+      <p id=todayOpsEmpty class=meta hidden>선택한 항목에 해당하는 학생이 없습니다.</p>
+      <button id=todayOpsMore type=button class="secondary small today-ops-more" hidden>더 보기</button>
+      <form id=todayOpsActionForm class="panel today-ops-action" hidden novalidate>
+        <h4 id=todayOpsActionTitle></h4>
+        <label id=todayOpsTimeLabel><span id=todayOpsTimeCaption>실제 시각</span><input id=todayOpsTime type=datetime-local></label>
+        <label id=todayOpsCategoryLabel>사유 분류<select id=todayOpsCategory><option value="">선택 안 함</option><option value=medical>병원·건강</option><option value=family>가정 사정</option><option value=school>학교 일정</option><option value=other>기타</option></select></label>
+        <label id=todayOpsReasonLabel><span id=todayOpsReasonCaption>사유</span><input id=todayOpsReason maxlength=300></label>
+        <div class=attendance-actions><button id=todayOpsActionSubmit type=submit>저장</button><button id=todayOpsActionCancel type=button class=secondary>취소</button></div>
+      </form>
+      <form id=todayOpsDeviceAssign class="panel today-ops-action" hidden novalidate aria-labelledby=todayOpsDeviceAssignTitle>
+        <h4 id=todayOpsDeviceAssignTitle></h4>
+        <p class=meta>학생 계정이 없는 학생만 학원 전용 학습계획 태블릿으로 오늘 발행된 계획을 봅니다(읽기 전용). 출석번호는 로그인에 쓰지 않습니다. 하원·수업 취소·기기 해지 시 자동으로 해제됩니다.</p>
+        <label>학습계획 태블릿<select id=todayOpsDeviceAssignSelect></select></label>
+        <p id=todayOpsDeviceAssignEmpty class=meta hidden>사용할 수 있는 학습계획 태블릿이 없습니다. ‘수업 생성·출석 기기 등록’에서 먼저 등록해 주세요.</p>
+        <div class=attendance-actions><button id=todayOpsDeviceAssignSubmit type=submit>배정</button><button id=todayOpsDeviceAssignCancel type=button class=secondary>취소</button></div>
+      </form>
+      <section id=todayOpsPlanPanel class="panel today-ops-plan" hidden aria-labelledby=todayOpsPlanTitle>
+        <h4 id=todayOpsPlanTitle>학습계획</h4>
+        <div id=todayOpsPlanCurrent></div>
+        <div id=todayOpsPlanDraft></div>
+        <div class=attendance-actions><button id=todayOpsPlanPublish type=button>최신 초안 발행(원장 확인)</button><button id=todayOpsPlanRegenerate type=button class=secondary>자동 초안 다시 만들기</button><button id=todayOpsPlanApprove type=button class=secondary>새 진도 시작 승인</button><button id=todayOpsPlanClose type=button class=secondary>닫기</button></div>
+        <section class=today-ops-progress aria-labelledby=todayOpsProgressTitle>
+          <h5 id=todayOpsProgressTitle>다음 진도</h5>
+          <div id=todayOpsProgressCurrent></div>
+          <form id=todayOpsProgressForm class=today-ops-progress-form novalidate><label>다음 진도 추가<input id=todayOpsProgressInput maxlength=200 autocomplete=off></label><button type=submit class=secondary>대기열에 추가</button></form>
+          <details id=todayOpsProgressMore><summary>이후 대기 진도</summary><ol id=todayOpsProgressList class=today-ops-plan-items></ol></details>
+        </section>
+        <details id=todayOpsPlanManual class=today-ops-setup><summary>초안 직접 작성</summary>
+          <label>새 초안 <span class=optional>(한 줄에 하나 · 숙제:/재풀이:/이월:/진도:/매쓰플랫:/메모:)</span><textarea id=todayOpsPlanLines maxlength=3000></textarea></label>
+          <div class=attendance-actions><button id=todayOpsPlanSave type=button class=secondary>초안 저장</button></div>
+        </details>
+      </section>
+      <details id=todayOpsSchedules class=today-ops-setup><summary>정기 시간표 (오늘·내일 수업 자동 생성)</summary>
+        <p class=meta>요일·시각은 한국시간 기준입니다. 5분마다 오늘·내일 수업과 재원생 출결 예정이 자동으로 만들어집니다. 수정은 아직 만들어지지 않은 날짜부터 적용됩니다.</p>
+        <ul id=todayOpsScheduleList class=today-ops-plan-items></ul>
+        <p id=todayOpsScheduleEmpty class=meta hidden>등록된 정기 시간표가 없습니다.</p>
+        <form id=todayOpsScheduleForm novalidate><h4>시간표 추가·수정</h4>
+          <label>반<select id=todayOpsScheduleGroup required></select></label>
+          <div class=form-two><label>요일<select id=todayOpsScheduleWeekday required><option value=1>월</option><option value=2>화</option><option value=3>수</option><option value=4>목</option><option value=5>금</option><option value=6>토</option><option value=7>일</option></select></label><label>시작 시각<input id=todayOpsScheduleStart type=time step=60 required></label></div>
+          <div class=form-two><label>수업 시간(분)<input id=todayOpsScheduleDuration type=number min=15 max=360 value=90 required></label><label>정원<input id=todayOpsScheduleCapacity type=number min=1 max=100 value=8></label></div>
+          <div class=form-two><label>지각 기준(분)<input id=todayOpsScheduleLate type=number min=0 max=120 value=10></label><label>미확인 기준(분)<input id=todayOpsScheduleMissing type=number min=0 max=180 value=15></label></div>
+          <div class=form-two><label>적용 시작일<input id=todayOpsScheduleFrom type=date required></label><label>적용 종료일 <span class=optional>(선택)</span><input id=todayOpsScheduleTo type=date></label></div>
+          <div class=attendance-actions><button id=todayOpsScheduleSubmit type=submit>시간표 추가</button><button id=todayOpsScheduleCancelEdit type=button class=secondary hidden>수정 취소</button></div>
+        </form>
+        <p class=meta>자동 실행이 멈췄을 때만 사용하세요. 실행 기록이 남습니다.</p>
+        <button id=todayOpsRunTick type=button class="secondary small">지금 시간표 반영·미처리 점검</button>
+      </details>
+      <details id=todayOpsSetup class=today-ops-setup><summary>수업 생성·출석 기기 등록</summary>
+        <form id=todayOpsSessionForm novalidate><h4>수업 회차 만들기</h4>
+          <label>반<select id=todayOpsSessionGroup required></select></label>
+          <div class=form-two><label>시작<input id=todayOpsSessionStart type=datetime-local required></label><label>종료<input id=todayOpsSessionEnd type=datetime-local required></label></div>
+          <label>정원<input id=todayOpsSessionCapacity type=number min=1 max=100 value=8></label>
+          <button type=submit>수업 회차 저장</button></form>
+        <form id=todayOpsDeviceForm novalidate><h4>입구 출석 태블릿 등록</h4>
+          <label>기기 이름<input id=todayOpsDeviceName maxlength=60 required></label>
+          <button type=submit>등록 코드 발급</button>
+          <output id=todayOpsDeviceToken class=today-ops-secret></output></form>
+        <form id=todayOpsLearningDeviceForm novalidate><h4>학습계획 태블릿 등록</h4>
+          <p class=meta>학원 전용 태블릿만 등록하세요. 발급된 코드는 한 번만 표시되며, 그 태블릿에서 /plan/ 화면을 열어 붙여 넣습니다. 학생 계정이 있는 학생은 기존처럼 전화번호+PIN으로 로그인합니다.</p>
+          <label>기기 이름<input id=todayOpsLearningDeviceName maxlength=60 required></label>
+          <button type=submit>등록 코드 발급</button>
+          <output id=todayOpsLearningDeviceToken class=today-ops-secret></output></form>
+        <section aria-labelledby=todayOpsDeviceListTitle><h4 id=todayOpsDeviceListTitle>등록된 기기</h4><ul id=todayOpsDeviceList class=today-ops-plan-items></ul><p id=todayOpsDeviceListEmpty class=meta hidden>등록된 기기가 없습니다.</p></section>
+        <section aria-labelledby=todayOpsTemplatesTitle><h4 id=todayOpsTemplatesTitle>학부모 알림 템플릿 승인</h4><p class=meta>승인한 템플릿만 자동 발송 대기열에 들어갑니다. 실제 카카오 발송은 아직 연결되지 않았으며 테스트(dry-run)로만 처리됩니다.</p><ul id=todayOpsTemplates class=today-ops-plan-items></ul></section>
+      </details>
+    </section>
   <section class="workspace-header"><div><p class="portal-kicker">TODAY'S WORKSPACE</p><h1>오늘 확인할 학생</h1><p>검토할 제출과 후속 조치가 필요한 학생을 한눈에 확인합니다.</p></div><div class="admin-stats"><button id=statPrincipalCheck type=button class=admin-stat><span id=principalCheckCount>0</span><small>원장 확인 필요</small></button><button id=statSubmitted type=button class=admin-stat><span id=queueCount>0</span><small>검토 대기</small></button><button id=statRevision type=button class=admin-stat><span id=revisionCount>0</span><small>수정 대기</small></button><button id=statOverdue type=button class=admin-stat><span id=overdueCount>0</span><small>미제출 지연</small></button><button id=statQuestions type=button class=admin-stat><span id=questionCount>0</span><small>질문 미답변</small></button></div></section>
   <section id=adminTodayFlow class=admin-today-flow aria-labelledby=adminTodayFlowTitle><div><p class=eyebrow>ONE-TAP ROUTINE</p><h2 id=adminTodayFlowTitle>오늘 운영 동선</h2><p class=meta>수업 전에는 이 순서대로만 눌러도 필요한 화면으로 이동합니다.</p></div><div class=today-flow-grid><button id=todayFlowReview type=button class=today-flow-card><span>1. 제출 검토</span><strong id=todayFlowReviewCount>0건</strong><small>가장 오래된 제출부터 처리</small></button><button id=todayFlowManage type=button class=today-flow-card><span>2. 학생별 상태</span><strong id=todayFlowManageCount>후속 0건 · 학생 0명</strong><small>수정·미제출·원장확인 묶어보기</small></button><button id=todayFlowQuestions type=button class=today-flow-card><span>3. 질문 답변</span><strong id=todayFlowQuestionsCount>0건</strong><small>미답변 질문만 먼저 확인</small></button></div></section>
       </section>
@@ -95,6 +169,12 @@
           <label class=check><input name=isTestData type=checkbox> 가상 테스트 학생으로 등록</label>
           <button id=studentRegistrySubmit type=submit>테스트 정보 수정</button><p id=studentRegistryPersistenceHelp class=prototype-help>현재 브라우저 안에서만 변경됩니다. 새로고침하면 초기화됩니다.</p>
         </form>
+        <section id=studentRegistryAttendanceCode class=student-attendance-code hidden aria-labelledby=studentRegistryAttendanceCodeTitle>
+          <h3 id=studentRegistryAttendanceCodeTitle>입구 출석번호</h3>
+          <p class=prototype-help>등원·하원 키오스크용 6자리 번호입니다. 학습 태블릿 로그인(전화번호+PIN)과는 별개입니다. 새로 발급하면 이전 번호는 즉시 폐기됩니다.</p>
+          <button id=studentRegistryIssueCode type=button class="secondary small">출석번호 발급 · 재발급</button>
+          <p id=studentRegistryCodeSecret class=today-ops-secret role=status aria-live=polite></p>
+        </section>
       </aside>
     </div>
   </section>
