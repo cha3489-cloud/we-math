@@ -84,10 +84,29 @@ describe('admin today operations', () => {
     $(document, 'todayOpsActionForm').dispatchEvent(new document.defaultView.Event('submit', { cancelable: true }));
     await flush();
     const call = calls.find((c) => c[0] === 'admin_record_manual_arrival');
-    expect(call[1]).toEqual({ p_attendance_id: 'r1', p_arrived_at: new Date('2099-11-16T16:20').toISOString(), p_reason: '태블릿 네트워크 장애' });
+    expect(call[1]).toEqual({ p_attendance_id: 'r1', p_arrived_at: '2099-11-16T07:20:00.000Z', p_reason: '태블릿 네트워크 장애' });
     expect(calls.filter((c) => c[0] === 'admin_today_operations')).toHaveLength(2);
     expect($(document, 'todayOpsResult').textContent).toBe('수동 등원을 기록했습니다.');
     expect($(document, 'todayOpsActionForm').hidden).toBe(true);
+  });
+
+  it('reads and fills datetime-local fields as Asia/Seoul regardless of the browser time zone', async () => {
+    const previousTz = process.env.TZ;
+    process.env.TZ = 'America/Los_Angeles';
+    try {
+      const { document, calls } = setup({ rpc: { admin_record_manual_arrival: { data: { status: 'late' }, error: null } } });
+      await flush();
+      document.querySelector('[data-bucket="missing"]').click();
+      [...document.querySelectorAll('#todayOpsList button')].find((b) => b.textContent === '수동 등원').click();
+      expect($(document, 'todayOpsTime').value).toBe('2099-11-16T16:30');
+      $(document, 'todayOpsTime').value = '2099-11-16T16:20';
+      $(document, 'todayOpsReason').value = '태블릿 네트워크 장애';
+      $(document, 'todayOpsActionForm').dispatchEvent(new document.defaultView.Event('submit', { cancelable: true }));
+      await flush();
+      expect(calls.find((c) => c[0] === 'admin_record_manual_arrival')[1].p_arrived_at).toBe('2099-11-16T07:20:00.000Z');
+    } finally {
+      if (previousTz === undefined) delete process.env.TZ; else process.env.TZ = previousTz;
+    }
   });
 
   it('restores focus to the trigger when the action form is cancelled with Escape', async () => {

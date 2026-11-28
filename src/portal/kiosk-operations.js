@@ -57,9 +57,14 @@ function kstDay(date) {
   const kst = new Date(date.getTime() + 9 * 60 * 60 * 1000);
   return kst.toISOString().slice(0, 10);
 }
+// datetime-local values are wall-clock text. The academy runs on Asia/Seoul (UTC+9, no DST), so
+// they are always read and written as KST, never as the browser's time zone.
 function localInputValue(date) {
-  const pad = (n) => String(n).padStart(2, '0');
-  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+  return new Date(date.getTime() + 9 * 60 * 60 * 1000).toISOString().slice(0, 16);
+}
+function parseKstInput(value) {
+  if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(value)) return new Date(NaN);
+  return new Date(`${value}:00+09:00`);
 }
 function kstSlot(value) {
   const ms = Date.parse(value);
@@ -372,7 +377,7 @@ export function bindTodayOperations(document, { client, issueAttendanceCode = nu
     const { kind, row } = state.action;
     const spec = ACTIONS[kind];
     const timeValue = byId('todayOpsTime').value;
-    const time = timeValue ? new Date(timeValue) : null;
+    const time = timeValue ? parseKstInput(timeValue) : null;
     const reason = byId('todayOpsReason').value.trim();
     if (spec.timeRequired && (!time || Number.isNaN(time.getTime()))) { byId('todayOpsResult').textContent = '시각을 입력해 주세요.'; return; }
     if (spec.reasonRequired && !reason) { byId('todayOpsResult').textContent = '사유를 입력해 주세요.'; return; }
@@ -628,8 +633,8 @@ export function bindTodayOperations(document, { client, issueAttendanceCode = nu
   });
   byId('todayOpsSessionForm').addEventListener('submit', async (event) => {
     event.preventDefault();
-    const start = new Date(byId('todayOpsSessionStart').value);
-    const end = new Date(byId('todayOpsSessionEnd').value);
+    const start = parseKstInput(byId('todayOpsSessionStart').value);
+    const end = parseKstInput(byId('todayOpsSessionEnd').value);
     const group = byId('todayOpsSessionGroup').value;
     if (!group || Number.isNaN(start.getTime()) || Number.isNaN(end.getTime()) || end <= start) { byId('todayOpsResult').textContent = '반·시작·종료 시각을 확인해 주세요.'; return; }
     await mutate('admin_create_class_session', { p_class_group_id: group, p_starts_at: start.toISOString(), p_ends_at: end.toISOString(), p_capacity: Number(byId('todayOpsSessionCapacity').value) || 8 }, '수업 회차와 재원생 출결 예정을 만들었습니다.');
