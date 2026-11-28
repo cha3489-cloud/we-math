@@ -2,8 +2,9 @@ name: Deploy operations edge functions
 
 # Deploys attendance-code and parent-message-dispatch only after a merge to main (or an explicit
 # manual dispatch), and only after the full test suite and Deno type checks pass.
-# ATTENDANCE_CODE_HMAC_SECRET is configured out-of-band as a Supabase function secret; this
-# workflow checks that it exists by name and never sets, reads, or prints its value.
+# ATTENDANCE_CODE_HMAC_SECRET is created once (openssl rand, 48 bytes) only when the secret name is
+# absent, passed to Supabase via a 0600 mktemp --env-file (removed on exit), never rotated, and never printed or exported. Existence is
+# verified by name. PARENT_MESSAGE_PROVIDER is untouched (code default stays dry_run).
 on:
   push:
     branches: [main]
@@ -57,13 +58,35 @@ jobs:
       - name: Check deployment credential
         run: |
           test -n "${SUPABASE_ACCESS_TOKEN:-}" || { echo 'Missing SUPABASE_ACCESS_TOKEN' >&2; exit 1; }
-      - name: Require the attendance HMAC function secret by name
+      - name: Bootstrap attendance HMAC function secret (first run only)
         run: |
+          set +x
           set -euo pipefail
-          names="$(npx supabase secrets list --project-ref "$SUPABASE_PROJECT_REF" -o json | jq -r '.[].name')"
+          list_names() {
+            npx supabase secrets list --project-ref "$SUPABASE_PROJECT_REF" -o json | jq -r '.[].name'
+          }
+          names="$(list_names)"
           if ! grep -qx 'ATTENDANCE_CODE_HMAC_SECRET' <<<"$names"; then
-            echo 'ATTENDANCE_CODE_HMAC_SECRET is not configured; refusing to deploy attendance-code' >&2
-            exit 1
+            secret_file=""
+            trap 'rm -f "$secret_file"; unset ATTENDANCE_CODE_HMAC_SECRET' EXIT
+            secret_file="$(mktemp)"
+            chmod 600 "$secret_file"
+            ATTENDANCE_CODE_HMAC_SECRET="$(openssl rand -base64 48)"
+            printf 'ATTENDANCE_CODE_HMAC_SECRET=%s\n' "$ATTENDANCE_CODE_HMAC_SECRET" > "$secret_file"
+            unset ATTENDANCE_CODE_HMAC_SECRET
+            npx supabase secrets set --project-ref "$SUPABASE_PROJECT_REF" --env-file "$secret_file" >/dev/null 2>&1 || {
+              echo 'Failed to register ATTENDANCE_CODE_HMAC_SECRET (output suppressed)' >&2
+              exit 1
+            }
+            rm -f "$secret_file"
+            names="$(list_names)"
+            if ! grep -qx 'ATTENDANCE_CODE_HMAC_SECRET' <<<"$names"; then
+              echo 'ATTENDANCE_CODE_HMAC_SECRET is still missing after registration; refusing to deploy' >&2
+              exit 1
+            fi
+            echo 'ATTENDANCE_CODE_HMAC_SECRET created and verified by name'
+          else
+            echo 'ATTENDANCE_CODE_HMAC_SECRET already present; left unchanged'
           fi
       - name: Deploy attendance-code
         run: |

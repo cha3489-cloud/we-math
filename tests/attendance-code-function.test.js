@@ -243,8 +243,7 @@ describe('attendance-code deployment wiring', () => {
     expect(workflow).toContain('npx supabase functions deploy attendance-code');
     expect(workflow).toContain('npx supabase functions deploy parent-message-dispatch');
     expect(workflow).toContain('ATTENDANCE_CODE_HMAC_SECRET');
-    // The secret is verified by name only; the workflow never sets or prints it.
-    expect(workflow).not.toContain('secrets set');
+    // Bootstrap behavior is covered in operations-secret-bootstrap-workflow.test.js.
     expect(workflow).not.toContain('secrets.ATTENDANCE_CODE_HMAC_SECRET');
   });
 });
